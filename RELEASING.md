@@ -26,9 +26,14 @@ version (`internal/core.Version`) and the packaging metadata (`FyneApp.toml`):
 
 ```
 make release VERSION=0.2.0      # stamps, runs check, builds ./financy
-git commit -am "Release v0.2.0"
-git tag v0.2.0 && git push --tags
+# Write docs/release-notes-v0.2.0.md  (becomes the GitHub Release body)
+git add -A && git commit -m "Release v0.2.0"
+git push
+git tag v0.2.0 && git push origin v0.2.0
 ```
+
+> The release workflow reads `docs/release-notes-<tag>.md` as the release body, so
+> create that file before tagging (a missing file fails the publish step).
 
 Pushing the tag triggers `.github/workflows/release.yml`, which packages
 Linux / Windows / macOS bundles (native runners + the fyne CLI) and attaches
