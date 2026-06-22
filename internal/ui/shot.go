@@ -13,8 +13,11 @@ import (
 	"github.com/raihanstark/financy/internal/ui/view"
 )
 
-// runShots renders the full application headlessly via the software renderer.
+// runShots renders the app headlessly (via the software renderer) and writes
+// PNGs used for docs/screenshots. It seeds demo data so the screens look real.
 func runShots(outDir string) {
+	_ = os.MkdirAll(outDir, 0o755)
+
 	a := test.NewApp()
 	a.Settings().SetTheme(style.Theme{})
 
@@ -26,34 +29,32 @@ func runShots(outDir string) {
 	view.Init(store, c.show, c.refresh, w)
 	w.Resize(fyne.NewSize(1320, 860))
 
-	// Main screens.
-	for _, uid := range []string{"accounts", "transactions"} {
-		c.show(uid)
-		writePNG(outDir+"/app-"+uid+".png", w.Canvas().Capture())
-	}
+	capture := func(name string) { writePNG(outDir+"/"+name+".png", w.Canvas().Capture()) }
+	dropOverlay := func() { w.Canvas().Overlays().Remove(w.Canvas().Overlays().Top()) }
 
-	// Preferences dialog, one capture per tab.
-	c.show("accounts")
-	view.OpenConfig(0)
-	writePNG(outDir+"/app-config.png", w.Canvas().Capture())
-	w.Canvas().Overlays().Remove(w.Canvas().Overlays().Top())
-	view.OpenConfig(1)
-	writePNG(outDir+"/app-config-categories.png", w.Canvas().Capture())
-	w.Canvas().Overlays().Remove(w.Canvas().Overlays().Top())
-	view.OpenConfig(2)
-	writePNG(outDir+"/app-config-data.png", w.Canvas().Capture())
-	w.Canvas().Overlays().Remove(w.Canvas().Overlays().Top())
-
-	// First-run setup dialog.
+	// First-run setup dialog (before any data).
 	c.renderWelcome()
 	showSetup()
-	writePNG(outDir+"/app-setup.png", w.Canvas().Capture())
-	w.Canvas().Overlays().Remove(w.Canvas().Overlays().Top())
+	capture("setup")
+	dropOverlay()
 
-	// Demo data (USD) populated.
+	// Populate demo data so the screens are illustrative.
 	core.SeedDemo(store, "$")
+
 	c.show("accounts")
-	writePNG(outDir+"/app-demo.png", w.Canvas().Capture())
+	capture("accounts")
+	c.show("transactions")
+	capture("transactions")
+
+	// Preferences tabs.
+	c.show("accounts")
+	view.OpenConfig(1)
+	capture("categories")
+	dropOverlay()
+	view.OpenConfig(2)
+	capture("data-summary")
+	dropOverlay()
+
 	w.Close()
 }
 
