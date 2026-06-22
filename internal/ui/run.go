@@ -27,8 +27,9 @@ func initNav() {
 	}
 }
 
-// Run is the application entry point, invoked from package main.
-func Run() {
+// Run is the application entry point, invoked from package main. icon is the
+// application/window icon (may be nil).
+func Run(icon fyne.Resource) {
 	initNav()
 
 	if len(os.Args) > 1 && os.Args[1] == "shot" {
@@ -43,8 +44,14 @@ func Run() {
 
 	a := app.NewWithID("app.financy")
 	a.Settings().SetTheme(style.Theme{})
+	if icon != nil {
+		a.SetIcon(icon)
+	}
 
 	w := a.NewWindow(appTitle(""))
+	if icon != nil {
+		w.SetIcon(icon)
+	}
 	w.Resize(fyne.NewSize(1320, 860))
 
 	ctl = &appController{win: w}

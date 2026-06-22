@@ -1,0 +1,58 @@
+name: Release
+
+# Triggered by pushing a version tag (e.g. v0.2.0). The tagged commit must
+# already carry the matching version (see `make release VERSION=x.y.z`).
+on:
+  push:
+    tags: ["v*"]
+
+permissions:
+  contents: write
+
+jobs:
+  package:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-latest
+            target: linux
+          - os: windows-latest
+            target: windows
+          - os: macos-latest
+            target: darwin
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+
+      - name: Install Fyne build dependencies (Linux)
+        if: matrix.target == 'linux'
+        run: sudo apt-get update && sudo apt-get install -y gcc pkg-config libgl1-mesa-dev xorg-dev
+
+      - name: Install the fyne CLI
+        run: go install fyne.io/fyne/v2/cmd/fyne@latest
+
+      - name: Package for ${{ matrix.target }}
+        shell: bash
+        run: |
+          export PATH="$PATH:$(go env GOPATH)/bin"
+          fyne package -os ${{ matrix.target }}
+
+      - name: Stage artifact
+        shell: bash
+        run: |
+          mkdir -p dist
+          case "${{ matrix.target }}" in
+            linux)   mv Financy.tar.xz dist/Financy-${{ github.ref_name }}-linux-amd64.tar.xz ;;
+            windows) mv Financy.exe    dist/Financy-${{ github.ref_name }}-windows-amd64.exe ;;
+            darwin)  zip -r            dist/Financy-${{ github.ref_name }}-macos.zip Financy.app ;;
+          esac
+
+      - name: Attach to GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: dist/*
