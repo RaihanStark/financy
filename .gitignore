@@ -1,0 +1,29 @@
+# Compiled binary (matches module name)
+/financy
+financy-stripped
+financy-upx
+
+# Go build artifacts
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+*.test
+*.out
+
+# Fyne packaging output
+*.app/
+*.apk
+*.aab
+fyne-cross/
+
+# Coverage / profiling
+*.prof
+coverage.*
+
+# Editor / OS
+.idea/
+.vscode/
+*.swp
+.DS_Store
