@@ -19,6 +19,15 @@ var (
 	docPath string
 )
 
+// appTitle builds the window title, including the app version and open file.
+func appTitle(path string) string {
+	t := "Financy v" + core.Version
+	if path != "" {
+		t += " — " + filepath.Base(path)
+	}
+	return t
+}
+
 // useStore makes s the active document and refreshes the whole UI.
 func useStore(s *core.Store, path string) {
 	if store != nil {
@@ -34,11 +43,7 @@ func useStore(s *core.Store, path string) {
 		})
 	}
 	if ctl.win != nil {
-		if path == "" {
-			ctl.win.SetTitle("Financy")
-		} else {
-			ctl.win.SetTitle("Financy — " + filepath.Base(path))
-		}
+		ctl.win.SetTitle(appTitle(path))
 		refreshMenu()
 	}
 	if store == nil {

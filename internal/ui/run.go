@@ -44,7 +44,7 @@ func Run() {
 	a := app.NewWithID("app.financy")
 	a.Settings().SetTheme(style.Theme{})
 
-	w := a.NewWindow("Financy")
+	w := a.NewWindow(appTitle(""))
 	w.Resize(fyne.NewSize(1320, 860))
 
 	ctl = &appController{win: w}

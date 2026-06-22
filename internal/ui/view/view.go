@@ -58,6 +58,7 @@ var (
 	namesOf         = core.NamesOf
 	p               = core.P
 	todaySerial     = core.TodaySerial
+	version         = core.Version
 )
 
 // ---- component helpers ----

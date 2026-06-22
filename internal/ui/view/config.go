@@ -185,6 +185,8 @@ func dataSummaryBody() fyne.CanvasObject {
 		detailField("Net worth", fmtMoney(store.NetWorth()), moneyColor(store.NetWorth())),
 		detailField("Income (YTD)", fmtMoney(store.IncomeTotal()), colPositive),
 		detailField("Expenses (YTD)", fmtMoney(store.ExpenseTotal()), colNegative),
+		spacerH(10), divider(), spacerH(4),
+		txt("Financy v"+version, colTextDim, 10.5, false),
 	)
 	return container.NewPadded(rows)
 }
