@@ -13,6 +13,8 @@ See `RELEASING.md`.
 
 ## [Unreleased]
 
+## [0.3.0] - 2026-06-23
+
 ### Added
 - **Account reconciliation** — right-click an account → *Reconcile…* (or the
   **Reconcile** button in its register). Enter the real balance from your bank and
@@ -91,6 +93,7 @@ double-entry accounting, with data in a single `.financy` file you own.
   automatic `.bak` before any file upgrade.
 - Cross-platform release bundles (Linux / Windows / macOS) published from CI on tag.
 
-[Unreleased]: https://github.com/raihanstark/financy/compare/v0.2.0...HEAD
+[Unreleased]: https://github.com/raihanstark/financy/compare/v0.3.0...HEAD
+[0.3.0]: https://github.com/raihanstark/financy/compare/v0.2.0...v0.3.0
 [0.2.0]: https://github.com/raihanstark/financy/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/raihanstark/financy/releases/tag/v0.1.0
