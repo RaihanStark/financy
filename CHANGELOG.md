@@ -13,15 +13,7 @@ See `RELEASING.md`.
 
 ## [Unreleased]
 
-### Fixed
-- **File ▸ New** now asks for the document's currency before saving (like the
-  Setup Wizard), instead of silently defaulting every new file to Rp.
-
-### Changed
-- Demo data now spans ~6 months (~90 transactions) of recurring income, bills,
-  groceries, dining, transfers and credit-card activity, so first-run users see
-  balances, registers and period flows behave like a real file. Screenshots
-  regenerated.
+## [0.2.0] - 2026-06-23
 
 ### Added
 - **Analytics** screen — a read-only insights dashboard with KPI cards (net worth
@@ -40,6 +32,16 @@ See `RELEASING.md`.
 - Refuse to open a `.financy` file whose schema is newer than the running app,
   with a clear "update Financy" dialog, instead of risking a misread. The file is
   left untouched.
+
+### Changed
+- Demo data now spans ~6 months (~90 transactions) of recurring income, bills,
+  groceries, dining, transfers and credit-card activity, so first-run users see
+  balances, registers and period flows behave like a real file. Screenshots
+  regenerated.
+
+### Fixed
+- **File ▸ New** now asks for the document's currency before saving (like the
+  Setup Wizard), instead of silently defaulting every new file to Rp.
 
 ## [0.1.0] - 2026-06-22
 
@@ -65,5 +67,6 @@ double-entry accounting, with data in a single `.financy` file you own.
   automatic `.bak` before any file upgrade.
 - Cross-platform release bundles (Linux / Windows / macOS) published from CI on tag.
 
-[Unreleased]: https://github.com/raihanstark/financy/compare/v0.1.0...HEAD
+[Unreleased]: https://github.com/raihanstark/financy/compare/v0.2.0...HEAD
+[0.2.0]: https://github.com/raihanstark/financy/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/raihanstark/financy/releases/tag/v0.1.0
