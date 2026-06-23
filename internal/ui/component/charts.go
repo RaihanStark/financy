@@ -52,13 +52,15 @@ func placeTicks(ticks []tick, vals []int, size fyne.Size, yOf func(int) float32)
 	}
 }
 
-func tooltipAt(w fyne.CanvasObject, tips []string, i int, evPos fyne.Position) {
+// tooltipAt shows tip i just below-right of the cursor. cursor is the event's
+// AbsolutePosition (already canvas-relative), so this is robust to scrolling — no
+// need to reconstruct the widget's position.
+func tooltipAt(tips []string, i int, cursor fyne.Position) {
 	if i < 0 || i >= len(tips) {
 		HideTooltip()
 		return
 	}
-	abs := fyne.CurrentApp().Driver().AbsolutePositionForObject(w)
-	ShowTooltip(tips[i], abs.Add(evPos).Add(fyne.NewPos(14, 16)))
+	ShowTooltip(tips[i], cursor.Add(fyne.NewPos(12, 14)))
 }
 
 // ---- grouped bar chart (two series over the same buckets) ----
@@ -172,8 +174,10 @@ func (c *barChart) bucketAt(x float32) int {
 	return i
 }
 
-func (c *barChart) MouseIn(ev *desktop.MouseEvent)    { c.MouseMoved(ev) }
-func (c *barChart) MouseMoved(ev *desktop.MouseEvent) { c.update(c.bucketAt(ev.Position.X), ev.Position) }
+func (c *barChart) MouseIn(ev *desktop.MouseEvent) { c.MouseMoved(ev) }
+func (c *barChart) MouseMoved(ev *desktop.MouseEvent) {
+	c.update(c.bucketAt(ev.Position.X), ev.AbsolutePosition)
+}
 func (c *barChart) MouseOut() {
 	c.hover = -1
 	c.highlight.Hide()
@@ -181,7 +185,7 @@ func (c *barChart) MouseOut() {
 	HideTooltip()
 }
 
-func (c *barChart) update(i int, evPos fyne.Position) {
+func (c *barChart) update(i int, cursor fyne.Position) {
 	if i != c.hover {
 		c.hover = i
 		if i >= 0 {
@@ -194,7 +198,7 @@ func (c *barChart) update(i int, evPos fyne.Position) {
 		}
 		canvas.Refresh(c)
 	}
-	tooltipAt(c, c.tips, i, evPos)
+	tooltipAt(c.tips, i, cursor)
 }
 
 // ---- net-worth line chart ----
@@ -359,8 +363,10 @@ func (c *lineChart) nearest(x float32) int {
 	return i
 }
 
-func (c *lineChart) MouseIn(ev *desktop.MouseEvent)    { c.MouseMoved(ev) }
-func (c *lineChart) MouseMoved(ev *desktop.MouseEvent) { c.update(c.nearest(ev.Position.X), ev.Position) }
+func (c *lineChart) MouseIn(ev *desktop.MouseEvent) { c.MouseMoved(ev) }
+func (c *lineChart) MouseMoved(ev *desktop.MouseEvent) {
+	c.update(c.nearest(ev.Position.X), ev.AbsolutePosition)
+}
 func (c *lineChart) MouseOut() {
 	c.hover = -1
 	c.guide.Hide()
@@ -368,7 +374,7 @@ func (c *lineChart) MouseOut() {
 	HideTooltip()
 }
 
-func (c *lineChart) update(i int, evPos fyne.Position) {
+func (c *lineChart) update(i int, cursor fyne.Position) {
 	if i != c.hover {
 		c.hover = i
 		if i >= 0 {
@@ -381,7 +387,7 @@ func (c *lineChart) update(i int, evPos fyne.Position) {
 		}
 		canvas.Refresh(c)
 	}
-	tooltipAt(c, c.tips, i, evPos)
+	tooltipAt(c.tips, i, cursor)
 }
 
 // ---- shared renderer ----

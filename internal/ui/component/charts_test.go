@@ -25,6 +25,31 @@ func moveTo(o fyne.CanvasObject, x, y float32) {
 	o.(desktop.Hoverable).MouseMoved(&desktop.MouseEvent{PointEvent: fyne.PointEvent{Position: fyne.NewPos(x, y)}})
 }
 
+func TestChartTooltipUsesCursorPosition(t *testing.T) {
+	test.NewApp()
+	var gotPos fyne.Position
+	ShowTooltip = func(_ string, p fyne.Position) { gotPos = p }
+	HideTooltip = func() {}
+	t.Cleanup(func() {
+		ShowTooltip = func(string, fyne.Position) {}
+		HideTooltip = func() {}
+	})
+
+	obj := barPairChart([]int{10, 20}, []int{5, 5}, colPositive, colNegative,
+		[]string{"a", "b"}, func(int) string { return "" })
+	obj.(*barChart).Resize(fyne.NewSize(254, 150))
+
+	// The tooltip must follow the event's AbsolutePosition (the true cursor),
+	// not a reconstructed widget position — so it stays put under scrolling.
+	obj.(desktop.Hoverable).MouseMoved(&desktop.MouseEvent{PointEvent: fyne.PointEvent{
+		Position:         fyne.NewPos(54+50, 75), // widget-relative (drives bucket)
+		AbsolutePosition: fyne.NewPos(500, 600),  // canvas cursor (drives tooltip)
+	}})
+	if want := fyne.NewPos(512, 614); gotPos != want { // 500+12, 600+14
+		t.Fatalf("tooltip at %v, want %v (cursor + small offset)", gotPos, want)
+	}
+}
+
 func TestBarChartHoverTooltip(t *testing.T) {
 	test.NewApp()
 	got, shown := hoverCapture(t)

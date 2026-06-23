@@ -50,6 +50,8 @@ func showToolTip(text string, pos fyne.Position) {
 	ttBox.Resize(sz)
 
 	// Keep the bubble inside the window — important for far-right buttons.
+	// pos is in canvas-absolute coordinates (from AbsolutePositionForObject or a
+	// mouse event's AbsolutePosition), so clamp against the canvas here.
 	if ctl != nil && ctl.win != nil {
 		const margin = 6
 		cs := ctl.win.Canvas().Size()
@@ -62,9 +64,17 @@ func showToolTip(text string, pos fyne.Position) {
 		if pos.Y+sz.Height > cs.Height-margin {
 			pos.Y = cs.Height - sz.Height - margin
 		}
+		if pos.Y < margin {
+			pos.Y = margin
+		}
 	}
 
-	ttBox.Move(pos)
+	// ttBox.Move is relative to the tooltip layer, which can sit below the canvas
+	// origin (e.g. the main menu bar pushes the content down). Convert the
+	// canvas-absolute position into layer-local coords so the bubble lands exactly
+	// at the cursor rather than menu-height too low.
+	origin := fyne.CurrentApp().Driver().AbsolutePositionForObject(tooltipLayer)
+	ttBox.Move(pos.Subtract(origin))
 	ttBox.Show()
 	ttBox.Refresh()
 }
