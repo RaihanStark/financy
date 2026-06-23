@@ -107,12 +107,14 @@ func accountMenuItems(a Account) []*fyne.MenuItem {
 	newTxn.Icon = theme.ContentAddIcon()
 	viewReg := fyne.NewMenuItem("View Register", func() { showRegisterDialog(a) })
 	viewReg.Icon = theme.ListIcon()
+	reconcile := fyne.NewMenuItem("Reconcile…", func() { reconcileAccount(a) })
+	reconcile.Icon = theme.ViewRefreshIcon()
 	edit := fyne.NewMenuItem("Edit Account…", func() { AccountForm(&a) })
 	edit.Icon = theme.DocumentCreateIcon()
 	del := fyne.NewMenuItem("Delete Account", func() { deleteAccount(a) })
 	del.Icon = theme.DeleteIcon()
 
-	return []*fyne.MenuItem{newTxn, viewReg, fyne.NewMenuItemSeparator(), edit, del}
+	return []*fyne.MenuItem{newTxn, viewReg, reconcile, fyne.NewMenuItemSeparator(), edit, del}
 }
 
 func deleteAccount(a Account) {
@@ -147,6 +149,7 @@ func showRegisterDialog(a Account) {
 
 	actions := container.NewHBox(
 		secondaryButton("New Transaction", theme.ContentAddIcon(), func() { TransactionForm("", a.Name) }),
+		secondaryButton("Reconcile", theme.ViewRefreshIcon(), func() { reconcileAccount(a) }),
 		secondaryButton("Edit Account", theme.DocumentCreateIcon(), func() { AccountForm(&a) }),
 	)
 

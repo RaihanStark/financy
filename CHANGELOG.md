@@ -14,6 +14,12 @@ See `RELEASING.md`.
 ## [Unreleased]
 
 ### Added
+- **Account reconciliation** — right-click an account → *Reconcile…* (or the
+  **Reconcile** button in its register). Enter the real balance from your bank and
+  Financy posts a single adjustment transaction for the difference so the account
+  matches. The contra goes to a *Reconciliation* equity account, so net worth
+  updates but income/expense analytics aren't distorted; the adjustment is a normal,
+  auditable journal entry.
 - **Live amount formatting** — money fields (transaction amount, opening balance)
   now group thousands as you type (e.g. `1,000,000`), and a new **Number format**
   setting in Preferences lets you choose the separator style (`1,234.56` /

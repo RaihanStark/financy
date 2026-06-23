@@ -53,6 +53,7 @@ const (
 var (
 	itoa            = core.Itoa
 	fmtMoney        = core.FmtMoney
+	fmtMoneyPlain   = core.FmtMoneyPlain
 	fmtMoneyShort   = core.FmtMoneyShort
 	fmtSerialDate   = core.FmtSerialDate
 	fmtSerialMonth  = core.FmtSerialMonth
