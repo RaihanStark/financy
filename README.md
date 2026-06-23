@@ -29,6 +29,7 @@ lives in a single file you own, and the books can never drift out of balance.
 - 🧾 **Transactions** — a clean, date-grouped journal with a familiar **Income / Expense / Transfer** entry form, live filters and search.
 - 🏷️ **Categories** — organise income & expenses; managed from Preferences.
 - 📊 **Analytics** — a read-only insights dashboard: KPIs (net worth & change, income, expenses, net saved, savings rate), an **income-vs-expenses** bar chart, a **net-worth-over-time** line, and **spending by category** — over a selectable period (This month / Last 3 / 6 / 12 / Year to date). Charts are drawn natively with axis labels and hover tooltips.
+- 📄 **Reports** — the three core financial statements as tabs: an **Income Statement** (P&L), a **Balance Sheet** (assets, liabilities & equity that always balances), and a **Cash Flow** — all derived from the journal over the same selectable period, so they can never drift from your transactions.
 - 🖱️ **Desktop-native UX** — right-click **context menus**, hover **tooltips**, an icon toolbar and a minimal File menu.
 - 💾 **Local-first persistence** — each document is a single **`.financy` SQLite file** that is *always auto-saved* (ACID writes — no save button, no lost work).
 - 📂 **Your files, your way** — New / Open / Open Recent / Save a Copy; opens your last file on launch.

@@ -40,6 +40,11 @@ type (
 	CategorySlice    = core.CategorySlice
 	Recurring        = core.Recurring
 	DueItem          = core.DueItem
+	IncomeStatement  = core.IncomeStatement
+	BalanceSheet     = core.BalanceSheet
+	CashFlow         = core.CashFlow
+	StmtLine         = core.StmtLine
+	CashLine         = core.CashLine
 )
 
 const (

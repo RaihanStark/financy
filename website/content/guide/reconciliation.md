@@ -1,6 +1,6 @@
 ---
 title: Reconciliation
-weight: 5
+weight: 6
 ---
 
 Reconciling checks that an account's balance in Financy matches the real balance

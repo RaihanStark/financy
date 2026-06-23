@@ -1,6 +1,6 @@
 ---
 title: Recurring
-weight: 6
+weight: 7
 ---
 
 Recurring transactions are **templates** for entries that repeat — rent, salary,

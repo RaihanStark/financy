@@ -12,4 +12,5 @@ Day-to-day use of Financy's main screens.
   {{< card link="recurring/" title="Recurring" subtitle="Templates for rent, salary, subscriptions." >}}
   {{< card link="categories/" title="Categories" subtitle="Organize income and expense categories." >}}
   {{< card link="analytics/" title="Analytics" subtitle="KPIs, trends, and spending by category." >}}
+  {{< card link="reports/" title="Reports" subtitle="Income statement, balance sheet, cash flow." >}}
 {{< /cards >}}

@@ -14,6 +14,15 @@ See `RELEASING.md`.
 ## [Unreleased]
 
 ### Added
+- **Reports** — a new *Reports* screen presenting the three core financial
+  statements as tabs: an **Income Statement** (P&L: income and expense categories
+  for the period, ending in net income), a **Balance Sheet** (assets, liabilities,
+  and equity as of the period end, where equity is opening balances plus retained
+  earnings — it always satisfies *Assets = Liabilities + Equity*), and a **Cash
+  Flow** (per-asset-account opening/closing/change for the period). It shares the
+  Analytics period selector (This month / Last 3·6·12 months / YTD). Everything is
+  read-only and derived from the journal, so the statements can't drift from your
+  transactions — no schema change.
 - **CSV export** (`File ▸ Export CSV…`) — write all transactions to a flat,
   spreadsheet-friendly CSV (`Date, Payee, Category, Account, Amount, Memo`),
   chronological, with plain decimal amounts. It round-trips with the importer, so
