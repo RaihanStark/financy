@@ -4,6 +4,7 @@ import (
 	"errors"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/container"
@@ -121,6 +122,40 @@ func doSaveCopy() {
 	}, ctl.win)
 	d.SetFileName("copy.financy")
 	d.Show()
+}
+
+// doExportCSV writes all transactions to a CSV the user chooses.
+func doExportCSV() {
+	if store == nil {
+		return
+	}
+	data, err := store.ExportCSV()
+	if err != nil {
+		dialog.ShowError(err, ctl.win)
+		return
+	}
+	d := dialog.NewFileSave(func(w fyne.URIWriteCloser, err error) {
+		if err != nil || w == nil {
+			return
+		}
+		defer w.Close()
+		if _, err := w.Write(data); err != nil {
+			dialog.ShowError(err, ctl.win)
+			return
+		}
+		dialog.ShowInformation("Exported", "Transactions exported to:\n"+w.URI().Path(), ctl.win)
+	}, ctl.win)
+	d.SetFileName(exportFileName())
+	d.SetFilter(storage.NewExtensionFileFilter([]string{".csv"}))
+	d.Show()
+}
+
+func exportFileName() string {
+	base := "financy"
+	if docPath != "" {
+		base = strings.TrimSuffix(filepath.Base(docPath), ".financy")
+	}
+	return base + "-export.csv"
 }
 
 func doClose() {

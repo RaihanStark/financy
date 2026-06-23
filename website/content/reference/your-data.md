@@ -43,3 +43,11 @@ the same `.financy` from multiple devices simultaneously.
 
 Because it's just a file: copy the `.financy` somewhere safe, or use **Save a
 Copy…** periodically. That's a complete, portable backup of everything.
+
+## Export to CSV
+
+**File ▸ Export CSV…** writes all your transactions to a plain CSV
+(`Date, Payee, Category, Account, Amount, Memo`), in date order, with plain decimal
+amounts — handy for spreadsheets, taxes, or sharing. The format round-trips with
+[CSV import](../../importing/csv/): export, edit in a spreadsheet, and bring it back
+in.

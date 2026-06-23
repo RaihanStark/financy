@@ -14,6 +14,10 @@ See `RELEASING.md`.
 ## [Unreleased]
 
 ### Added
+- **CSV export** (`File ▸ Export CSV…`) — write all transactions to a flat,
+  spreadsheet-friendly CSV (`Date, Payee, Category, Account, Amount, Memo`),
+  chronological, with plain decimal amounts. It round-trips with the importer, so
+  you can export, edit in a spreadsheet, and re-import.
 - **Recurring transactions** — a new *Recurring* screen for templates (rent,
   salary, subscriptions) with a frequency (Weekly/Biweekly/Monthly/Quarterly/
   Yearly) and next-due date. When entries are due, Financy prompts you (on open, or

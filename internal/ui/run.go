@@ -92,6 +92,7 @@ func buildMainMenu() *fyne.MainMenu {
 				view.ImportCSV()
 			}
 		}),
+		fyne.NewMenuItem("Export CSV…", doExportCSV),
 		fyne.NewMenuItem("Setup Wizard…", showSetup),
 		fyne.NewMenuItemSeparator(),
 		fyne.NewMenuItem("Save a Copy…", doSaveCopy),
