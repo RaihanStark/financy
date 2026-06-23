@@ -8,6 +8,9 @@ LDFLAGS := -X $(PKG)/internal/core.Version=$(VERSION)
 # binary in GOPATH/bin (where `go install ... hugo` puts it).
 HUGO := $(shell command -v hugo 2>/dev/null || echo $(shell go env GOPATH)/bin/hugo)
 
+# Where the screenshot harness writes its PNGs before they're copied into the docs.
+SHOTDIR := /tmp/financy-shots
+
 .PHONY: help run test vet check build shot set-version package release clean docs docs-build
 
 help:
@@ -16,7 +19,7 @@ help:
 	@echo "  make test                     run all tests"
 	@echo "  make check                    build + vet + test"
 	@echo "  make build                    build ./$(APP) with version $(VERSION)"
-	@echo "  make shot                     regenerate UI screenshots into /tmp/financy-shots"
+	@echo "  make shot                     regenerate UI screenshots + copy into the docs"
 	@echo "  make docs                     serve the docs site locally (http://localhost:1313)"
 	@echo "  make docs-build               build the docs to website/public"
 	@echo "  make set-version VERSION=x.y.z  stamp version into code + FyneApp.toml"
@@ -40,8 +43,23 @@ check:
 build:
 	go build -ldflags "$(LDFLAGS)" -o $(APP) .
 
+# Regenerate every UI screenshot from the current code and copy them into the two
+# doc locations (README uses docs/screenshots, the Hugo site uses website/static/img,
+# which renames a few). Run this whenever the UI changes so the docs stay current.
 shot:
-	go run . shot /tmp/financy-shots
+	go run . shot $(SHOTDIR)
+	@echo "Copying screenshots into docs/screenshots and website/static/img…"
+	@for n in accounts analytics categories data-summary recurring reports setup transactions; do \
+		cp "$(SHOTDIR)/$$n.png" "docs/screenshots/$$n.png"; \
+	done
+	@for n in accounts analytics categories reports transactions; do \
+		cp "$(SHOTDIR)/$$n.png" "website/static/img/$$n.png"; \
+	done
+	@cp "$(SHOTDIR)/recurring.png"        website/static/img/recurring-screen.png
+	@cp "$(SHOTDIR)/reconcile-dialog.png" website/static/img/reconcile-dialog.png
+	@cp "$(SHOTDIR)/reconcile-result.png" website/static/img/reconcile-result.png
+	@cp "$(SHOTDIR)/recurring-due.png"    website/static/img/recurring-due.png
+	@echo "Screenshots updated."
 
 # Serve the docs site locally with live reload at http://localhost:1313/ .
 # Needs Hugo Extended: CGO_ENABLED=1 go install -tags extended github.com/gohugoio/hugo@latest

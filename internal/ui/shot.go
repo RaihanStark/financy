@@ -61,6 +61,21 @@ func runShots(outDir string) {
 	capture("data-summary")
 	dropOverlay()
 
+	// Dialog states the docs site embeds. The reconcile dialog and the recurring
+	// "due" prompt are read-only; capture them over the Accounts screen.
+	c.show("accounts")
+	view.ShotReconcileDialog("Checking")
+	capture("reconcile-dialog")
+	dropOverlay()
+	view.ShotDuePrompt(10)
+	capture("recurring-due")
+	dropOverlay()
+
+	// This one posts an adjustment, so it must come after every other capture.
+	view.ShotReconcileResult("Checking", 2500)
+	capture("reconcile-result")
+	dropOverlay()
+
 	w.Close()
 }
 
