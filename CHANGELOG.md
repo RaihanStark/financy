@@ -20,6 +20,8 @@ See `RELEASING.md`.
   regenerated.
 
 ### Added
+- **Setup Wizard…** in the File menu — re-open the first-run welcome wizard at any
+  time to spin up a fresh document with demo data or start from scratch.
 - Calendar date picker on the transaction date field — click the calendar button
   to pick a day instead of typing. The field still accepts/validates `YYYY-MM-DD`.
 - Refuse to open a `.financy` file whose schema is newer than the running app,
