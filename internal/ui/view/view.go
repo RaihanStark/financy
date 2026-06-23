@@ -59,7 +59,9 @@ var (
 	serialToTime    = core.SerialToTime
 	timeToSerial    = core.TimeToSerial
 	parseAmount     = core.ParseAmount
-	amountToInput   = core.AmountToInput
+	fmtMoneyInput      = core.FmtMoneyInput
+	groupTyped         = core.GroupTyped
+	numberFormatStyles = core.NumberFormatStyles
 	parseDateSerial = core.ParseDateSerial
 	slugify         = core.Slugify
 	namesOf         = core.NamesOf

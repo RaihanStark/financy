@@ -226,8 +226,7 @@ func AccountForm(existing *Account) {
 	inst := widget.NewEntry()
 	typ := widget.NewSelect([]string{"Asset", "Liability"}, nil)
 	notes := widget.NewEntry()
-	opening := widget.NewEntry()
-	opening.SetPlaceHolder("0")
+	opening := newAmountEntry()
 
 	title := "Add Account"
 	items := []*widget.FormItem{

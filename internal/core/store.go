@@ -14,10 +14,11 @@ type Store struct {
 	accounts  []Account
 	txns      []Transaction
 	nextID    int
-	owner     string
-	currency  string
-	year      int
-	listeners []func()
+	owner        string
+	currency     string
+	year         int
+	numberFormat string // separator style override; "" = currency default
+	listeners    []func()
 	onError   func(error)
 }
 
@@ -500,9 +501,21 @@ func (s *Store) DeleteAccount(id string) bool {
 func (s *Store) SetSettings(owner, currency string, year int) {
 	s.owner, s.currency, s.year = owner, currency, year
 	s.reportError(s.dbSetSettings())
-	SetCurrencySymbol(currency)
+	SetCurrencySymbol(currency)        // resets separators to the currency default…
+	ApplyNumberFormat(s.numberFormat)  // …then re-apply any chosen number format.
 	s.notify()
 }
+
+// SetNumberFormat overrides the grouping/decimal separator style (see
+// NumberFormatStyles); "" reverts to the active currency's default.
+func (s *Store) SetNumberFormat(style string) {
+	s.numberFormat = style
+	s.reportError(s.dbSetSettings())
+	ApplyNumberFormat(style)
+	s.notify()
+}
+
+func (s *Store) NumberFormat() string { return s.numberFormat }
 
 func (s *Store) Owner() string    { return s.owner }
 func (s *Store) Currency() string { return s.currency }

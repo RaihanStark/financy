@@ -35,6 +35,8 @@ func loadStore(db *sql.DB) (*Store, error) {
 			if n, e := strconv.Atoi(v); e == nil {
 				s.year = n
 			}
+		case "number_format":
+			s.numberFormat = v
 		}
 	}
 	rows.Close()
@@ -92,6 +94,7 @@ func loadStore(db *sql.DB) (*Store, error) {
 
 	s.nextID = s.computeNextID()
 	SetCurrencySymbol(s.currency)
+	ApplyNumberFormat(s.numberFormat)
 	return s, nil
 }
 
@@ -219,6 +222,10 @@ func (s *Store) dbSetSettings() error {
 		return err
 	}
 	if err := set("year", Itoa(s.year)); err != nil {
+		tx.Rollback()
+		return err
+	}
+	if err := set("number_format", s.numberFormat); err != nil {
 		tx.Rollback()
 		return err
 	}

@@ -365,8 +365,7 @@ func TransactionForm(id, prefillMoney string) {
 
 	kind := widget.NewSelect([]string{"Expense", "Income", "Transfer"}, nil)
 	date := newDateEntry(0)
-	amount := widget.NewEntry()
-	amount.SetPlaceHolder("0")
+	amount := newAmountEntry()
 	amount.Validator = func(s string) error {
 		if parseAmount(s) <= 0 {
 			return errors.New("enter an amount greater than zero")
@@ -405,7 +404,7 @@ func TransactionForm(id, prefillMoney string) {
 	if existing != nil {
 		title = "Edit Transaction"
 		date.SetText(fmtSerialDate(existing.Date))
-		amount.SetText(amountToInput(v.amount))
+		amount.SetText(fmtMoneyInput(v.amount))
 		payee.SetText(existing.Payee)
 		memo.SetText(existing.Memo)
 		k := v.kind

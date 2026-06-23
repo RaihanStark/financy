@@ -52,14 +52,28 @@ func configBody(onSaved func()) fyne.CanvasObject {
 	currency := widget.NewSelect([]string{"Rp", "$", "€", "£"}, nil)
 	currency.SetSelected(store.Currency())
 
+	const fmtDefault = "Currency default"
+	numFmt := widget.NewSelect(append([]string{fmtDefault}, numberFormatStyles()...), nil)
+	if store.NumberFormat() == "" {
+		numFmt.SetSelected(fmtDefault)
+	} else {
+		numFmt.SetSelected(store.NumberFormat())
+	}
+
 	form := widget.NewForm(
 		widget.NewFormItem("Currency", currency),
+		widget.NewFormItem("Number format", numFmt),
 	)
 
 	saved := txt("", colPositive, 11.5, true)
 	save := primaryButton("Save Changes", theme.DocumentSaveIcon(), func() {
 		// Owner and year are not user-facing; preserve them.
 		store.SetSettings(store.Owner(), currency.Selected, store.Year())
+		style := numFmt.Selected
+		if style == fmtDefault {
+			style = ""
+		}
+		store.SetNumberFormat(style)
 		saved.Text = "Saved."
 		saved.Refresh()
 		if onSaved != nil {
@@ -68,13 +82,15 @@ func configBody(onSaved func()) fyne.CanvasObject {
 	})
 
 	return container.NewPadded(container.NewVBox(
-		sectionTitle("Currency"),
+		sectionTitle("Currency & Format"),
 		spacerH(6),
 		form,
 		spacerH(8),
 		container.NewHBox(save, saved),
 		spacerH(12),
-		txt("The selected currency symbol is used throughout the app.",
+		txt("The currency sets the symbol and decimals; the number format controls the",
+			colTextDim, 11, false),
+		txt("thousands and decimal separators (e.g. 1,234.56 vs 1.234,56).",
 			colTextDim, 11, false),
 	))
 }

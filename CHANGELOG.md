@@ -14,6 +14,10 @@ See `RELEASING.md`.
 ## [Unreleased]
 
 ### Added
+- **Live amount formatting** — money fields (transaction amount, opening balance)
+  now group thousands as you type (e.g. `1,000,000`), and a new **Number format**
+  setting in Preferences lets you choose the separator style (`1,234.56` /
+  `1.234,56` / `1 234,56` / …) independently of the currency symbol.
 - **Guided CSV import** (`File ▸ Import CSV…`, or the Transactions screen) — bring in
   bank/card exports. A mapping step auto-detects columns and date format from the
   header (any layout; single signed-amount **or** separate debit/credit columns),

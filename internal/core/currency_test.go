@@ -41,6 +41,45 @@ func TestCurrencyFormatting(t *testing.T) {
 	SetCurrencySymbol("Rp") // restore for other tests
 }
 
+func TestGroupTypedAndNumberFormat(t *testing.T) {
+	SetCurrencySymbol("$") // 2 decimals, default separators ",", "."
+
+	// Live grouping as the user types (US default).
+	cases := map[string]string{
+		"1000":      "1,000",
+		"1000000":   "1,000,000",
+		"1000.5":    "1,000.5",
+		"1000.":     "1,000.",   // trailing decimal preserved while typing
+		"1,234.56":  "1,234.56", // already grouped → stable
+		"1000.999":  "1,000.99", // capped at 2 decimals
+		"007":       "7",        // leading zeros trimmed
+		"":          "",
+		".5":        "0.5",
+	}
+	for in, want := range cases {
+		if got := GroupTyped(in); got != want {
+			t.Errorf("GroupTyped(%q) = %q, want %q", in, got, want)
+		}
+	}
+
+	// A number-format override changes separators without touching the currency
+	// symbol or decimal count. 1234567 minor = 12,345.67.
+	ApplyNumberFormat("1.234,56") // EU style: "." thousands, "," decimal
+	if got := FmtMoney(1234567); got != "$ 12.345,67" {
+		t.Errorf("EU FmtMoney = %q, want \"$ 12.345,67\"", got)
+	}
+	if got := GroupTyped("1234,5"); got != "1.234,5" {
+		t.Errorf("EU GroupTyped = %q, want 1.234,5", got)
+	}
+
+	// Reverting / switching currency resets separators to that currency's default.
+	SetCurrencySymbol("$")
+	if got := FmtMoney(1234567); got != "$ 12,345.67" {
+		t.Errorf("after currency reset = %q, want \"$ 12,345.67\"", got)
+	}
+	SetCurrencySymbol("Rp")
+}
+
 func TestFmtMoneyShort(t *testing.T) {
 	SetCurrencySymbol("$") // 2 decimals: minor units are cents
 	cases := map[int]string{

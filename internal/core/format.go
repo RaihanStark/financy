@@ -66,13 +66,47 @@ var currencies = map[string]currencyFmt{
 
 var active = currencies["Rp"]
 
-// SetCurrencySymbol switches the active currency formatting.
+// sepThousand / sepDecimal are the active grouping and decimal separators. They
+// default to the active currency's, but a document's number-format setting can
+// override them (see ApplyNumberFormat) without changing the symbol or decimals.
+var sepThousand = active.thousand
+var sepDecimal = active.decimal
+
+// SetCurrencySymbol switches the active currency formatting and resets the
+// separators to that currency's defaults (re-apply a number format afterwards).
 func SetCurrencySymbol(sym string) {
 	if c, ok := currencies[sym]; ok {
 		active = c
 	} else if sym != "" {
 		active = currencyFmt{symbol: sym, decimals: 2, thousand: ",", decimal: "."}
 	}
+	sepThousand, sepDecimal = active.thousand, active.decimal
+}
+
+// numberFormats maps a style key to its (thousand, decimal) separators.
+var numberFormats = map[string][2]string{
+	"1,234.56": {",", "."},
+	"1.234,56": {".", ","},
+	"1 234,56": {" ", ","},
+	"1 234.56": {" ", "."},
+	"1234.56":  {"", "."},
+	"1234,56":  {"", ","},
+}
+
+// NumberFormatStyles lists the selectable separator styles for the settings UI,
+// in display order. The empty string means "use the currency default".
+func NumberFormatStyles() []string {
+	return []string{"1,234.56", "1.234,56", "1 234,56", "1 234.56", "1234.56", "1234,56"}
+}
+
+// ApplyNumberFormat overrides the grouping/decimal separators by style key. An
+// unknown/empty style reverts to the active currency's defaults.
+func ApplyNumberFormat(style string) {
+	if f, ok := numberFormats[style]; ok {
+		sepThousand, sepDecimal = f[0], f[1]
+		return
+	}
+	sepThousand, sepDecimal = active.thousand, active.decimal
 }
 
 // CurrencyDecimals reports the active currency's number of decimal places.
@@ -124,11 +158,101 @@ func groupInt(n int, sep string) string {
 // fmtMinor renders minor units with grouping and decimals (no symbol/sign).
 func fmtMinor(minor int) string {
 	base := pow10(active.decimals)
-	s := groupInt(minor/base, active.thousand)
+	s := groupInt(minor/base, sepThousand)
 	if active.decimals > 0 {
-		s += active.decimal + fmt.Sprintf("%0*d", active.decimals, minor%base)
+		s += sepDecimal + fmt.Sprintf("%0*d", active.decimals, minor%base)
 	}
 	return s
+}
+
+// FmtMoneyInput formats minor units for an editable field: grouped digits with
+// the active separators, no currency symbol, leading '-' for negatives.
+func FmtMoneyInput(minor int) string {
+	neg := minor < 0
+	if neg {
+		minor = -minor
+	}
+	out := fmtMinor(minor)
+	if neg {
+		out = "-" + out
+	}
+	return out
+}
+
+// GroupTyped reformats a partially-typed amount with thousands grouping,
+// preserving a trailing decimal separator and capping decimals at the currency's
+// places. Used for live formatting in money entry fields as the user types.
+func GroupTyped(s string) string {
+	if strings.TrimSpace(s) == "" {
+		return ""
+	}
+	neg := strings.HasPrefix(strings.TrimSpace(s), "-")
+
+	// Keep only digits and the active decimal separator.
+	var cleaned strings.Builder
+	for _, r := range s {
+		switch {
+		case r >= '0' && r <= '9':
+			cleaned.WriteRune(r)
+		case sepDecimal != "" && string(r) == sepDecimal:
+			cleaned.WriteRune(r)
+		}
+	}
+	cs := cleaned.String()
+
+	whole, frac, hasDec := cs, "", false
+	if sepDecimal != "" {
+		if i := strings.LastIndex(cs, sepDecimal); i >= 0 {
+			whole, frac, hasDec = cs[:i], cs[i+len(sepDecimal):], true
+		}
+	}
+	whole, frac = onlyDigits(whole), onlyDigits(frac)
+	if active.decimals == 0 {
+		hasDec, frac = false, ""
+	}
+	if len(frac) > active.decimals {
+		frac = frac[:active.decimals]
+	}
+
+	grouped := groupDigitsStr(whole, sepThousand)
+	if !hasDec {
+		if neg && grouped != "" {
+			return "-" + grouped
+		}
+		return grouped
+	}
+	if grouped == "" {
+		grouped = "0"
+	}
+	out := grouped + sepDecimal + frac
+	if neg {
+		out = "-" + out
+	}
+	return out
+}
+
+// groupDigitsStr groups a digit string in threes (string-based, no overflow);
+// leading zeros are trimmed. An empty separator disables grouping.
+func groupDigitsStr(s, sep string) string {
+	s = strings.TrimLeft(s, "0")
+	if s == "" {
+		return ""
+	}
+	if sep == "" {
+		return s
+	}
+	var out strings.Builder
+	pre := len(s) % 3
+	if pre > 0 {
+		out.WriteString(s[:pre])
+	}
+	for i := pre; i < len(s); i += 3 {
+		if out.Len() > 0 {
+			out.WriteString(sep)
+		}
+		out.WriteString(s[i : i+3])
+	}
+	return out.String()
 }
 
 // FmtMoney formats minor units in the active currency, e.g. "$ 12,345.67" or
