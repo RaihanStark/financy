@@ -55,8 +55,9 @@ func showSetup() {
 		d.Hide()
 		promptCreateDocument(demo, cur)
 	})
+	cancel := secondaryButton("Close", nil, func() { d.Hide() })
 
-	content := container.NewVBox(body, spacerH(16), container.NewCenter(cont))
+	content := container.NewVBox(body, spacerH(16), container.NewCenter(container.NewHBox(cancel, cont)))
 	d = dialog.NewCustomWithoutButtons("Setup", content, ctl.win)
 	d.Resize(fyne.NewSize(480, 340))
 	d.Show()
@@ -88,8 +89,9 @@ func promptNewDocument() {
 		d.Hide()
 		promptCreateDocument(false, cur)
 	})
+	cancel := secondaryButton("Cancel", nil, func() { d.Hide() })
 
-	content := container.NewVBox(body, spacerH(16), container.NewCenter(cont))
+	content := container.NewVBox(body, spacerH(16), container.NewCenter(container.NewHBox(cancel, cont)))
 	d = dialog.NewCustomWithoutButtons("New", content, ctl.win)
 	d.Resize(fyne.NewSize(420, 230))
 	d.Show()
