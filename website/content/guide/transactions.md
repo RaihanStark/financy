@@ -31,8 +31,22 @@ The summary cards update to show income, expense, and net for the current filter
 
 ## Editing & deleting
 
-Right-click any row (or use its menu) to **edit** or **delete**. Because balances
-are derived, edits and deletes immediately and correctly update every total.
+Right-click any row (or use its menu) to **edit**, **duplicate**, or **delete**.
+Because balances are derived, edits and deletes immediately and correctly update
+every total.
+
+## Bulk recategorize
+
+To move many transactions to a new category at once, click **Select** in the header.
+Each row gains a checkbox — tick the ones you want, or use **Select all shown** to
+grab everything matching the current filters (so you can, say, filter to one account
+and reassign the lot). Then click **Recategorize…** and choose the target category.
+
+Only entries whose kind matches the chosen category are changed — an expense
+category is applied to expense rows, an income category to income rows. Transfers,
+opening balances, and mismatched entries are skipped, and Financy tells you how many
+were actually moved. It's a fast way to clean up the uncategorized rows left behind
+by a CSV import.
 
 ## Splits & transfers
 

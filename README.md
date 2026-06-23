@@ -26,7 +26,7 @@ lives in a single file you own, and the books can never drift out of balance.
 - 📒 **Real double-entry accounting** — every transaction is balanced postings that sum to zero, so balances and net worth are *derived* and can never go inconsistent.
 - 💵 **Proper money handling** — amounts are stored as integer minor units (cents), with per-currency formatting for **Rp · $ · € · £** (no floating-point money, ever).
 - 🏦 **Accounts** — asset & liability cards, a net-worth overview, and a per-account **register with running balance**.
-- 🧾 **Transactions** — a clean, date-grouped journal with a familiar **Income / Expense / Transfer** entry form, live filters and search.
+- 🧾 **Transactions** — a clean, date-grouped journal with a familiar **Income / Expense / Transfer** entry form, live filters and search, plus a **bulk-select mode** to recategorize many entries at once.
 - 🏷️ **Categories** — organise income & expenses; managed from Preferences.
 - 📊 **Analytics** — a read-only insights dashboard: KPIs (net worth & change, income, expenses, net saved, savings rate), an **income-vs-expenses** bar chart, a **net-worth-over-time** line, and **spending by category** — over a selectable period (This month / Last 3 / 6 / 12 / Year to date). Charts are drawn natively with axis labels and hover tooltips.
 - 📄 **Reports** — the three core financial statements as tabs: an **Income Statement** (P&L), a **Balance Sheet** (assets, liabilities & equity that always balances), and a **Cash Flow** — all derived from the journal over the same selectable period, so they can never drift from your transactions.

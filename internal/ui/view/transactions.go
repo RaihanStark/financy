@@ -21,6 +21,12 @@ var (
 	filterSearch  = ""
 )
 
+// Bulk-selection state for recategorizing many transactions at once.
+var (
+	selecting bool
+	selected  = map[string]bool{}
+)
+
 // txnView is a human-facing interpretation of a balanced transaction.
 type txnView struct {
 	kind      string // Expense / Income / Transfer / Opening / Split
@@ -96,10 +102,27 @@ func abs(n int) int {
 }
 
 func ScreenTransactions() fyne.CanvasObject {
-	bar := appBar("Transactions", "Double-entry journal — every entry balances to zero",
-		secondaryButton("Import CSV", theme.DownloadIcon(), func() { ImportCSV() }),
-		primaryButton("Add Transaction", theme.ContentAddIcon(), func() { TransactionForm("", "") }),
-	)
+	var bar fyne.CanvasObject
+	if selecting {
+		recat := primaryButton("Recategorize…", theme.ContentCopyIcon(), func() {
+			if len(selected) > 0 {
+				bulkRecategorize()
+			}
+		})
+		if len(selected) == 0 {
+			recat.Disable()
+		}
+		bar = appBar("Transactions", itoa(len(selected))+" selected — tap rows to choose",
+			recat,
+			secondaryButton("Done", theme.CancelIcon(), func() { exitSelectMode() }),
+		)
+	} else {
+		bar = appBar("Transactions", "Double-entry journal — every entry balances to zero",
+			secondaryButton("Select", theme.ListIcon(), func() { selecting = true; render() }),
+			secondaryButton("Import CSV", theme.DownloadIcon(), func() { ImportCSV() }),
+			primaryButton("Add Transaction", theme.ContentAddIcon(), func() { TransactionForm("", "") }),
+		)
+	}
 
 	months := append([]string{"All months"}, distinctMonths()...)
 	monthSel := widget.NewSelect(months, nil)
@@ -143,8 +166,14 @@ func ScreenTransactions() fyne.CanvasObject {
 		statCard("NET (filtered)", fmtMoney(inc-exp), moneyColor(inc-exp), ""),
 	)
 
-	body := container.NewVBox(filters, spacerH(4), summary, spacerH(4),
-		panel(container.NewVBox(sectionTitle("Journal"), spacerH(4), txnLedger(rows))))
+	items := []fyne.CanvasObject{filters, spacerH(4)}
+	if selecting {
+		items = append(items, selectionBar(rows), spacerH(4))
+	} else {
+		items = append(items, summary, spacerH(4))
+	}
+	items = append(items, panel(container.NewVBox(sectionTitle("Journal"), spacerH(4), txnLedger(rows))))
+	body := container.NewVBox(items...)
 	return container.NewBorder(bar, nil, nil, nil, container.NewPadded(body))
 }
 
@@ -242,14 +271,122 @@ func txnRow(t Transaction) fyne.CanvasObject {
 		alignRight(mono(amtStr, amtCol, 14, true)),
 		alignRight(txt(v.kind, colTextDim, 9.5, false)),
 	)
-	inner := container.NewBorder(nil, nil,
-		container.NewHBox(typeChip(v.kind), spacerW(8)),
-		right, center)
 
-	row := newTappableRow(container.New(padCell(7, 10), inner), colSurface,
-		func() { TransactionForm(t.ID, "") })
-	row.SetOnSecondary(func(pos fyne.Position) { showContextMenu(pos, txnMenuItems(t)...) })
+	lead := container.NewHBox(typeChip(v.kind), spacerW(8))
+	if selecting {
+		lead = container.NewHBox(checkBox(selected[t.ID]), spacerW(6), typeChip(v.kind), spacerW(8))
+	}
+	inner := container.NewBorder(nil, nil, lead, right, center)
+
+	var bg color.Color = colSurface
+	if selecting && selected[t.ID] {
+		bg = withAlpha(colPrimary, 0x14)
+	}
+	onTap := func() { TransactionForm(t.ID, "") }
+	if selecting {
+		onTap = func() { toggleSelect(t.ID) }
+	}
+	row := newTappableRow(container.New(padCell(7, 10), inner), bg, onTap)
+	if !selecting {
+		row.SetOnSecondary(func(pos fyne.Position) { showContextMenu(pos, txnMenuItems(t)...) })
+	}
 	return row
+}
+
+// checkBox is a small square selection indicator for bulk-select rows.
+func checkBox(on bool) fyne.CanvasObject {
+	bg := canvas.NewRectangle(colSurface)
+	bg.CornerRadius = 3
+	bg.StrokeColor = colBorder
+	bg.StrokeWidth = 1
+	var glyph fyne.CanvasObject = spacerW(0)
+	if on {
+		bg.FillColor = colPrimary
+		bg.StrokeColor = colPrimary
+		g := txt("✓", colSurface, 13, true)
+		g.Alignment = fyne.TextAlignCenter
+		glyph = g
+	}
+	return container.NewGridWrap(fyne.NewSize(18, 18), container.NewStack(bg, container.NewCenter(glyph)))
+}
+
+func toggleSelect(id string) {
+	if selected[id] {
+		delete(selected, id)
+	} else {
+		selected[id] = true
+	}
+	render()
+}
+
+func exitSelectMode() {
+	selecting = false
+	selected = map[string]bool{}
+	render()
+}
+
+// selectionBar shows the running count plus select-all / clear over the rows
+// currently in view (so filters + Select all is a quick way to scope a batch).
+func selectionBar(rows []Transaction) fyne.CanvasObject {
+	allSelected := len(rows) > 0
+	for _, t := range rows {
+		if !selected[t.ID] {
+			allSelected = false
+			break
+		}
+	}
+	toggleAll := secondaryButton("Select all shown", theme.ListIcon(), func() {
+		for _, t := range rows {
+			selected[t.ID] = true
+		}
+		render()
+	})
+	if allSelected {
+		toggleAll = secondaryButton("Unselect all shown", theme.ContentClearIcon(), func() {
+			for _, t := range rows {
+				delete(selected, t.ID)
+			}
+			render()
+		})
+	}
+	clear := secondaryButton("Clear selection", theme.CancelIcon(), func() {
+		selected = map[string]bool{}
+		render()
+	})
+	left := txt(itoa(len(selected))+" selected · "+itoa(len(rows))+" shown", colText, 12, true)
+	return panel(container.NewBorder(nil, nil, left, container.NewHBox(toggleAll, clear)))
+}
+
+// bulkRecategorize asks for a target category and reassigns it to every selected
+// transaction whose kind matches (the core skips transfers/openings/mismatches).
+func bulkRecategorize() {
+	expense := namesOf(store.ExpenseAccounts())
+	income := namesOf(store.IncomeAccounts())
+	cat := widget.NewSelect(append(append([]string{}, expense...), income...), nil)
+	cat.PlaceHolder = "Choose a category…"
+
+	n := len(selected)
+	hint := widget.NewLabel(itoa(n) + " transaction(s) selected. Transfers, opening balances and " +
+		"entries that don't match the category's type are left unchanged.")
+	hint.Wrapping = fyne.TextWrapWord
+
+	items := []*widget.FormItem{
+		widget.NewFormItem("New category", cat),
+		widget.NewFormItem("", hint),
+	}
+	showForm("Recategorize transactions", items, func() {
+		if cat.Selected == "" {
+			return
+		}
+		ids := make([]string, 0, len(selected))
+		for id := range selected {
+			ids = append(ids, id)
+		}
+		changed := store.RecategorizeTransactions(ids, idOf(cat.Selected))
+		exitSelectMode()
+		showInfo("Recategorized", itoa(changed)+" of "+itoa(n)+
+			" selected transaction(s) moved to "+cat.Selected+".")
+	})
 }
 
 // typeChip is the small colored square that flags the transaction kind.

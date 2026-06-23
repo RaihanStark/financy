@@ -14,6 +14,12 @@ See `RELEASING.md`.
 ## [Unreleased]
 
 ### Added
+- **Bulk recategorize** — the Transactions screen has a **Select** mode: tick any
+  number of rows (with **Select all shown** to grab everything matching the current
+  filters), then **Recategorize…** to move them all to one category at once.
+  Transfers, opening balances, and entries whose kind doesn't match the chosen
+  category are left untouched, and it reports how many actually changed. Pairs well
+  with CSV import for cleaning up uncategorized rows in bulk.
 - **Reports** — a new *Reports* screen presenting the three core financial
   statements as tabs: an **Income Statement** (P&L: income and expense categories
   for the period, ending in net income), a **Balance Sheet** (assets, liabilities,

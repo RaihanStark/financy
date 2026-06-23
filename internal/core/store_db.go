@@ -236,6 +236,39 @@ func (s *Store) dbInsertTxnBatch(txns []Transaction) error {
 	return tx.Commit()
 }
 
+// dbUpsertTxnBatch rewrites many existing transactions (and their postings) in a
+// single DB transaction — used by bulk edits like recategorization.
+func (s *Store) dbUpsertTxnBatch(txns []Transaction) error {
+	if s.db == nil {
+		return nil
+	}
+	tx, err := s.db.Begin()
+	if err != nil {
+		return err
+	}
+	for _, t := range txns {
+		if _, err := tx.Exec(`
+			INSERT INTO transactions (id, date, payee, memo) VALUES (?, ?, ?, ?)
+			ON CONFLICT(id) DO UPDATE SET date = excluded.date, payee = excluded.payee, memo = excluded.memo`,
+			t.ID, t.Date, t.Payee, t.Memo); err != nil {
+			tx.Rollback()
+			return err
+		}
+		if _, err := tx.Exec(`DELETE FROM postings WHERE txn_id = ?`, t.ID); err != nil {
+			tx.Rollback()
+			return err
+		}
+		for i, p := range t.Posts {
+			if _, err := tx.Exec(`INSERT INTO postings (txn_id, seq, account_id, amount) VALUES (?, ?, ?, ?)`,
+				t.ID, i, p.AccountID, p.Amount); err != nil {
+				tx.Rollback()
+				return err
+			}
+		}
+	}
+	return tx.Commit()
+}
+
 func (s *Store) dbDeleteTxn(id string) error {
 	if s.db == nil {
 		return nil
