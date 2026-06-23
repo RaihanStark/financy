@@ -25,6 +25,7 @@ func initNav() {
 		"accounts":     {label: "Accounts", icon: iconAccounts(), build: view.ScreenAccounts},
 		"transactions": {label: "Transactions", icon: iconTransactions(), build: view.ScreenTransactions},
 		"analytics":    {label: "Analytics", icon: iconAnalytics(), build: view.ScreenAnalytics},
+		"recurring":    {label: "Recurring", icon: iconRecurring(), build: view.ScreenRecurring},
 	}
 }
 

@@ -449,18 +449,10 @@ func TransactionForm(id, prefillMoney string) {
 		if serial == 0 || amt <= 0 || acctA.Selected == "" || acctB.Selected == "" {
 			return
 		}
-		var posts []Posting
-		switch kind.Selected {
-		case "Expense":
-			posts = []Posting{p(idOf(acctB.Selected), amt), p(idOf(acctA.Selected), -amt)}
-		case "Income":
-			posts = []Posting{p(idOf(acctA.Selected), amt), p(idOf(acctB.Selected), -amt)}
-		case "Transfer":
-			if acctA.Selected == acctB.Selected {
-				return
-			}
-			posts = []Posting{p(idOf(acctB.Selected), amt), p(idOf(acctA.Selected), -amt)}
+		if kind.Selected == "Transfer" && acctA.Selected == acctB.Selected {
+			return
 		}
+		posts := postingsFor(kind.Selected, idOf(acctA.Selected), idOf(acctB.Selected), amt)
 		nt := Transaction{Date: serial, Payee: payee.Text, Memo: memo.Text, Posts: posts}
 		if existing != nil {
 			store.UpdateTransaction(existing.ID, nt)

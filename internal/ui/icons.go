@@ -11,6 +11,7 @@ func iconAccounts() fyne.Resource     { return theme.StorageIcon() }
 func iconTransactions() fyne.Resource { return theme.HistoryIcon() }
 func iconBudget() fyne.Resource       { return theme.GridIcon() }
 func iconAnalytics() fyne.Resource    { return theme.GridIcon() }
+func iconRecurring() fyne.Resource    { return theme.MediaReplayIcon() }
 func iconDebts() fyne.Resource        { return theme.WarningIcon() }
 func iconIncome() fyne.Resource       { return theme.DownloadIcon() }
 func iconGoals() fyne.Resource        { return theme.ConfirmIcon() }

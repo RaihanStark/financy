@@ -20,6 +20,13 @@ func TestSeedDemo(t *testing.T) {
 	if got := len(s.MoneyAccounts()); got != 4 {
 		t.Fatalf("money accounts = %d, want 4", got)
 	}
+	if got := len(s.Recurrings()); got != 4 {
+		t.Fatalf("recurring templates = %d, want 4", got)
+	}
+	// Demo recurring should be upcoming (not due), so loading demo doesn't nag.
+	if len(s.PendingRecurring(TodaySerial)) != 0 {
+		t.Fatal("demo recurring templates should not be due on load")
+	}
 
 	txns := s.Transactions()
 	// Roughly six months of recurring + occasional activity — should be dozens

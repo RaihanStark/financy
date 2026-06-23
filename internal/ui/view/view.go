@@ -38,6 +38,8 @@ type (
 	MonthFlow        = core.MonthFlow
 	NetWorthPoint    = core.NetWorthPoint
 	CategorySlice    = core.CategorySlice
+	Recurring        = core.Recurring
+	DueItem          = core.DueItem
 )
 
 const (
@@ -67,6 +69,8 @@ var (
 	slugify         = core.Slugify
 	namesOf         = core.NamesOf
 	p               = core.P
+	postingsFor     = core.PostingsFor
+	frequencies     = core.Frequencies
 	todaySerial     = core.TodaySerial
 	version         = core.Version
 )

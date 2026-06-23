@@ -92,10 +92,54 @@ func loadStore(db *sql.DB) (*Store, error) {
 	}
 	prows.Close()
 
+	// Recurring templates (table added in migration v2).
+	rrows, err := db.Query(`SELECT id, kind, acct_a, acct_b, amount, payee, memo, freq, next_due, enabled FROM recurring ORDER BY rowid`)
+	if err != nil {
+		return nil, err
+	}
+	for rrows.Next() {
+		var r Recurring
+		var en int
+		if err := rrows.Scan(&r.ID, &r.Kind, &r.AcctA, &r.AcctB, &r.Amount, &r.Payee, &r.Memo, &r.Freq, &r.NextDue, &en); err != nil {
+			rrows.Close()
+			return nil, err
+		}
+		r.Enabled = en != 0
+		s.recurring = append(s.recurring, r)
+	}
+	rrows.Close()
+
 	s.nextID = s.computeNextID()
 	SetCurrencySymbol(s.currency)
 	ApplyNumberFormat(s.numberFormat)
 	return s, nil
+}
+
+func (s *Store) dbUpsertRecurring(r Recurring) error {
+	if s.db == nil {
+		return nil
+	}
+	en := 0
+	if r.Enabled {
+		en = 1
+	}
+	_, err := s.db.Exec(`
+		INSERT INTO recurring (id, kind, acct_a, acct_b, amount, payee, memo, freq, next_due, enabled)
+		VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+		ON CONFLICT(id) DO UPDATE SET
+			kind = excluded.kind, acct_a = excluded.acct_a, acct_b = excluded.acct_b,
+			amount = excluded.amount, payee = excluded.payee, memo = excluded.memo,
+			freq = excluded.freq, next_due = excluded.next_due, enabled = excluded.enabled`,
+		r.ID, r.Kind, r.AcctA, r.AcctB, r.Amount, r.Payee, r.Memo, r.Freq, r.NextDue, en)
+	return err
+}
+
+func (s *Store) dbDeleteRecurring(id string) error {
+	if s.db == nil {
+		return nil
+	}
+	_, err := s.db.Exec(`DELETE FROM recurring WHERE id = ?`, id)
+	return err
 }
 
 // computeNextID derives the next "t<N>" id from existing transaction ids.

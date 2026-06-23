@@ -13,6 +13,20 @@ See `RELEASING.md`.
 
 ## [Unreleased]
 
+### Added
+- **Recurring transactions** — a new *Recurring* screen for templates (rent,
+  salary, subscriptions) with a frequency (Weekly/Biweekly/Monthly/Quarterly/
+  Yearly) and next-due date. When entries are due, Financy prompts you (on open, or
+  via *Post Due Now*) — for each occurrence you choose, from a dropdown, to **post a
+  new transaction** or **link it to the existing transaction that already paid it**
+  (Financy pre-selects a close match if it finds one, so you can't double-post; the
+  amount needn't match exactly, and a *Browse all transactions…* picker lets you
+  search the account's full history to link any transaction).
+  It never posts silently. Missed periods are caught up. A row's ⋮ menu also offers
+  **Post now (early)** — a review to create a new transaction today or link the
+  occurrence to an existing one. Posted entries are normal, editable transactions. Adds a schema migration (existing files
+  upgrade automatically, with the usual `.bak`).
+
 ## [0.3.0] - 2026-06-23
 
 ### Added

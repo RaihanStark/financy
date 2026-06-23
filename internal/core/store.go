@@ -13,6 +13,7 @@ type Store struct {
 	db        *sql.DB
 	accounts  []Account
 	txns      []Transaction
+	recurring []Recurring
 	nextID    int
 	owner        string
 	currency     string

@@ -140,6 +140,7 @@ func buildToolbar(c *appController) fyne.CanvasObject {
 		newToolBtn(theme.StorageIcon(), "Accounts", func() { c.show("accounts") }),
 		newToolBtn(theme.HistoryIcon(), "Transactions", func() { c.show("transactions") }),
 		newToolBtn(theme.GridIcon(), "Analytics", func() { c.show("analytics") }),
+		newToolBtn(theme.MediaReplayIcon(), "Recurring", func() { c.show("recurring") }),
 	)
 	right := container.NewHBox(
 		newToolBtn(theme.ListIcon(), "Categories", func() {

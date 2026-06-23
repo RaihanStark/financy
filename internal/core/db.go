@@ -44,6 +44,21 @@ var migrations = []string{
 		value TEXT NOT NULL
 	);
 	`,
+	// v2 — recurring transaction templates.
+	`
+	CREATE TABLE recurring (
+		id       TEXT PRIMARY KEY,
+		kind     TEXT NOT NULL,
+		acct_a   TEXT NOT NULL,
+		acct_b   TEXT NOT NULL,
+		amount   INTEGER NOT NULL,
+		payee    TEXT NOT NULL DEFAULT '',
+		memo     TEXT NOT NULL DEFAULT '',
+		freq     TEXT NOT NULL,
+		next_due INTEGER NOT NULL,
+		enabled  INTEGER NOT NULL DEFAULT 1
+	);
+	`,
 }
 
 // schemaVersion is the number of migrations that define the current schema.

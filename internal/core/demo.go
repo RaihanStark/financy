@@ -98,4 +98,15 @@ func SeedDemo(s *Store, currency string) {
 			income(base+15, "Freelance Project", "side", 32000+m*2500)
 		}
 	}
+
+	// Recurring templates, due in the next couple of weeks so the Recurring screen
+	// is populated without nagging on load.
+	s.AddRecurring(Recurring{Kind: KindIncome, AcctA: "checking", AcctB: "salary",
+		Amount: 470000, Payee: "Acme Corp Payroll", Freq: "Monthly", NextDue: d + 5, Enabled: true})
+	s.AddRecurring(Recurring{Kind: KindExpense, AcctA: "checking", AcctB: "housing",
+		Amount: 140000, Payee: "Landlord", Freq: "Monthly", NextDue: d + 2, Enabled: true})
+	s.AddRecurring(Recurring{Kind: KindTransfer, AcctA: "checking", AcctB: "savings",
+		Amount: 50000, Payee: "Transfer to Savings", Freq: "Monthly", NextDue: d + 3, Enabled: true})
+	s.AddRecurring(Recurring{Kind: KindExpense, AcctA: "checking", AcctB: "subs",
+		Amount: 2998, Payee: "Netflix & Spotify", Freq: "Monthly", NextDue: d + 8, Enabled: true})
 }

@@ -58,6 +58,7 @@ func useStore(s *core.Store, path string) {
 		prefs.remember(path)
 	}
 	ctl.show("accounts")
+	view.CheckRecurringDue() // prompt if any recurring entries are due
 }
 
 // openDocumentAt opens an existing file, backing it up first if it predates the
