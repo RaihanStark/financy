@@ -29,6 +29,10 @@ See `RELEASING.md`.
   automatically, with the usual `.bak`).
 
 ### Fixed
+- Button hover no longer washes out — primary (blue) buttons now darken slightly on
+  hover instead of turning flat gray, and secondary buttons show a visible hover
+  (the theme's hover color was opaque, replacing the button colour instead of
+  tinting it).
 - Hover tooltips (toolbar icons, analytics charts) now appear at the cursor instead
   of being offset too far below it — the in-canvas File menu was pushing the
   floating tooltip layer down.

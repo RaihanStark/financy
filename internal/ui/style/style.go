@@ -50,7 +50,10 @@ func (Theme) Color(name fyne.ThemeColorName, _ fyne.ThemeVariant) color.Color {
 	case theme.ColorNamePrimary, theme.ColorNameFocus, theme.ColorNameHyperlink:
 		return Primary
 	case theme.ColorNameHover:
-		return SurfaceHi
+		// A translucent darken overlay — Fyne blends this over the button's base
+		// color, so it tints (darker blue on primary, darker gray on others)
+		// instead of replacing it with a flat gray.
+		return color.NRGBA{R: 0, G: 0, B: 0, A: 0x1f}
 	case theme.ColorNameInputBorder, theme.ColorNameSeparator:
 		return Border
 	case theme.ColorNameSelection:
