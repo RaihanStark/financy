@@ -20,13 +20,45 @@ func TestSeedDemo(t *testing.T) {
 	if got := len(s.MoneyAccounts()); got != 4 {
 		t.Fatalf("money accounts = %d, want 4", got)
 	}
-	// Amounts are minor units (cents): net worth $17,143.06, CC owed $550.00.
-	if got := s.NetWorth(); got != 1714306 {
-		t.Fatalf("net worth = %d, want 1714306", got)
+
+	txns := s.Transactions()
+	// Roughly six months of recurring + occasional activity — should be dozens
+	// of entries, not the old handful.
+	if len(txns) < 60 {
+		t.Fatalf("demo has %d transactions, want a richer set (>= 60)", len(txns))
 	}
-	if got := s.TotalLiabilities(); got != 55000 {
-		t.Fatalf("liabilities = %d, want 55000", got)
+
+	// The data should span ~6 months: the earliest entry is well before today.
+	earliest := txns[0].Date
+	for _, tx := range txns {
+		if tx.Date < earliest {
+			earliest = tx.Date
+		}
 	}
+	if span := TodaySerial - earliest; span < 150 {
+		t.Fatalf("demo spans %d days, want at least ~6 months (>= 150)", span)
+	}
+
+	// Double-entry must hold globally: every posting nets to zero, so the sum of
+	// all account balances across the whole chart is exactly zero.
+	total := 0
+	for _, a := range append(append(s.AssetAccounts(), s.LiabilityAccounts()...),
+		append(s.IncomeAccounts(), s.ExpenseAccounts()...)...) {
+		total += s.Balance(a.ID)
+	}
+	total += s.Balance("opening") // equity
+	if total != 0 {
+		t.Fatalf("books are out of balance: all postings sum to %d, want 0", total)
+	}
+
+	// A healthy demo: positive net worth, with the card showing some balance owed.
+	if s.NetWorth() <= 0 {
+		t.Fatalf("net worth = %d, want positive", s.NetWorth())
+	}
+	if s.TotalLiabilities() <= 0 {
+		t.Fatalf("liabilities = %d, want a non-zero card balance", s.TotalLiabilities())
+	}
+
 	// SeedDemo is idempotent (no-op when money accounts exist).
 	before := len(s.Transactions())
 	SeedDemo(s, "$")

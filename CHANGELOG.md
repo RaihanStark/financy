@@ -13,6 +13,12 @@ See `RELEASING.md`.
 
 ## [Unreleased]
 
+### Changed
+- Demo data now spans ~6 months (~90 transactions) of recurring income, bills,
+  groceries, dining, transfers and credit-card activity, so first-run users see
+  balances, registers and period flows behave like a real file. Screenshots
+  regenerated.
+
 ### Added
 - Calendar date picker on the transaction date field — click the calendar button
   to pick a day instead of typing. The field still accepts/validates `YYYY-MM-DD`.
