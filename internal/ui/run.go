@@ -86,6 +86,11 @@ func buildMainMenu() *fyne.MainMenu {
 		fyne.NewMenuItem("Open…", doOpen),
 		openRecent,
 		fyne.NewMenuItemSeparator(),
+		fyne.NewMenuItem("Import CSV…", func() {
+			if store != nil {
+				view.ImportCSV()
+			}
+		}),
 		fyne.NewMenuItem("Setup Wizard…", showSetup),
 		fyne.NewMenuItemSeparator(),
 		fyne.NewMenuItem("Save a Copy…", doSaveCopy),

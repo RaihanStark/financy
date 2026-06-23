@@ -97,6 +97,7 @@ func abs(n int) int {
 
 func ScreenTransactions() fyne.CanvasObject {
 	bar := appBar("Transactions", "Double-entry journal — every entry balances to zero",
+		secondaryButton("Import CSV", theme.DownloadIcon(), func() { ImportCSV() }),
 		primaryButton("Add Transaction", theme.ContentAddIcon(), func() { TransactionForm("", "") }),
 	)
 

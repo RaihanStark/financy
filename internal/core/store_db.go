@@ -162,6 +162,33 @@ func (s *Store) dbUpsertTxn(t Transaction) error {
 	return tx.Commit()
 }
 
+// dbInsertTxnBatch inserts many transactions in a single DB transaction — much
+// faster and atomic (all-or-nothing) compared with calling dbUpsertTxn per row.
+func (s *Store) dbInsertTxnBatch(txns []Transaction) error {
+	if s.db == nil {
+		return nil
+	}
+	tx, err := s.db.Begin()
+	if err != nil {
+		return err
+	}
+	for _, t := range txns {
+		if _, err := tx.Exec(`INSERT INTO transactions (id, date, payee, memo) VALUES (?, ?, ?, ?)`,
+			t.ID, t.Date, t.Payee, t.Memo); err != nil {
+			tx.Rollback()
+			return err
+		}
+		for i, p := range t.Posts {
+			if _, err := tx.Exec(`INSERT INTO postings (txn_id, seq, account_id, amount) VALUES (?, ?, ?, ?)`,
+				t.ID, i, p.AccountID, p.Amount); err != nil {
+				tx.Rollback()
+				return err
+			}
+		}
+	}
+	return tx.Commit()
+}
+
 func (s *Store) dbDeleteTxn(id string) error {
 	if s.db == nil {
 		return nil

@@ -379,6 +379,32 @@ func (s *Store) AddTransaction(t Transaction) bool {
 	return true
 }
 
+// AddTransactions commits many balanced transactions at once — one DB
+// transaction and a single change notification (used by CSV import). Unbalanced
+// entries are skipped. Returns the number added.
+func (s *Store) AddTransactions(txns []Transaction) (int, error) {
+	valid := make([]Transaction, 0, len(txns))
+	for _, t := range txns {
+		if !t.balanced() || len(t.Posts) < 2 {
+			continue
+		}
+		if t.ID == "" {
+			t.ID = s.genID()
+		}
+		valid = append(valid, t)
+	}
+	if len(valid) == 0 {
+		return 0, nil
+	}
+	if err := s.dbInsertTxnBatch(valid); err != nil {
+		s.reportError(err)
+		return 0, err
+	}
+	s.txns = append(s.txns, valid...)
+	s.notify()
+	return len(valid), nil
+}
+
 func (s *Store) UpdateTransaction(id string, t Transaction) bool {
 	if !t.balanced() {
 		return false

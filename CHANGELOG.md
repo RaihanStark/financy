@@ -13,6 +13,20 @@ See `RELEASING.md`.
 
 ## [Unreleased]
 
+### Added
+- **Guided CSV import** (`File ▸ Import CSV…`, or the Transactions screen) — bring in
+  bank/card exports. A mapping step auto-detects columns and date format from the
+  header (any layout; single signed-amount **or** separate debit/credit columns),
+  then a preview shows each row's parsed date, payee, amount and category before you
+  commit. Single-entry rows become balanced double-entry transactions (the money
+  account plus a contra category). Rows **auto-categorize by payee** — matching
+  against transactions you've already categorized (exact, then token/substring, so
+  `AMAZON.COM*A1B2C` still matches a learned `Amazon`), so recurring payees come in
+  tagged; the rest default to Uncategorized. Every row has a **category dropdown**
+  in the preview so you can set/adjust before committing. Likely duplicates (same
+  date+payee+amount already in the account) are flagged and excluded by default;
+  unparseable rows are skipped. Imports commit atomically in one batch.
+
 ## [0.2.0] - 2026-06-23
 
 ### Added
