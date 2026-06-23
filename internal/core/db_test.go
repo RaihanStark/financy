@@ -1,6 +1,9 @@
 package core
 
 import (
+	"database/sql"
+	"errors"
+	"fmt"
 	"path/filepath"
 	"testing"
 )
@@ -67,6 +70,31 @@ func TestPersistenceRoundTrip(t *testing.T) {
 	defer s3.Close()
 	if len(s3.Transactions()) != 0 {
 		t.Fatal("delete not persisted")
+	}
+}
+
+func TestOpenRefusesFileFromNewerVersion(t *testing.T) {
+	path := filepath.Join(t.TempDir(), "future.financy")
+
+	// Create a valid document, then forge a user_version higher than this build
+	// knows about — as if a newer Financy had migrated it forward.
+	s, err := NewDocument(path)
+	if err != nil {
+		t.Fatal(err)
+	}
+	s.Close()
+
+	db, err := sql.Open("sqlite", path)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if _, err := db.Exec(fmt.Sprintf(`PRAGMA user_version = %d;`, LatestVersion()+1)); err != nil {
+		t.Fatal(err)
+	}
+	db.Close()
+
+	if _, err := OpenStore(path); !errors.Is(err, ErrFileTooNew) {
+		t.Fatalf("OpenStore on newer file = %v, want ErrFileTooNew", err)
 	}
 }
 

@@ -2,10 +2,16 @@ package core
 
 import (
 	"database/sql"
+	"errors"
 	"fmt"
 
 	_ "modernc.org/sqlite" // pure-Go SQLite driver, registered as "sqlite"
 )
+
+// ErrFileTooNew is returned when a document's schema version is higher than this
+// build understands — it was written by a newer version of Financy. We refuse to
+// open it rather than risk misreading (or silently corrupting) the data.
+var ErrFileTooNew = errors.New("this file was created by a newer version of Financy")
 
 // migrations are applied in order; the DB's PRAGMA user_version tracks how many
 // have run. Append new migrations — never edit an existing one.
@@ -69,6 +75,9 @@ func migrate(db *sql.DB) error {
 	var version int
 	if err := db.QueryRow(`PRAGMA user_version;`).Scan(&version); err != nil {
 		return err
+	}
+	if version > len(migrations) {
+		return ErrFileTooNew
 	}
 	for v := version; v < len(migrations); v++ {
 		tx, err := db.Begin()

@@ -13,6 +13,11 @@ See `RELEASING.md`.
 
 ## [Unreleased]
 
+### Added
+- Refuse to open a `.financy` file whose schema is newer than the running app,
+  with a clear "update Financy" dialog, instead of risking a misread. The file is
+  left untouched.
+
 ## [0.1.0] - 2026-06-22
 
 Initial release — a fast, local-first personal finance manager built on real

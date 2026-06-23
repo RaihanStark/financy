@@ -1,6 +1,7 @@
 package ui
 
 import (
+	"errors"
 	"os"
 	"path/filepath"
 
@@ -69,6 +70,14 @@ func openDocumentAt(path string) {
 	}
 	s, err := core.OpenStore(path)
 	if err != nil {
+		if errors.Is(err, core.ErrFileTooNew) {
+			msg := filepath.Base(path) + " was created by a newer version of Financy than " +
+				"this one (you're running v" + core.Version + ").\n\n" +
+				"Update Financy to the latest version, then open the file again. " +
+				"It has not been changed."
+			dialog.ShowInformation("Can't open this file", msg, ctl.win)
+			return
+		}
 		dialog.ShowError(err, ctl.win)
 		return
 	}
