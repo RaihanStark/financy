@@ -1,12 +1,14 @@
 name: Deploy site to GitHub Pages
 
-# Publishes the static landing page in /site to GitHub Pages on every push to
-# main that touches it. Set Settings → Pages → Source to "GitHub Actions" once.
+# Publishes the landing page (/site) at the root and the Hugo docs (/website)
+# under /docs to GitHub Pages on every push to main that touches them.
+# Set Settings → Pages → Source to "GitHub Actions" once.
 on:
   push:
     branches: [main]
     paths:
       - "site/**"
+      - "website/**"
       - ".github/workflows/pages.yml"
   workflow_dispatch:
 
@@ -29,10 +31,27 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      # Go is needed for Hugo to fetch the Hextra theme module.
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+
+      - name: Setup Hugo (extended)
+        uses: peaceiris/actions-hugo@v3
+        with:
+          hugo-version: "0.163.3"
+          extended: true
+
+      - name: Assemble site (landing at /, docs at /docs)
+        run: |
+          mkdir -p dist
+          cp -r site/. dist/
+          hugo --source website --gc --minify --destination "$GITHUB_WORKSPACE/dist/docs"
+
       - name: Upload site artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          path: site
+          path: dist
 
       - name: Deploy to GitHub Pages
         id: deployment

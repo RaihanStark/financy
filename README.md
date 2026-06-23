@@ -13,6 +13,8 @@ lives in a single file you own, and the books can never drift out of balance.
 &nbsp;![SQLite](https://img.shields.io/badge/Storage-SQLite-003B57?logo=sqlite&logoColor=white)
 &nbsp;![License](https://img.shields.io/badge/License-MIT-green)
 
+📖 **[Read the documentation](https://raihanstark.github.io/financy/docs/)** · 🌐 **[Website](https://raihanstark.github.io/financy/)**
+
 <img src="docs/screenshots/accounts.png" alt="Accounts" width="820">
 
 </div>
