@@ -62,6 +62,39 @@ func showSetup() {
 	d.Show()
 }
 
+// promptNewDocument is the File ▸ New flow: ask which currency the new (empty)
+// document should use, then continue to the save dialog — mirroring the Setup
+// Wizard's "start from scratch" path so New isn't silently defaulted to Rp.
+func promptNewDocument() {
+	if ctl == nil || ctl.win == nil {
+		return
+	}
+
+	currency := widget.NewSelect([]string{"Rp", "$", "€", "£"}, nil)
+	currency.SetSelected("$")
+
+	body := container.NewVBox(
+		txt("New document", colText, 18, true),
+		txt("Choose the currency for this file, then pick where to save it.", colTextDim, 12, false),
+		spacerH(10),
+		container.NewBorder(nil, nil,
+			container.NewGridWrap(fyne.NewSize(80, 32), txt("Currency", colTextDim, 12, false)),
+			nil, currency),
+	)
+
+	var d *dialog.CustomDialog
+	cont := primaryButton("Continue…", nil, func() {
+		cur := currency.Selected
+		d.Hide()
+		promptCreateDocument(false, cur)
+	})
+
+	content := container.NewVBox(body, spacerH(16), container.NewCenter(cont))
+	d = dialog.NewCustomWithoutButtons("New", content, ctl.win)
+	d.Resize(fyne.NewSize(420, 230))
+	d.Show()
+}
+
 // promptCreateDocument asks where to save, then creates the new document.
 func promptCreateDocument(demo bool, currency string) {
 	fd := dialog.NewFileSave(func(w fyne.URIWriteCloser, err error) {

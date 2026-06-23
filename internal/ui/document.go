@@ -84,29 +84,9 @@ func openDocumentAt(path string) {
 	useStore(s, path)
 }
 
-func newDocumentAt(path string) {
-	s, err := core.NewDocument(path)
-	if err != nil {
-		dialog.ShowError(err, ctl.win)
-		return
-	}
-	useStore(s, path)
-}
-
 // ---- File menu actions ----
 
-func doNew() {
-	d := dialog.NewFileSave(func(w fyne.URIWriteCloser, err error) {
-		if err != nil || w == nil {
-			return
-		}
-		path := w.URI().Path()
-		w.Close() // creates an empty file; NewDocument initializes the schema in it
-		newDocumentAt(path)
-	}, ctl.win)
-	d.SetFileName("budget.financy")
-	d.Show()
-}
+func doNew() { promptNewDocument() }
 
 func doOpen() {
 	d := dialog.NewFileOpen(func(r fyne.URIReadCloser, err error) {

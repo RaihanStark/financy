@@ -13,6 +13,10 @@ See `RELEASING.md`.
 
 ## [Unreleased]
 
+### Fixed
+- **File ▸ New** now asks for the document's currency before saving (like the
+  Setup Wizard), instead of silently defaulting every new file to Rp.
+
 ### Changed
 - Demo data now spans ~6 months (~90 transactions) of recurring income, bills,
   groceries, dining, transfers and credit-card activity, so first-run users see
