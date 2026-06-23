@@ -158,6 +158,49 @@ func FmtMoneyPlain(minor int) string {
 	return out
 }
 
+// FmtMoneyShort renders minor units compactly for chart axes, e.g. "$0",
+// "$1.2k", "$26k", "Rp1.5M". Uses the active currency symbol with k/M/B
+// abbreviations; integer math only (no float money).
+func FmtMoneyShort(minor int) string {
+	neg := minor < 0
+	if neg {
+		minor = -minor
+	}
+	major := minor / pow10(active.decimals) // whole currency units
+	out := active.symbol + abbrev(major)
+	if neg {
+		out = "-" + out
+	}
+	return out
+}
+
+// abbrev shortens a non-negative integer with k/M/B suffixes, keeping one
+// decimal only for small magnitudes (e.g. 1234 -> "1.2k", 26206 -> "26k").
+func abbrev(n int) string {
+	switch {
+	case n < 1_000:
+		return strconv.Itoa(n)
+	case n < 1_000_000:
+		return abbrevUnit(n, 1_000, "k")
+	case n < 1_000_000_000:
+		return abbrevUnit(n, 1_000_000, "M")
+	default:
+		return abbrevUnit(n, 1_000_000_000, "B")
+	}
+}
+
+func abbrevUnit(n, div int, suffix string) string {
+	whole := n / div
+	if whole >= 10 { // 10k+ : drop the decimal to stay short
+		return strconv.Itoa(whole) + suffix
+	}
+	frac := (n % div) / (div / 10)
+	if frac == 0 {
+		return strconv.Itoa(whole) + suffix
+	}
+	return strconv.Itoa(whole) + "." + strconv.Itoa(frac) + suffix
+}
+
 // AmountToInput renders minor units as a plain editable string ("12.50"),
 // without currency symbol or grouping — for pre-filling entry fields.
 func AmountToInput(minor int) string {

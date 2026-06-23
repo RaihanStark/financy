@@ -10,6 +10,7 @@ import (
 	"fyne.io/fyne/v2/theme"
 	"fyne.io/fyne/v2/widget"
 
+	"github.com/raihanstark/financy/internal/ui/component"
 	"github.com/raihanstark/financy/internal/ui/view"
 )
 
@@ -33,6 +34,10 @@ func initTooltipLayer() {
 	ttBox = container.NewStack(bg, container.New(padCell(3, 8), ttText))
 	ttBox.Hide()
 	tooltipLayer = container.NewWithoutLayout(ttBox)
+
+	// Let interactive components (charts) drive the same floating tooltip.
+	component.ShowTooltip = showToolTip
+	component.HideTooltip = hideToolTip
 }
 
 func showToolTip(text string, pos fyne.Position) {
@@ -134,6 +139,7 @@ func buildToolbar(c *appController) fyne.CanvasObject {
 		toolSep(),
 		newToolBtn(theme.StorageIcon(), "Accounts", func() { c.show("accounts") }),
 		newToolBtn(theme.HistoryIcon(), "Transactions", func() { c.show("transactions") }),
+		newToolBtn(theme.GridIcon(), "Analytics", func() { c.show("analytics") }),
 	)
 	right := container.NewHBox(
 		newToolBtn(theme.ListIcon(), "Categories", func() {

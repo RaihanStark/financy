@@ -40,3 +40,22 @@ func TestCurrencyFormatting(t *testing.T) {
 
 	SetCurrencySymbol("Rp") // restore for other tests
 }
+
+func TestFmtMoneyShort(t *testing.T) {
+	SetCurrencySymbol("$") // 2 decimals: minor units are cents
+	cases := map[int]string{
+		0:         "$0",
+		50000:     "$500",
+		120000:    "$1.2k",
+		2620618:   "$26k",
+		5400000:   "$54k",
+		100000000: "$1M",
+		-2620618:  "-$26k",
+	}
+	for minor, want := range cases {
+		if got := FmtMoneyShort(minor); got != want {
+			t.Errorf("FmtMoneyShort(%d) = %q, want %q", minor, got, want)
+		}
+	}
+	SetCurrencySymbol("Rp")
+}

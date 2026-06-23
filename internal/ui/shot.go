@@ -45,6 +45,8 @@ func runShots(outDir string) {
 	capture("accounts")
 	c.show("transactions")
 	capture("transactions")
+	c.show("analytics")
+	capture("analytics")
 
 	// Preferences tabs.
 	c.show("accounts")

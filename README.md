@@ -26,6 +26,7 @@ lives in a single file you own, and the books can never drift out of balance.
 - 🏦 **Accounts** — asset & liability cards, a net-worth overview, and a per-account **register with running balance**.
 - 🧾 **Transactions** — a clean, date-grouped journal with a familiar **Income / Expense / Transfer** entry form, live filters and search.
 - 🏷️ **Categories** — organise income & expenses; managed from Preferences.
+- 📊 **Analytics** — a read-only insights dashboard: KPIs (net worth & change, income, expenses, net saved, savings rate), an **income-vs-expenses** bar chart, a **net-worth-over-time** line, and **spending by category** — over a selectable period (This month / Last 3 / 6 / 12 / Year to date). Charts are drawn natively with axis labels and hover tooltips.
 - 🖱️ **Desktop-native UX** — right-click **context menus**, hover **tooltips**, an icon toolbar and a minimal File menu.
 - 💾 **Local-first persistence** — each document is a single **`.financy` SQLite file** that is *always auto-saved* (ACID writes — no save button, no lost work).
 - 📂 **Your files, your way** — New / Open / Open Recent / Save a Copy; opens your last file on launch.
@@ -35,6 +36,8 @@ lives in a single file you own, and the books can never drift out of balance.
 ---
 
 ## 📸 Screenshots
+
+<div align="center"><img src="docs/screenshots/analytics.png" alt="Analytics dashboard" width="820"></div>
 
 | First-run setup | Transactions |
 | :-: | :-: |
@@ -78,6 +81,7 @@ save your `.financy` file.
 - **Open an account's register** — click an account card. Right-click a card (or use the
   **⋮** button) for *New Transaction · View Register · Edit · Delete*.
 - **Filter the journal** — by month, type, account, or free-text search.
+- **See your trends** — the **📊 Analytics** screen shows KPIs and charts over This month / Last 3 / 6 / 12 / Year to date; hover any month for a tooltip.
 - **Manage categories & currency** — the **⚙ Preferences** dialog (Configuration · Categories · Data Summary).
 - **Files** — `File ▸ New / Open / Open Recent / Save a Copy / Close`.
 
@@ -104,8 +108,8 @@ internal/
   core/                  domain model · double-entry Store · SQLite · formatting   (no UI deps)
   ui/
     style/               palette + theme
-    component/           reusable widgets (cards, table, rows, app bar, tooltips)
-    view/                screens (Accounts, Transactions) + Preferences + forms
+    component/           reusable widgets (cards, table, rows, app bar, tooltips, charts)
+    view/                screens (Accounts, Transactions, Analytics) + Preferences + forms
     (root)               app shell, controller, toolbar, File menu, document manager
 ```
 

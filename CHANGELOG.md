@@ -20,6 +20,15 @@ See `RELEASING.md`.
   regenerated.
 
 ### Added
+- **Analytics** screen — a read-only insights dashboard with KPI cards (net worth
+  + change, income, expenses, net saved, savings rate), an Income-vs-Expenses bar
+  chart, a Net-worth-over-time line chart, and ranked Spending-by-category, all
+  over a selectable period (This month / Last 3 / 6 / 12 / Year to date). Charts
+  are drawn natively with Fyne canvas primitives (no new dependency) and are
+  interactive: hovering a month highlights it and shows a tooltip (per-month
+  income/expense/net on the bar chart, net worth on the line chart). Both charts
+  have a Y axis with value gridlines and compact tick labels ($2.5k, $26k, …).
+  Reachable from the toolbar.
 - **Setup Wizard…** in the File menu — re-open the first-run welcome wizard at any
   time to spin up a fresh document with demo data or start from scratch.
 - Calendar date picker on the transaction date field — click the calendar button

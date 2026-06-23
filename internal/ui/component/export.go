@@ -22,6 +22,9 @@ var (
 	AlignRight        = alignRight
 	CanvasTransparent = canvasTransparent
 
+	BarPairChart = barPairChart
+	LineChart    = lineChartWidget
+
 	AppBar          = appBar
 	PrimaryButton   = primaryButton
 	SecondaryButton = secondaryButton

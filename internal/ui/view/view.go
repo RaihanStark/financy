@@ -33,6 +33,11 @@ type (
 	Transaction = core.Transaction
 	RegisterRow = core.RegisterRow
 	AcctType    = core.AcctType
+
+	AnalyticsSummary = core.AnalyticsSummary
+	MonthFlow        = core.MonthFlow
+	NetWorthPoint    = core.NetWorthPoint
+	CategorySlice    = core.CategorySlice
 )
 
 const (
@@ -48,6 +53,7 @@ const (
 var (
 	itoa            = core.Itoa
 	fmtMoney        = core.FmtMoney
+	fmtMoneyShort   = core.FmtMoneyShort
 	fmtSerialDate   = core.FmtSerialDate
 	fmtSerialMonth  = core.FmtSerialMonth
 	serialToTime    = core.SerialToTime
@@ -95,6 +101,9 @@ var (
 	pillStat        = component.PillStat
 	padCell         = component.PadCell
 	newTappableRow  = component.NewTappableRow
+	barPairChart    = component.BarPairChart
+	lineChart       = component.LineChart
+	chartGutter     = component.ChartGutter
 	tc              = component.Tc
 	tcc             = component.Tcc
 	tcb             = component.Tcb
