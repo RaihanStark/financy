@@ -363,13 +363,7 @@ func TransactionForm(id, prefillMoney string) {
 	}
 
 	kind := widget.NewSelect([]string{"Expense", "Income", "Transfer"}, nil)
-	date := widget.NewEntry()
-	date.Validator = func(s string) error {
-		if parseDateSerial(s) == 0 {
-			return errors.New("use YYYY-MM-DD")
-		}
-		return nil
-	}
+	date := newDateEntry(0)
 	amount := widget.NewEntry()
 	amount.SetPlaceHolder("0")
 	amount.Validator = func(s string) error {

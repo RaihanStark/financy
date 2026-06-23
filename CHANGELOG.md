@@ -14,6 +14,8 @@ See `RELEASING.md`.
 ## [Unreleased]
 
 ### Added
+- Calendar date picker on the transaction date field — click the calendar button
+  to pick a day instead of typing. The field still accepts/validates `YYYY-MM-DD`.
 - Refuse to open a `.financy` file whose schema is newer than the running app,
   with a clear "update Financy" dialog, instead of risking a misread. The file is
   left untouched.

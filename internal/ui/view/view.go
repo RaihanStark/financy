@@ -51,6 +51,7 @@ var (
 	fmtSerialDate   = core.FmtSerialDate
 	fmtSerialMonth  = core.FmtSerialMonth
 	serialToTime    = core.SerialToTime
+	timeToSerial    = core.TimeToSerial
 	parseAmount     = core.ParseAmount
 	amountToInput   = core.AmountToInput
 	parseDateSerial = core.ParseDateSerial
