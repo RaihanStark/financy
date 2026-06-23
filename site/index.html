@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Financy — local-first double-entry finance for your desktop</title>
+  <meta name="description" content="Financy is a fast, local-first personal finance manager built on real double-entry accounting. Your data lives in a single file you own, and the books can never drift out of balance." />
+
+  <!-- Open Graph / social preview -->
+  <meta property="og:title" content="Financy — local-first double-entry finance" />
+  <meta property="og:description" content="A native desktop finance manager built on real double-entry accounting. Your data, in a single file you own." />
+  <meta property="og:type" content="website" />
+  <meta property="og:image" content="screenshots/accounts.png" />
+
+  <link rel="icon" type="image/png" href="icon.png" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <header class="topbar">
+    <div class="wrap topbar-inner">
+      <a class="brand" href="#">💰 Financy</a>
+      <nav class="nav">
+        <a href="#features">Features</a>
+        <a href="#screens">Screenshots</a>
+        <a href="#install">Install</a>
+        <a class="ghlink" href="https://github.com/raihanstark/financy" target="_blank" rel="noopener">GitHub ↗</a>
+      </nav>
+    </div>
+  </header>
+
+  <main>
+    <!-- Hero -->
+    <section class="hero">
+      <div class="wrap hero-inner">
+        <h1>Your money, double-checked by math.</h1>
+        <p class="lede">
+          Financy is a fast, local-first personal finance manager built on
+          <strong>real double-entry accounting</strong>. Your data lives in a single
+          file you own — and the books can never drift out of balance.
+        </p>
+        <div class="cta">
+          <a class="btn btn-primary" href="https://github.com/raihanstark/financy/releases/latest" target="_blank" rel="noopener">
+            Download Financy
+          </a>
+          <a class="btn btn-ghost" href="https://github.com/raihanstark/financy" target="_blank" rel="noopener">
+            View source
+          </a>
+        </div>
+        <p class="platforms">Linux · Windows · macOS — free &amp; open source (MIT)</p>
+        <div class="shot-frame">
+          <img src="screenshots/accounts.png" alt="Financy accounts overview with net worth and account cards" width="1100" loading="eager" />
+        </div>
+      </div>
+    </section>
+
+    <!-- Features -->
+    <section id="features" class="section">
+      <div class="wrap">
+        <h2 class="section-title">Built like an accountant, feels like a desktop app</h2>
+        <div class="grid">
+          <article class="card">
+            <div class="ico">📒</div>
+            <h3>Real double-entry</h3>
+            <p>Every transaction is balanced postings that sum to zero. Balances and net worth are <em>derived</em>, never stored — so they can't go inconsistent.</p>
+          </article>
+          <article class="card">
+            <div class="ico">💵</div>
+            <h3>Money done right</h3>
+            <p>Amounts are integer minor units (cents), with formatting for Rp · $ · € · £. No floating-point money, ever.</p>
+          </article>
+          <article class="card">
+            <div class="ico">🏦</div>
+            <h3>Accounts &amp; net worth</h3>
+            <p>Asset &amp; liability cards, a net-worth overview, and a per-account register with running balance.</p>
+          </article>
+          <article class="card">
+            <div class="ico">🧾</div>
+            <h3>Fast transactions</h3>
+            <p>A date-grouped journal with a familiar Income / Expense / Transfer entry form, live filters and search.</p>
+          </article>
+          <article class="card">
+            <div class="ico">💾</div>
+            <h3>Local-first &amp; yours</h3>
+            <p>Each document is a single <code>.financy</code> SQLite file, always auto-saved with ACID writes. No cloud, no save button.</p>
+          </article>
+          <article class="card">
+            <div class="ico">🔒</div>
+            <h3>Safe by design</h3>
+            <p>Atomic writes, append-only schema migrations, and an automatic <code>.bak</code> before any file upgrade.</p>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <!-- Screenshots -->
+    <section id="screens" class="section section-alt">
+      <div class="wrap">
+        <h2 class="section-title">A look inside</h2>
+        <div class="shots">
+          <figure class="shot">
+            <img src="screenshots/transactions.png" alt="Transactions journal" loading="lazy" />
+            <figcaption>Date-grouped transaction journal with filters and search.</figcaption>
+          </figure>
+          <figure class="shot">
+            <img src="screenshots/categories.png" alt="Categories" loading="lazy" />
+            <figcaption>Income &amp; expense categories, managed from Preferences.</figcaption>
+          </figure>
+          <figure class="shot">
+            <img src="screenshots/data-summary.png" alt="Data summary" loading="lazy" />
+            <figcaption>A clear summary of everything in your document.</figcaption>
+          </figure>
+          <figure class="shot">
+            <img src="screenshots/setup.png" alt="First-run setup" loading="lazy" />
+            <figcaption>First-run setup: load demo data or start from scratch.</figcaption>
+          </figure>
+        </div>
+      </div>
+    </section>
+
+    <!-- Install -->
+    <section id="install" class="section">
+      <div class="wrap install-inner">
+        <h2 class="section-title">Get Financy</h2>
+        <p class="install-lede">
+          Grab the build for your platform from the latest release. Builds are currently
+          unsigned, so Windows/macOS may ask you to confirm before the first run.
+        </p>
+
+        <div class="install-grid">
+          <div class="install-card">
+            <h3>🐧 Linux</h3>
+            <p>Download the <code>.tar.xz</code>, extract, and run the app.</p>
+          </div>
+          <div class="install-card">
+            <h3>🪟 Windows</h3>
+            <p>Run the <code>.exe</code>. SmartScreen → <em>More info → Run anyway</em>.</p>
+          </div>
+          <div class="install-card">
+            <h3>🍎 macOS</h3>
+            <p>Unzip, move to Applications. First launch: right-click → <em>Open</em>.</p>
+          </div>
+        </div>
+
+        <div class="cta cta-center">
+          <a class="btn btn-primary btn-lg" href="https://github.com/raihanstark/financy/releases/latest" target="_blank" rel="noopener">
+            Download the latest release
+          </a>
+        </div>
+        <p class="build-note">
+          Or build from source: <code>git clone</code> the repo and run <code>make run</code>.
+        </p>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <div class="wrap footer-inner">
+      <span>💰 Financy — local-first double-entry finance.</span>
+      <span>
+        Built with <a href="https://go.dev" target="_blank" rel="noopener">Go</a> +
+        <a href="https://fyne.io" target="_blank" rel="noopener">Fyne</a> +
+        <a href="https://pkg.go.dev/modernc.org/sqlite" target="_blank" rel="noopener">SQLite</a>.
+        MIT licensed.
+      </span>
+    </div>
+  </footer>
+</body>
+</html>
