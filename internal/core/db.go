@@ -59,6 +59,20 @@ var migrations = []string{
 		enabled  INTEGER NOT NULL DEFAULT 1
 	);
 	`,
+	// v3 — zero-based budget assignments (one row per month × category).
+	`
+	CREATE TABLE budget (
+		month       TEXT NOT NULL,
+		category_id TEXT NOT NULL,
+		amount      INTEGER NOT NULL,
+		PRIMARY KEY (month, category_id)
+	);
+	`,
+	// v4 — per-account "off budget" (tracking) flag. Default 0 keeps every
+	// existing account on-budget.
+	`
+	ALTER TABLE accounts ADD COLUMN off_budget INTEGER NOT NULL DEFAULT 0;
+	`,
 }
 
 // schemaVersion is the number of migrations that define the current schema.

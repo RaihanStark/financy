@@ -24,6 +24,7 @@ func initNav() {
 	nav = map[string]node{
 		"accounts":     {label: "Accounts", icon: iconAccounts(), build: view.ScreenAccounts},
 		"transactions": {label: "Transactions", icon: iconTransactions(), build: view.ScreenTransactions},
+		"budget":       {label: "Budget", icon: iconBudget(), build: view.ScreenBudget},
 		"analytics":    {label: "Analytics", icon: iconAnalytics(), build: view.ScreenAnalytics},
 		"recurring":    {label: "Recurring", icon: iconRecurring(), build: view.ScreenRecurring},
 		"reports":      {label: "Reports", icon: iconReports(), build: view.ScreenReports},

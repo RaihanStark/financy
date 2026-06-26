@@ -17,11 +17,38 @@ func TestSeedDemo(t *testing.T) {
 	if s.Currency() != "$" {
 		t.Fatalf("currency = %q, want $", s.Currency())
 	}
-	if got := len(s.MoneyAccounts()); got != 4 {
-		t.Fatalf("money accounts = %d, want 4", got)
+	if got := len(s.MoneyAccounts()); got != 5 {
+		t.Fatalf("money accounts = %d, want 5", got)
 	}
 	if got := len(s.Recurrings()); got != 4 {
 		t.Fatalf("recurring templates = %d, want 4", got)
+	}
+
+	// The brokerage is an off-budget tracking account: in Net Worth, out of the
+	// budget's funds pool.
+	if a := s.AccountByName("Brokerage"); a == nil || !a.OffBudget {
+		t.Fatal("Brokerage should exist and be off-budget")
+	}
+
+	// The Budget module is wired up: this month has real assignments, money has
+	// been given jobs (Ready to Assign < total funds), and the sinking funds have
+	// rolled an Available balance forward.
+	bm := s.BudgetFor(CurrentMonthKey())
+	if bm.TotalAssigned <= 0 {
+		t.Fatalf("current month TotalAssigned = %d, want > 0", bm.TotalAssigned)
+	}
+	// Zero-based: the demo assigns every dollar, so Ready to Assign lands on 0.
+	if bm.ReadyToAssign != 0 {
+		t.Fatalf("ReadyToAssign = %d, want 0 (demo is fully budgeted)", bm.ReadyToAssign)
+	}
+	if bm.TotalAvailable <= 0 {
+		t.Fatalf("TotalAvailable = %d, want > 0 (money held in envelopes)", bm.TotalAvailable)
+	}
+	// Off-budget brokerage must NOT inflate the assignable pool: funds should
+	// track on-budget accounts only, not total assets.
+	if bm.Funds >= s.TotalAssets() {
+		t.Fatalf("budget Funds (%d) should exclude the off-budget brokerage and be < TotalAssets (%d)",
+			bm.Funds, s.TotalAssets())
 	}
 	// Demo recurring should be upcoming (not due), so loading demo doesn't nag.
 	if len(s.PendingRecurring(TodaySerial)) != 0 {

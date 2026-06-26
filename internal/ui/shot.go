@@ -52,6 +52,18 @@ func runShots(outDir string) {
 	c.show("reports")
 	capture("reports")
 
+	// Budget is already populated by SeedDemo; capture it and the assign dialog.
+	c.show("budget")
+	capture("budget")
+	view.ShotAssignDialog("Groceries")
+	capture("budget-assign")
+	dropOverlay()
+	// A locked past month (view-only).
+	view.ShotBudgetMonth(-1)
+	c.show("budget")
+	capture("budget-locked")
+	view.ShotBudgetMonth(1)
+
 	// Preferences tabs.
 	c.show("accounts")
 	view.OpenConfig(1)

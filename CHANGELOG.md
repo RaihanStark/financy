@@ -14,10 +14,42 @@ See `RELEASING.md`.
 ## [Unreleased]
 
 ### Added
+- **Richer demo data** — the sample document now exercises every module coherently:
+  an off-budget **Brokerage** account that grows via monthly auto-invest, plus a full
+  **budget** — monthly assignments for every category, sinking funds (Emergency Fund,
+  Insurance, Vacation) that roll an Available balance forward, a mid-year vacation that
+  draws its envelope down, and a few categories left intentionally tight so overspending
+  shows. Accounts, Transactions, Budget, Recurring, Analytics and Reports all tie out.
+- **Budget** — a new zero-based ("envelope") budgeting screen modelled on YNAB.
+  Pick a month and give every unit of currency a job: each Expense category shows
+  what you **Assigned**, its **Activity**, and a rolling **Available** balance, with
+  a **Ready to Assign** banner up top. Ready to Assign is a single global pool —
+  your on-budget funds minus everything you've committed to a category in *any*
+  month — so it reads the same whatever month you view, money assigned to a future
+  month draws it down today, and the goal is to budget until it reaches 0.
+  **Past months are locked** (view-only) — you can only change the current and
+  future months, so a budget you've already lived through can't be rewritten.
+  Available carries forward month to month;
+  cash overspending turns a category red and is absorbed by the next month's Ready
+  to Assign (it doesn't drag the envelope negative forever). Click a category to
+  assign an amount with one-tap quick-budget suggestions (last month's assigned,
+  last month's spent, 3-month average), or **Auto-Assign** to copy the previous
+  month's plan. Assignments are saved in the document (schema v3).
+- **On-budget / tracking accounts** — accounts have an **Include in budget** toggle.
+  Ready to Assign is computed from your on-budget **Asset and Liability** balances
+  (so a credit card's debt nets against your cash and card spending is budget-neutral,
+  the way YNAB handles it), while tracking accounts you exclude — investments, a
+  mortgage — no longer inflate the money you can assign. Stored per account (schema v4).
 - **Linux `.deb` and `.rpm` packages** — releases now ship native Debian/Ubuntu and
   Fedora/RHEL packages (built with nfpm). Installing puts `financy` on your `PATH`,
   adds a desktop launcher and app icon, and registers the `.financy` file type so
   documents open with a double-click. See the README install section.
+
+### Changed
+- **Repositioned as a zero-based budgeting (ZBB) app** — the README, website and docs
+  now lead with budgeting ("give every dollar a job"), with double-entry accounting as
+  the trustworthy engine underneath. Added a Budget user-guide page and updated the
+  desktop entry/package metadata. The app name, file format and data are unchanged.
 
 ## [0.4.0] - 2026-06-23
 

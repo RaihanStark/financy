@@ -2,13 +2,13 @@
 Type=Application
 Version=1.0
 Name=Financy
-GenericName=Personal Finance Manager
-Comment=A fast, local-first personal finance manager built on real double-entry accounting
+GenericName=Zero-Based Budgeting
+Comment=Open-source zero-based budgeting (ZBB) — give every dollar a job, backed by real double-entry accounting
 Exec=financy %f
 Icon=app.financy
 Terminal=false
 Categories=Office;Finance;
 MimeType=application/x-financy;
-Keywords=finance;money;accounting;budget;networth;ledger;
+Keywords=budget;budgeting;zbb;zero-based;envelope;ynab;finance;money;accounting;networth;ledger;
 StartupNotify=true
 StartupWMClass=Financy

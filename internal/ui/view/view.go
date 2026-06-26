@@ -45,6 +45,8 @@ type (
 	CashFlow         = core.CashFlow
 	StmtLine         = core.StmtLine
 	CashLine         = core.CashLine
+	BudgetMonth      = core.BudgetMonth
+	BudgetCategory   = core.BudgetCategory
 )
 
 const (
@@ -78,6 +80,11 @@ var (
 	frequencies     = core.Frequencies
 	todaySerial     = core.TodaySerial
 	version         = core.Version
+
+	currentMonthKey = core.CurrentMonthKey
+	shiftMonth      = core.ShiftMonth
+	fmtMonthLong    = core.FmtMonthLong
+	monthEditable   = core.MonthEditable
 )
 
 // ---- component helpers ----

@@ -88,7 +88,11 @@ func accountCard(a Account, liability bool) fyne.CanvasObject {
 
 	top := container.NewBorder(nil, nil,
 		txt(a.Name, colText, 14, true), menuBtn)
-	sub := txt(string(a.Type)+" · "+orDash(a.Institution), colTextDim, 10.5, false)
+	subText := string(a.Type) + " · " + orDash(a.Institution)
+	if a.OffBudget {
+		subText += " · Off-budget"
+	}
+	sub := txt(subText, colTextDim, 10.5, false)
 	balance := txt(fmtMoney(bal), amtCol, 22, true)
 	footer := txt(itoa(entries)+" transactions", colTextDim, 10, false)
 
@@ -230,6 +234,10 @@ func AccountForm(existing *Account) {
 	typ := widget.NewSelect([]string{"Asset", "Liability"}, nil)
 	notes := widget.NewEntry()
 	opening := newAmountEntry()
+	// On-budget by default; uncheck for tracking accounts (investments, mortgage)
+	// whose balance shouldn't count as money you can assign in the budget.
+	inBudget := widget.NewCheck("Include this account's balance in the budget", nil)
+	inBudget.SetChecked(true)
 
 	title := "Add Account"
 	items := []*widget.FormItem{
@@ -237,6 +245,7 @@ func AccountForm(existing *Account) {
 		widget.NewFormItem("Institution", inst),
 		widget.NewFormItem("Type", typ),
 		widget.NewFormItem("Notes", notes),
+		widget.NewFormItem("Budget", inBudget),
 	}
 	if existing != nil {
 		title = "Edit Account"
@@ -244,6 +253,7 @@ func AccountForm(existing *Account) {
 		inst.SetText(existing.Institution)
 		typ.SetSelected(string(existing.Type))
 		notes.SetText(existing.Notes)
+		inBudget.SetChecked(!existing.OffBudget)
 	} else {
 		typ.SetSelected("Asset")
 		items = append(items, widget.NewFormItem("Opening balance", opening))
@@ -253,7 +263,8 @@ func AccountForm(existing *Account) {
 		if name.Text == "" || typ.Selected == "" {
 			return
 		}
-		acc := Account{Name: name.Text, Institution: inst.Text, Type: AcctType(typ.Selected), Notes: notes.Text}
+		acc := Account{Name: name.Text, Institution: inst.Text, Type: AcctType(typ.Selected),
+			Notes: notes.Text, OffBudget: !inBudget.Checked}
 		if existing != nil {
 			store.UpdateAccount(existing.ID, acc)
 			return

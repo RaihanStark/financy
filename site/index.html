@@ -3,14 +3,14 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Financy — local-first double-entry finance for your desktop</title>
-  <meta name="description" content="Financy is a fast, local-first personal finance manager built on real double-entry accounting. Your data lives in a single file you own, and the books can never drift out of balance." />
+  <title>Financy — open-source zero-based budgeting for your desktop</title>
+  <meta name="description" content="Financy is a fast, local-first zero-based budgeting (ZBB) app. Give every dollar a job until Ready to Assign hits zero — backed by real double-entry accounting so the numbers never lie. Your data lives in a single file you own." />
 
   <!-- Open Graph / social preview -->
-  <meta property="og:title" content="Financy — local-first double-entry finance" />
-  <meta property="og:description" content="A native desktop finance manager built on real double-entry accounting. Your data, in a single file you own." />
+  <meta property="og:title" content="Financy — open-source zero-based budgeting (ZBB)" />
+  <meta property="og:description" content="Give every dollar a job. A local-first zero-based budget backed by real double-entry accounting. Your data, in a single file you own." />
   <meta property="og:type" content="website" />
-  <meta property="og:image" content="screenshots/accounts.png" />
+  <meta property="og:image" content="screenshots/budget.png" />
 
   <link rel="icon" type="image/png" href="icon.png" />
   <link rel="stylesheet" href="style.css" />
@@ -33,11 +33,13 @@
     <!-- Hero -->
     <section class="hero">
       <div class="wrap hero-inner">
-        <h1>Your money, double-checked by math.</h1>
+        <h1>Give every dollar a job.</h1>
         <p class="lede">
-          Financy is a fast, local-first personal finance manager built on
-          <strong>real double-entry accounting</strong>. Your data lives in a single
-          file you own — and the books can never drift out of balance.
+          Financy is a fast, local-first <strong>zero-based budgeting</strong> app:
+          assign every unit of money to a category until <em>Ready to Assign</em> hits
+          zero, then track your envelopes through the month. Backed by
+          <strong>real double-entry accounting</strong>, so your budget and balances
+          can never drift out of balance — and your data lives in a single file you own.
         </p>
         <div class="cta">
           <a class="btn btn-primary" href="https://github.com/raihanstark/financy/releases/latest" target="_blank" rel="noopener">
@@ -49,7 +51,7 @@
         </div>
         <p class="platforms">Linux · Windows · macOS — free &amp; open source (MIT)</p>
         <div class="shot-frame">
-          <img src="screenshots/accounts.png" alt="Financy accounts overview with net worth and account cards" width="1100" loading="eager" />
+          <img src="screenshots/budget.png" alt="Financy zero-based budget with Ready to Assign and category envelopes" width="1100" loading="eager" />
         </div>
       </div>
     </section>
@@ -57,42 +59,37 @@
     <!-- Features -->
     <section id="features" class="section">
       <div class="wrap">
-        <h2 class="section-title">Built like an accountant, feels like a desktop app</h2>
+        <h2 class="section-title">Zero-based budgeting, backed by real accounting</h2>
         <div class="grid">
+          <article class="card">
+            <div class="ico">🎯</div>
+            <h3>Zero-based budget</h3>
+            <p>Give every category a job until <em>Ready to Assign</em> hits zero. Track Assigned · Activity · Available per envelope, with balances that roll forward and overspending in red.</p>
+          </article>
+          <article class="card">
+            <div class="ico">💰</div>
+            <h3>Honest Ready to Assign</h3>
+            <p>One global pool drawn from your real on-budget balances. Assign to any month — even a future one — and it draws down today. You can't budget money you don't have.</p>
+          </article>
+          <article class="card">
+            <div class="ico">💳</div>
+            <h3>Credit cards &amp; tracking</h3>
+            <p>Card spending nets against the budget so it's budget-neutral. Mark investments or a mortgage as off-budget — counted in net worth, not in assignable cash.</p>
+          </article>
           <article class="card">
             <div class="ico">📒</div>
             <h3>Real double-entry</h3>
-            <p>Every transaction is balanced postings that sum to zero. Balances and net worth are <em>derived</em>, never stored — so they can't go inconsistent.</p>
-          </article>
-          <article class="card">
-            <div class="ico">💵</div>
-            <h3>Money done right</h3>
-            <p>Amounts are integer minor units (cents), with formatting for Rp · $ · € · £. No floating-point money, ever.</p>
-          </article>
-          <article class="card">
-            <div class="ico">🏦</div>
-            <h3>Accounts &amp; net worth</h3>
-            <p>Asset &amp; liability cards, a net-worth overview, and a per-account register with running balance.</p>
-          </article>
-          <article class="card">
-            <div class="ico">🧾</div>
-            <h3>Fast transactions</h3>
-            <p>A date-grouped journal with a familiar Income / Expense / Transfer entry form, live filters and search.</p>
+            <p>Every transaction is balanced postings that sum to zero. Your budget, balances and net worth are <em>derived</em> from one journal — they can't go inconsistent.</p>
           </article>
           <article class="card">
             <div class="ico">📊</div>
-            <h3>Analytics</h3>
-            <p>KPIs, income-vs-expenses, net-worth-over-time and spending by category — over a selectable period. Native charts with axis labels and hover tooltips.</p>
+            <h3>Analytics &amp; reports</h3>
+            <p>KPIs, income-vs-expenses, net-worth trends and spending by category, plus Income Statement, Balance Sheet and Cash Flow — all derived from your journal.</p>
           </article>
           <article class="card">
             <div class="ico">💾</div>
             <h3>Local-first &amp; yours</h3>
-            <p>Each document is a single <code>.financy</code> SQLite file, always auto-saved with ACID writes. No cloud, no save button.</p>
-          </article>
-          <article class="card">
-            <div class="ico">🔒</div>
-            <h3>Safe by design</h3>
-            <p>Atomic writes, append-only schema migrations, and an automatic <code>.bak</code> before any file upgrade.</p>
+            <p>Each document is a single <code>.financy</code> SQLite file, always auto-saved with ACID writes. No cloud, no account, no save button.</p>
           </article>
         </div>
       </div>
@@ -103,6 +100,14 @@
       <div class="wrap">
         <h2 class="section-title">A look inside</h2>
         <div class="shots">
+          <figure class="shot">
+            <img src="screenshots/budget.png" alt="Zero-based budget" loading="lazy" />
+            <figcaption>Budget: Ready to Assign, with Assigned · Activity · Available per category.</figcaption>
+          </figure>
+          <figure class="shot">
+            <img src="screenshots/accounts.png" alt="Accounts and net worth" loading="lazy" />
+            <figcaption>Accounts &amp; net worth, with on-budget and tracking accounts.</figcaption>
+          </figure>
           <figure class="shot">
             <img src="screenshots/analytics.png" alt="Analytics dashboard" loading="lazy" />
             <figcaption>Analytics: KPIs, cash-flow &amp; net-worth trends, spending by category.</figcaption>
@@ -165,7 +170,7 @@
 
   <footer class="footer">
     <div class="wrap footer-inner">
-      <span>💰 Financy — local-first double-entry finance.</span>
+      <span>💰 Financy — open-source zero-based budgeting.</span>
       <span>
         Built with <a href="https://go.dev" target="_blank" rel="noopener">Go</a> +
         <a href="https://fyne.io" target="_blank" rel="noopener">Fyne</a> +

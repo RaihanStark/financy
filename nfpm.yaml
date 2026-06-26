@@ -19,10 +19,11 @@ vendor: Financy
 homepage: https://raihanstark.github.io/financy/
 license: MIT
 description: |
-  A fast, local-first personal finance manager built on real double-entry accounting.
-  Track accounts, money movements and net worth in a native desktop app — your data
-  lives in a single .financy SQLite file you own, and the books can never drift out
-  of balance.
+  Open-source zero-based budgeting (ZBB) for your desktop — give every dollar a job.
+  Assign your money to categories until Ready to Assign hits zero, then track each
+  envelope through the month. Backed by real double-entry accounting, so your budget,
+  balances and net worth are derived from one journal and can never drift out of
+  balance. Your data lives in a single .financy SQLite file you own.
 
 contents:
   - src: ./financy
