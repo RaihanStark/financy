@@ -10,17 +10,18 @@ import (
 // journal of balanced transactions; all balances and totals are derived. When
 // backed by a database (db != nil) every mutation writes through to disk.
 type Store struct {
-	db        *sql.DB
-	accounts  []Account
-	txns      []Transaction
-	recurring []Recurring
-	nextID    int
+	db           *sql.DB
+	accounts     []Account
+	txns         []Transaction
+	recurring    []Recurring
+	assignments  map[string]int // "YYYY-MM|categoryID" → assigned minor units
+	nextID       int
 	owner        string
 	currency     string
 	year         int
 	numberFormat string // separator style override; "" = currency default
 	listeners    []func()
-	onError   func(error)
+	onError      func(error)
 }
 
 // SetErrorHandler registers a callback invoked when a persistence write fails,
@@ -45,11 +46,12 @@ func todaySerial() int {
 // tests and ephemeral sessions. It is not persisted (db is nil).
 func NewStore() *Store {
 	s := &Store{
-		accounts: seedAccounts(),
-		txns:     seedTransactions(),
-		owner:    settingsOwner,
-		currency: settingsCurrency,
-		year:     settingsYear,
+		accounts:    seedAccounts(),
+		txns:        seedTransactions(),
+		assignments: map[string]int{},
+		owner:       settingsOwner,
+		currency:    settingsCurrency,
+		year:        settingsYear,
 	}
 	s.nextID = len(s.txns) + 1
 	SetCurrencySymbol(s.currency)
@@ -492,6 +494,7 @@ func (s *Store) DeleteAccount(id string) bool {
 				return false
 			}
 			s.accounts = append(s.accounts[:i], s.accounts[i+1:]...)
+			s.deleteAssignmentsFor(id)
 			s.notify()
 			return true
 		}

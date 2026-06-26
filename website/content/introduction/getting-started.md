@@ -30,8 +30,9 @@ the first run.
 
 On first launch the **Setup Wizard** appears. Choose one:
 
-- **Load demo data (USD)** — a realistic ~6-month sample so you can explore
-  Accounts, Transactions, and Analytics immediately.
+- **Load demo data (USD)** — a complete worked example: ~6 months of transactions
+  and a fully-assigned **zero-based budget**, so you can explore the Budget,
+  Accounts, Transactions and Analytics immediately.
 - **Start from scratch** — pick your **currency**, then choose where to save your
   new `.financy` file.
 
@@ -50,5 +51,6 @@ go run .        # or: make run
 
 ## Next steps
 
+- **[Budgeting]({{< relref "budget" >}})** — give every dollar a job with a zero-based budget.
 - **[Core Concepts]({{< relref "concepts" >}})** — how double-entry keeps your books correct.
 - **[Importing CSV]({{< relref "csv" >}})** — load real bank data instead of typing.

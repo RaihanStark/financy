@@ -20,6 +20,28 @@ func showForm(title string, items []*widget.FormItem, onConfirm func()) {
 	d.Show()
 }
 
+// dialogWithSave wraps arbitrary content in a Save/Cancel modal; onSave runs
+// only when the user saves. The caller shows the returned dialog.
+func dialogWithSave(title string, content fyne.CanvasObject, onSave func()) dialog.Dialog {
+	d := dialog.NewCustomConfirm(title, "Save", "Cancel", content, func(ok bool) {
+		if ok {
+			onSave()
+		}
+	}, win)
+	d.Resize(fyne.NewSize(440, 500))
+	return d
+}
+
+// showDetail presents read-only content with just a Close button.
+func showDetail(title string, content fyne.CanvasObject) {
+	if win == nil {
+		return
+	}
+	d := dialog.NewCustom(title, "Close", content, win)
+	d.Resize(fyne.NewSize(440, 340))
+	d.Show()
+}
+
 // showContextMenu pops up a desktop-style menu at the given screen position.
 func showContextMenu(pos fyne.Position, items ...*fyne.MenuItem) {
 	if win == nil {

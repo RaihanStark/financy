@@ -24,6 +24,19 @@ func ShotReconcileResult(account string, delta int) {
 	showRegisterDialog(*a)
 }
 
+// ShotBudgetMonth shifts the Budget screen by delta months (for screenshots).
+func ShotBudgetMonth(delta int) { budgetMonth = shiftMonth(budgetMonth, delta) }
+
+// ShotAssignDialog opens the per-category "Assign" dialog for a named category.
+func ShotAssignDialog(name string) {
+	for _, c := range store.BudgetFor(budgetMonth).Categories {
+		if c.Name == name {
+			assignDialog(c)
+			return
+		}
+	}
+}
+
 // ShotDuePrompt opens the recurring "due" prompt for everything due within
 // daysAhead of today, so the screenshot shows several occurrences to act on.
 func ShotDuePrompt(daysAhead int) {

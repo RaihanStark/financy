@@ -191,6 +191,7 @@ func buildToolbar(c *appController) fyne.CanvasObject {
 		toolSep(),
 		newNavBtn(theme.StorageIcon(), "Accounts", "accounts", func() { c.show("accounts") }),
 		newNavBtn(theme.HistoryIcon(), "Transactions", "transactions", func() { c.show("transactions") }),
+		newNavBtn(theme.AccountIcon(), "Budget", "budget", func() { c.show("budget") }),
 		newNavBtn(theme.MediaReplayIcon(), "Recurring", "recurring", func() { c.show("recurring") }),
 		toolSep(),
 		newNavBtn(theme.GridIcon(), "Analytics", "analytics", func() { c.show("analytics") }),

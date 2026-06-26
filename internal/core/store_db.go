@@ -9,10 +9,11 @@ import (
 // DB handle and writes through on every mutation.
 func loadStore(db *sql.DB) (*Store, error) {
 	s := &Store{
-		db:       db,
-		owner:    "",
-		currency: "Rp",
-		year:     settingsYear,
+		db:          db,
+		owner:       "",
+		currency:    "Rp",
+		year:        settingsYear,
+		assignments: map[string]int{},
 	}
 
 	// Settings.
@@ -42,18 +43,20 @@ func loadStore(db *sql.DB) (*Store, error) {
 	_ = rows.Close()
 
 	// Accounts (insertion order).
-	arows, err := db.Query(`SELECT id, name, type, institution, notes FROM accounts ORDER BY rowid`)
+	arows, err := db.Query(`SELECT id, name, type, institution, notes, off_budget FROM accounts ORDER BY rowid`)
 	if err != nil {
 		return nil, err
 	}
 	for arows.Next() {
 		var a Account
 		var t string
-		if err := arows.Scan(&a.ID, &a.Name, &t, &a.Institution, &a.Notes); err != nil {
+		var off int
+		if err := arows.Scan(&a.ID, &a.Name, &t, &a.Institution, &a.Notes, &off); err != nil {
 			_ = arows.Close()
 			return nil, err
 		}
 		a.Type = AcctType(t)
+		a.OffBudget = off != 0
 		s.accounts = append(s.accounts, a)
 	}
 	_ = arows.Close()
@@ -109,6 +112,22 @@ func loadStore(db *sql.DB) (*Store, error) {
 	}
 	_ = rrows.Close()
 
+	// Budget assignments (table added in migration v3).
+	brows, err := db.Query(`SELECT month, category_id, amount FROM budget`)
+	if err != nil {
+		return nil, err
+	}
+	for brows.Next() {
+		var month, catID string
+		var amt int
+		if err := brows.Scan(&month, &catID, &amt); err != nil {
+			_ = brows.Close()
+			return nil, err
+		}
+		s.assignments[monthKey(month, catID)] = amt
+	}
+	_ = brows.Close()
+
 	s.nextID = s.computeNextID()
 	SetCurrencySymbol(s.currency)
 	ApplyNumberFormat(s.numberFormat)
@@ -142,6 +161,25 @@ func (s *Store) dbDeleteRecurring(id string) error {
 	return err
 }
 
+func (s *Store) dbUpsertAssignment(month, catID string, amount int) error {
+	if s.db == nil {
+		return nil
+	}
+	_, err := s.db.Exec(`
+		INSERT INTO budget (month, category_id, amount) VALUES (?, ?, ?)
+		ON CONFLICT(month, category_id) DO UPDATE SET amount = excluded.amount`,
+		month, catID, amount)
+	return err
+}
+
+func (s *Store) dbDeleteAssignment(month, catID string) error {
+	if s.db == nil {
+		return nil
+	}
+	_, err := s.db.Exec(`DELETE FROM budget WHERE month = ? AND category_id = ?`, month, catID)
+	return err
+}
+
 // computeNextID derives the next "t<N>" id from existing transaction ids.
 func (s *Store) computeNextID() int {
 	max := 0
@@ -161,13 +199,18 @@ func (s *Store) dbUpsertAccount(a Account) error {
 	if s.db == nil {
 		return nil
 	}
+	off := 0
+	if a.OffBudget {
+		off = 1
+	}
 	_, err := s.db.Exec(`
-		INSERT INTO accounts (id, name, type, institution, notes)
-		VALUES (?, ?, ?, ?, ?)
+		INSERT INTO accounts (id, name, type, institution, notes, off_budget)
+		VALUES (?, ?, ?, ?, ?, ?)
 		ON CONFLICT(id) DO UPDATE SET
 			name = excluded.name, type = excluded.type,
-			institution = excluded.institution, notes = excluded.notes`,
-		a.ID, a.Name, string(a.Type), a.Institution, a.Notes)
+			institution = excluded.institution, notes = excluded.notes,
+			off_budget = excluded.off_budget`,
+		a.ID, a.Name, string(a.Type), a.Institution, a.Notes, off)
 	return err
 }
 

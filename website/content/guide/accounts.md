@@ -1,6 +1,6 @@
 ---
 title: Accounts
-weight: 1
+weight: 2
 ---
 
 The **Accounts** screen is your home base: a net-worth overview plus cards for
@@ -29,6 +29,15 @@ owed.
 Use **Add Account** (top-right). Choose **Asset** or **Liability**, optionally set
 an institution and an **opening balance** (which posts an Opening Balance entry —
 see [Concepts]({{< relref "concepts" >}})). The opening-balance field formats as you type.
+
+### On-budget vs. tracking accounts
+
+The **Include this account's balance in the budget** toggle controls whether an
+account feeds your [Budget]({{< relref "budget" >}})'s *Ready to Assign*. Leave it on
+for spending accounts (checking, cash, credit cards). Turn it **off** for *tracking*
+accounts — investments, a mortgage, a house — so they still count toward net worth
+but don't masquerade as money you can assign. Off-budget accounts are tagged on
+their card.
 
 ## Deleting an account
 

@@ -117,6 +117,8 @@ func quickAdd(c *appController) {
 	switch c.currentUID {
 	case "accounts":
 		view.AccountForm(nil)
+	case "budget":
+		view.AddBudgetCategory()
 	default:
 		view.TransactionForm("", "")
 	}

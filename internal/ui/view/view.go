@@ -47,6 +47,8 @@ type (
 	CashFlow         = core.CashFlow
 	StmtLine         = core.StmtLine
 	CashLine         = core.CashLine
+	BudgetMonth      = core.BudgetMonth
+	BudgetCategory   = core.BudgetCategory
 )
 
 const (
@@ -80,6 +82,11 @@ var (
 	frequencies     = core.Frequencies
 	todaySerial     = core.TodaySerial
 	version         = core.Version
+
+	currentMonthKey = core.CurrentMonthKey
+	shiftMonth      = core.ShiftMonth
+	fmtMonthLong    = core.FmtMonthLong
+	monthEditable   = core.MonthEditable
 )
 
 // ---- component helpers ----
@@ -127,6 +134,7 @@ var (
 var (
 	colSurface   color.NRGBA
 	colSurfaceHi color.NRGBA
+	colAltRow    color.NRGBA
 	colBorder    color.NRGBA
 	colText      color.NRGBA
 	colTextDim   color.NRGBA
@@ -142,6 +150,7 @@ func init() { SyncPalette() }
 func SyncPalette() {
 	colSurface = style.Surface
 	colSurfaceHi = style.SurfaceHi
+	colAltRow = style.AltRow
 	colBorder = style.Border
 	colText = style.Text
 	colTextDim = style.TextDim
