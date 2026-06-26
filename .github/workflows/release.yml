@@ -36,6 +36,10 @@ jobs:
       - name: Install the fyne CLI
         run: go install fyne.io/fyne/v2/cmd/fyne@latest
 
+      - name: Install the nfpm CLI (Linux)
+        if: matrix.target == 'linux'
+        run: go install github.com/goreleaser/nfpm/v2/cmd/nfpm@latest
+
       - name: Package for ${{ matrix.target }}
         shell: bash
         run: |
@@ -51,6 +55,22 @@ jobs:
             windows) mv Financy.exe    dist/Financy-${{ github.ref_name }}-windows-amd64.exe ;;
             darwin)  zip -r            dist/Financy-${{ github.ref_name }}-macos.zip Financy.app ;;
           esac
+
+      - name: Build .deb and .rpm (Linux)
+        if: matrix.target == 'linux'
+        shell: bash
+        run: |
+          export PATH="$PATH:$(go env GOPATH)/bin"
+          # Build a version-stamped binary, then package it with nfpm. Strip the
+          # leading "v" from the tag so package versions are valid semver.
+          version="${GITHUB_REF_NAME#v}"
+          make build VERSION="$version"
+          VERSION="$version" nfpm package --config nfpm.yaml --packager deb --target dist/
+          VERSION="$version" nfpm package --config nfpm.yaml --packager rpm --target dist/
+          # Normalise asset names to match the other release bundles. nfpm adds an
+          # rpm release number (financy-<ver>-1.x86_64.rpm), so glob the names.
+          mv dist/financy_*_amd64.deb   dist/Financy-${{ github.ref_name }}-linux-amd64.deb
+          mv dist/financy-*.x86_64.rpm  dist/Financy-${{ github.ref_name }}-linux-x86_64.rpm
 
       - name: Attach to GitHub Release
         uses: softprops/action-gh-release@v2

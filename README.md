@@ -54,7 +54,23 @@ lives in a single file you own, and the books can never drift out of balance.
 
 ## 🚀 Getting Started
 
-### Prerequisites
+### Install (Linux packages)
+
+Grab the `.deb` or `.rpm` for the latest release from the
+[Releases page](https://github.com/raihanstark/financy/releases/latest):
+
+```sh
+# Debian / Ubuntu
+sudo apt install ./Financy-vX.Y.Z-linux-amd64.deb
+
+# Fedora / RHEL / openSUSE
+sudo dnf install ./Financy-vX.Y.Z-linux-x86_64.rpm
+```
+
+This installs the `financy` command, a desktop launcher, and registers the
+`.financy` file type so you can double-click documents to open them.
+
+### Prerequisites (building from source)
 - **Go 1.25+**
 - A C toolchain + OpenGL/X11 dev headers (Fyne requirement). On Debian/Ubuntu:
   ```sh

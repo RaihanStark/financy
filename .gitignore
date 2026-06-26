@@ -18,6 +18,12 @@ financy-upx
 *.aab
 fyne-cross/
 
+# Linux package output (nfpm: deb/rpm) + staged release artifacts
+/dist/
+*.deb
+*.rpm
+*.tar.xz
+
 # Coverage / profiling
 *.prof
 coverage.*
