@@ -14,7 +14,6 @@ var (
 	colPrimary   = style.Primary
 	colPositive  = style.Positive
 	colNegative  = style.Negative
-	colWarning   = style.Warning
 )
 
 // Corner radii for the custom canvas widgets.

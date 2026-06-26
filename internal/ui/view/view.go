@@ -15,14 +15,13 @@ import (
 // Injected services, set by ui.Run via Init.
 var (
 	store  *core.Store
-	nav    func(string)
 	render func()
 	win    fyne.Window
 )
 
 // Init wires the view package to the running application.
-func Init(s *core.Store, navigate func(string), rerender func(), w fyne.Window) {
-	store, nav, render, win = s, navigate, rerender, w
+func Init(s *core.Store, rerender func(), w fyne.Window) {
+	store, render, win = s, rerender, w
 }
 
 // ---- domain type aliases ----
@@ -93,14 +92,11 @@ var (
 	mono            = component.Mono
 	panel           = component.Panel
 	statCard        = component.StatCard
-	badge           = component.Badge
-	progressBar     = component.ProgressBar
 	hbar            = component.Hbar
 	divider         = component.Divider
 	spacerH         = component.SpacerH
 	spacerW         = component.SpacerW
 	sectionTitle    = component.SectionTitle
-	pageHeader      = component.PageHeader
 	moneyColor      = component.MoneyColor
 	withAlpha       = component.WithAlpha
 	alignRight      = component.AlignRight
@@ -108,9 +104,7 @@ var (
 	primaryButton   = component.PrimaryButton
 	secondaryButton = component.SecondaryButton
 	detailField     = component.DetailField
-	alertBanner     = component.AlertBanner
 	emptyState      = component.EmptyState
-	pillStat        = component.PillStat
 	padCell         = component.PadCell
 	newTappableRow  = component.NewTappableRow
 	barPairChart    = component.BarPairChart
@@ -125,10 +119,8 @@ var (
 // ---- palette ----
 
 var (
-	colBG        = style.BG
 	colSurface   = style.Surface
 	colSurfaceHi = style.SurfaceHi
-	colAltRow    = style.AltRow
 	colBorder    = style.Border
 	colText      = style.Text
 	colTextDim   = style.TextDim

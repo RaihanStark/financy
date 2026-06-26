@@ -26,7 +26,7 @@ func runShots(outDir string) {
 	root := assembleShell(c)
 	w := test.NewWindow(root)
 	c.win = w
-	view.Init(store, c.show, c.refresh, w)
+	view.Init(store, c.refresh, w)
 	w.Resize(fyne.NewSize(1320, 860))
 
 	capture := func(name string) { writePNG(outDir+"/"+name+".png", w.Canvas().Capture()) }
@@ -84,6 +84,6 @@ func writePNG(path string, img image.Image) {
 	if err != nil {
 		panic(err)
 	}
-	defer f.Close()
+	defer func() { _ = f.Close() }()
 	_ = png.Encode(f, img)
 }

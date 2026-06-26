@@ -20,10 +20,8 @@ const (
 )
 
 var (
-	newStore    = core.NewStore
-	fmtMoney    = core.FmtMoney
-	p           = core.P
-	todaySerial = core.TodaySerial
+	newStore = core.NewStore
+	fmtMoney = core.FmtMoney
 )
 
 var (
