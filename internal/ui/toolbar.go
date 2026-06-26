@@ -197,6 +197,8 @@ func buildToolbar(c *appController) fyne.CanvasObject {
 		newNavBtn(theme.DocumentIcon(), "Reports", "reports", func() { c.show("reports") }),
 	)
 	right := container.NewHBox(
+		newToolBtn(theme.ColorPaletteIcon(), themeToggleLabel(), toggleTheme),
+		toolSep(),
 		newToolBtn(theme.ListIcon(), "Categories", func() {
 			if store != nil {
 				view.OpenConfig(1)
