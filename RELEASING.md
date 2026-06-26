@@ -47,12 +47,30 @@ git tag v0.2.0 && git push origin v0.2.0
 
 Pushing the tag triggers `.github/workflows/release.yml`, which packages
 Linux / Windows / macOS bundles (native runners + the fyne CLI) and attaches
-them to the GitHub Release.
+them to the GitHub Release. The Linux runner also builds a **`.deb`** and an
+**`.rpm`** with [nfpm](https://nfpm.goreleaser.com/) (see `nfpm.yaml`) and
+attaches those too, so each release ships:
+
+| Asset | Platform |
+| --- | --- |
+| `Financy-vX.Y.Z-linux-amd64.deb`    | Debian / Ubuntu |
+| `Financy-vX.Y.Z-linux-x86_64.rpm`   | Fedora / RHEL / openSUSE |
+| `Financy-vX.Y.Z-linux-amd64.tar.xz` | other Linux (fyne tarball) |
+| `Financy-vX.Y.Z-windows-amd64.exe`  | Windows |
+| `Financy-vX.Y.Z-macos.zip`          | macOS |
+
+The `.deb`/`.rpm` install the `financy` binary to `/usr/bin`, a desktop
+launcher, the app icon, and a shared-MIME entry so `.financy` files open with a
+double-click. The packaged files and runtime deps live in `nfpm.yaml` and
+`packaging/` — keep them in sync if the install layout changes.
 
 ### Packaging locally (optional)
 ```
-go install fyne.io/fyne/v2/cmd/fyne@latest   # once
-make package                                  # bundle for your current OS
+go install fyne.io/fyne/v2/cmd/fyne@latest               # once — fyne bundles
+make package                                              # bundle for your current OS
+
+go install github.com/goreleaser/nfpm/v2/cmd/nfpm@latest # once — deb/rpm
+make nfpm                                                 # builds dist/*.deb + dist/*.rpm
 ```
 
 ## CI
