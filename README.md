@@ -181,6 +181,14 @@ them to the GitHub Release. See [RELEASING.md](RELEASING.md) for the full guide.
 
 ---
 
+## ❤️ Support the Project
+
+Financy is free and open-source, built and maintained in my spare time. If it helps you
+give every dollar a job, please consider [**sponsoring on GitHub**](https://github.com/sponsors/RaihanStark) —
+it directly funds continued development and is hugely appreciated. A ⭐ on the repo helps too!
+
+---
+
 ## 📄 License
 
 Released under the [MIT License](LICENSE).
