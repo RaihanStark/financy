@@ -3,7 +3,7 @@ package core
 // SeedDemo populates a freshly-created document with about six months of
 // illustrative USD activity so every screen has something coherent to show:
 // recurring income, bills, groceries and dining, transfers, credit-card spending
-// and paydowns, an off-budget brokerage that grows via auto-invest, and a full
+// and paydowns, an off-budget investments account that grows via auto-invest, and a full
 // zero-based budget (monthly assignments, sinking funds and a vacation drawdown).
 // New users can see balances, the per-account register, period flows, and the
 // Budget all behave like a real file. It no-ops if the document already has
@@ -23,7 +23,7 @@ func SeedDemo(s *Store, currency string) {
 	s.AddAccount(Account{ID: "visa", Name: "Credit Card", Type: Liability, Institution: "Demo Card"})
 	// A long-term investment account, marked off-budget: it counts toward Net
 	// Worth but its balance isn't money you can assign in the budget.
-	s.AddAccount(Account{ID: "brokerage", Name: "Brokerage", Type: Asset, Institution: "Demo Invest", Notes: "Long-term investments", OffBudget: true})
+	s.AddAccount(Account{ID: "investments", Name: "Investments", Type: Asset, Institution: "Demo Invest", Notes: "Long-term investments", OffBudget: true})
 
 	// Two extra budget categories so the budget shows real sinking funds.
 	s.AddAccount(Account{ID: "emergency", Name: "Emergency Fund", Type: Expense, Notes: "Savings goal"})
@@ -49,7 +49,7 @@ func SeedDemo(s *Store, currency string) {
 	add(start, "Opening Balance", P("savings", 800000), P("opening", -800000))
 	add(start, "Opening Balance", P("cash", 12000), P("opening", -12000))
 	add(start, "Credit card opening", P("visa", -60000), P("opening", 60000))
-	add(start, "Brokerage opening", P("brokerage", 1500000), P("opening", -1500000))
+	add(start, "Investments opening", P("investments", 1500000), P("opening", -1500000))
 
 	// Six monthly cycles of recurring + occasional activity. Amounts drift a
 	// little month to month so the journal looks lived-in rather than copied.
@@ -84,8 +84,8 @@ func SeedDemo(s *Store, currency string) {
 		// Move some money to savings every month.
 		add(base+3, "Transfer to Savings", P("savings", 50000), P("checking", -50000))
 
-		// Automatic monthly investment into the off-budget brokerage account.
-		add(base+28, "Auto-Invest", P("brokerage", 30000), P("checking", -30000))
+		// Automatic monthly investment into the off-budget investments account.
+		add(base+28, "Auto-Invest", P("investments", 30000), P("checking", -30000))
 
 		// A vacation paid from savings mid-way, drawing down its sinking fund.
 		if m == 4 {
@@ -111,7 +111,7 @@ func SeedDemo(s *Store, currency string) {
 		}
 		if m%3 == 2 {
 			expense(base+11, "Pharmacy", "health", "checking", 7200)
-			income(base+27, "Brokerage Dividend", "invest", 4200+m*300)
+			income(base+27, "Investments Dividend", "invest", 4200+m*300)
 		}
 		if m%2 == 1 {
 			income(base+15, "Freelance Project", "side", 32000+m*2500)

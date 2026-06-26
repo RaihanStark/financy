@@ -45,7 +45,7 @@ func ImportCSV() {
 		if err != nil || r == nil {
 			return
 		}
-		defer r.Close()
+		defer func() { _ = r.Close() }()
 		data, e := io.ReadAll(r)
 		if e != nil {
 			dialog.ShowError(e, win)

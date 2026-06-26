@@ -47,6 +47,10 @@ func Run(icon fyne.Resource) {
 	}
 
 	a := app.NewWithID("app.financy")
+	// Restore the saved light/dark choice before any UI is built so the first
+	// render is already in the right palette.
+	prefs = loadPrefs()
+	applyPalette(prefs.Dark)
 	a.Settings().SetTheme(style.Theme{})
 	if icon != nil {
 		a.SetIcon(icon)

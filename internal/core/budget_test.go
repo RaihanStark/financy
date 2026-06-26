@@ -22,7 +22,7 @@ func TestBudgetPersistenceRoundTrip(t *testing.T) {
 	if err != nil {
 		t.Fatalf("OpenStore: %v", err)
 	}
-	defer s2.Close()
+	defer func() { _ = s2.Close() }()
 	if got := s2.Assigned("2026-06", "groceries"); got != 450 {
 		t.Fatalf("after reopen Assigned(June,groceries) = %d, want 450", got)
 	}
@@ -42,7 +42,7 @@ func TestBudgetPersistenceRoundTrip(t *testing.T) {
 	if err != nil {
 		t.Fatalf("OpenStore 2: %v", err)
 	}
-	defer s3.Close()
+	defer func() { _ = s3.Close() }()
 	if got := s3.Assigned("2026-06", "groceries"); got != 0 {
 		t.Fatalf("cleared assignment came back as %d, want 0", got)
 	}
@@ -221,13 +221,13 @@ func TestOffBudgetFlagPersists(t *testing.T) {
 	}
 	s.AddAccount(Account{Name: "Brokerage", Type: Asset, OffBudget: true})
 	s.AddAccount(Account{Name: "Checking", Type: Asset})
-	s.Close()
+	_ = s.Close()
 
 	s2, err := OpenStore(path)
 	if err != nil {
 		t.Fatalf("OpenStore: %v", err)
 	}
-	defer s2.Close()
+	defer func() { _ = s2.Close() }()
 	if a := s2.AccountByName("Brokerage"); a == nil || !a.OffBudget {
 		t.Fatal("Brokerage should round-trip as off-budget")
 	}

@@ -300,7 +300,7 @@ func checkBox(on bool) fyne.CanvasObject {
 	bg.CornerRadius = 4
 	bg.StrokeColor = colBorder
 	bg.StrokeWidth = 1
-	var glyph fyne.CanvasObject = spacerW(0)
+	glyph := spacerW(0)
 	if on {
 		bg.FillColor = colPrimary
 		bg.StrokeColor = colPrimary
@@ -476,7 +476,7 @@ func filteredTransactions() []Transaction {
 			continue
 		}
 		if filterAccount != "All accounts" && v.moneyName != filterAccount &&
-			!(v.kind == "Transfer" && strings.Contains(v.moneyName, filterAccount)) {
+			(v.kind != "Transfer" || !strings.Contains(v.moneyName, filterAccount)) {
 			continue
 		}
 		if q != "" {

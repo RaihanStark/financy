@@ -76,19 +76,19 @@ func NewDocument(path string) (*Store, error) {
 	}
 	var n int
 	if err := db.QueryRow(`SELECT COUNT(*) FROM accounts`).Scan(&n); err != nil {
-		db.Close()
+		_ = db.Close()
 		return nil, err
 	}
 	if n == 0 {
 		seed := &Store{db: db, currency: "Rp", year: settingsYear}
 		for _, a := range seedAccounts() {
 			if err := seed.dbUpsertAccount(a); err != nil {
-				db.Close()
+				_ = db.Close()
 				return nil, err
 			}
 		}
 		if err := seed.dbSetSettings(); err != nil {
-			db.Close()
+			_ = db.Close()
 			return nil, err
 		}
 	}

@@ -15,7 +15,7 @@ See `RELEASING.md`.
 
 ### Added
 - **Richer demo data** — the sample document now exercises every module coherently:
-  an off-budget **Brokerage** account that grows via monthly auto-invest, plus a full
+  an off-budget **Investments** account that grows via monthly auto-invest, plus a full
   **budget** — monthly assignments for every category, sinking funds (Emergency Fund,
   Insurance, Vacation) that roll an Available balance forward, a mid-year vacation that
   draws its envelope down, and a few categories left intentionally tight so overspending
@@ -40,6 +40,9 @@ See `RELEASING.md`.
   (so a credit card's debt nets against your cash and card spending is budget-neutral,
   the way YNAB handles it), while tracking accounts you exclude — investments, a
   mortgage — no longer inflate the money you can assign. Stored per account (schema v4).
+- **Dark mode** — a 🎨 toggle in the toolbar switches the whole app between the
+  light and a new dark theme (deep-slate surfaces with accents tuned to read well
+  on a dark ground). Your choice is remembered and restored on the next launch.
 - **Linux `.deb` and `.rpm` packages** — releases now ship native Debian/Ubuntu and
   Fedora/RHEL packages (built with nfpm). Installing puts `financy` on your `PATH`,
   adds a desktop launcher and app icon, and registers the `.financy` file type so

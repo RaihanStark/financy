@@ -89,11 +89,11 @@ func openDB(path string) (*sql.DB, error) {
 	// single-user document; enforce foreign keys for cascade deletes.
 	db.SetMaxOpenConns(1)
 	if _, err := db.Exec(`PRAGMA foreign_keys = ON;`); err != nil {
-		db.Close()
+		_ = db.Close()
 		return nil, err
 	}
 	if err := migrate(db); err != nil {
-		db.Close()
+		_ = db.Close()
 		return nil, err
 	}
 	return db, nil
@@ -114,12 +114,12 @@ func migrate(db *sql.DB) error {
 			return err
 		}
 		if _, err := tx.Exec(migrations[v]); err != nil {
-			tx.Rollback()
+			_ = tx.Rollback()
 			return fmt.Errorf("migration %d: %w", v+1, err)
 		}
 		// PRAGMA user_version doesn't accept placeholders.
 		if _, err := tx.Exec(fmt.Sprintf(`PRAGMA user_version = %d;`, v+1)); err != nil {
-			tx.Rollback()
+			_ = tx.Rollback()
 			return fmt.Errorf("set version %d: %w", v+1, err)
 		}
 		if err := tx.Commit(); err != nil {
@@ -135,7 +135,7 @@ func dbVersion(path string) (int, error) {
 	if err != nil {
 		return 0, err
 	}
-	defer db.Close()
+	defer func() { _ = db.Close() }()
 	var v int
 	if err := db.QueryRow(`PRAGMA user_version;`).Scan(&v); err != nil {
 		return 0, err

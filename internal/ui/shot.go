@@ -96,6 +96,6 @@ func writePNG(path string, img image.Image) {
 	if err != nil {
 		panic(err)
 	}
-	defer f.Close()
+	defer func() { _ = f.Close() }()
 	_ = png.Encode(f, img)
 }

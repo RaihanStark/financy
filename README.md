@@ -11,6 +11,7 @@ balances and net worth are all derived from one journal and can never drift out 
 balance. Your data lives in a single file you own — no cloud, no account, no tracking.
 
 ![CI](https://github.com/raihanstark/financy/actions/workflows/ci.yml/badge.svg)
+&nbsp;![govulncheck](https://github.com/raihanstark/financy/actions/workflows/govulncheck.yml/badge.svg)
 &nbsp;![Go](https://img.shields.io/badge/Go-1.25+-00ADD8?logo=go&logoColor=white)
 &nbsp;![Fyne](https://img.shields.io/badge/UI-Fyne-1A1A2E)
 &nbsp;![SQLite](https://img.shields.io/badge/Storage-SQLite-003B57?logo=sqlite&logoColor=white)

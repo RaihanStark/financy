@@ -24,7 +24,7 @@ func loadStore(db *sql.DB) (*Store, error) {
 	for rows.Next() {
 		var k, v string
 		if err := rows.Scan(&k, &v); err != nil {
-			rows.Close()
+			_ = rows.Close()
 			return nil, err
 		}
 		switch k {
@@ -40,7 +40,7 @@ func loadStore(db *sql.DB) (*Store, error) {
 			s.numberFormat = v
 		}
 	}
-	rows.Close()
+	_ = rows.Close()
 
 	// Accounts (insertion order).
 	arows, err := db.Query(`SELECT id, name, type, institution, notes, off_budget FROM accounts ORDER BY rowid`)
@@ -52,14 +52,14 @@ func loadStore(db *sql.DB) (*Store, error) {
 		var t string
 		var off int
 		if err := arows.Scan(&a.ID, &a.Name, &t, &a.Institution, &a.Notes, &off); err != nil {
-			arows.Close()
+			_ = arows.Close()
 			return nil, err
 		}
 		a.Type = AcctType(t)
 		a.OffBudget = off != 0
 		s.accounts = append(s.accounts, a)
 	}
-	arows.Close()
+	_ = arows.Close()
 
 	// Transactions (insertion order) + their postings.
 	trows, err := db.Query(`SELECT id, date, payee, memo FROM transactions ORDER BY rowid`)
@@ -70,13 +70,13 @@ func loadStore(db *sql.DB) (*Store, error) {
 	for trows.Next() {
 		var t Transaction
 		if err := trows.Scan(&t.ID, &t.Date, &t.Payee, &t.Memo); err != nil {
-			trows.Close()
+			_ = trows.Close()
 			return nil, err
 		}
 		byID[t.ID] = len(s.txns)
 		s.txns = append(s.txns, t)
 	}
-	trows.Close()
+	_ = trows.Close()
 
 	prows, err := db.Query(`SELECT txn_id, account_id, amount FROM postings ORDER BY txn_id, seq`)
 	if err != nil {
@@ -86,14 +86,14 @@ func loadStore(db *sql.DB) (*Store, error) {
 		var txnID, acctID string
 		var amt int
 		if err := prows.Scan(&txnID, &acctID, &amt); err != nil {
-			prows.Close()
+			_ = prows.Close()
 			return nil, err
 		}
 		if i, ok := byID[txnID]; ok {
 			s.txns[i].Posts = append(s.txns[i].Posts, Posting{AccountID: acctID, Amount: amt})
 		}
 	}
-	prows.Close()
+	_ = prows.Close()
 
 	// Recurring templates (table added in migration v2).
 	rrows, err := db.Query(`SELECT id, kind, acct_a, acct_b, amount, payee, memo, freq, next_due, enabled FROM recurring ORDER BY rowid`)
@@ -104,13 +104,13 @@ func loadStore(db *sql.DB) (*Store, error) {
 		var r Recurring
 		var en int
 		if err := rrows.Scan(&r.ID, &r.Kind, &r.AcctA, &r.AcctB, &r.Amount, &r.Payee, &r.Memo, &r.Freq, &r.NextDue, &en); err != nil {
-			rrows.Close()
+			_ = rrows.Close()
 			return nil, err
 		}
 		r.Enabled = en != 0
 		s.recurring = append(s.recurring, r)
 	}
-	rrows.Close()
+	_ = rrows.Close()
 
 	// Budget assignments (table added in migration v3).
 	brows, err := db.Query(`SELECT month, category_id, amount FROM budget`)
@@ -121,12 +121,12 @@ func loadStore(db *sql.DB) (*Store, error) {
 		var month, catID string
 		var amt int
 		if err := brows.Scan(&month, &catID, &amt); err != nil {
-			brows.Close()
+			_ = brows.Close()
 			return nil, err
 		}
 		s.assignments[monthKey(month, catID)] = amt
 	}
-	brows.Close()
+	_ = brows.Close()
 
 	s.nextID = s.computeNextID()
 	SetCurrencySymbol(s.currency)
@@ -235,17 +235,17 @@ func (s *Store) dbUpsertTxn(t Transaction) error {
 		INSERT INTO transactions (id, date, payee, memo) VALUES (?, ?, ?, ?)
 		ON CONFLICT(id) DO UPDATE SET date = excluded.date, payee = excluded.payee, memo = excluded.memo`,
 		t.ID, t.Date, t.Payee, t.Memo); err != nil {
-		tx.Rollback()
+		_ = tx.Rollback()
 		return err
 	}
 	if _, err := tx.Exec(`DELETE FROM postings WHERE txn_id = ?`, t.ID); err != nil {
-		tx.Rollback()
+		_ = tx.Rollback()
 		return err
 	}
 	for i, p := range t.Posts {
 		if _, err := tx.Exec(`INSERT INTO postings (txn_id, seq, account_id, amount) VALUES (?, ?, ?, ?)`,
 			t.ID, i, p.AccountID, p.Amount); err != nil {
-			tx.Rollback()
+			_ = tx.Rollback()
 			return err
 		}
 	}
@@ -265,13 +265,13 @@ func (s *Store) dbInsertTxnBatch(txns []Transaction) error {
 	for _, t := range txns {
 		if _, err := tx.Exec(`INSERT INTO transactions (id, date, payee, memo) VALUES (?, ?, ?, ?)`,
 			t.ID, t.Date, t.Payee, t.Memo); err != nil {
-			tx.Rollback()
+			_ = tx.Rollback()
 			return err
 		}
 		for i, p := range t.Posts {
 			if _, err := tx.Exec(`INSERT INTO postings (txn_id, seq, account_id, amount) VALUES (?, ?, ?, ?)`,
 				t.ID, i, p.AccountID, p.Amount); err != nil {
-				tx.Rollback()
+				_ = tx.Rollback()
 				return err
 			}
 		}
@@ -294,17 +294,17 @@ func (s *Store) dbUpsertTxnBatch(txns []Transaction) error {
 			INSERT INTO transactions (id, date, payee, memo) VALUES (?, ?, ?, ?)
 			ON CONFLICT(id) DO UPDATE SET date = excluded.date, payee = excluded.payee, memo = excluded.memo`,
 			t.ID, t.Date, t.Payee, t.Memo); err != nil {
-			tx.Rollback()
+			_ = tx.Rollback()
 			return err
 		}
 		if _, err := tx.Exec(`DELETE FROM postings WHERE txn_id = ?`, t.ID); err != nil {
-			tx.Rollback()
+			_ = tx.Rollback()
 			return err
 		}
 		for i, p := range t.Posts {
 			if _, err := tx.Exec(`INSERT INTO postings (txn_id, seq, account_id, amount) VALUES (?, ?, ?, ?)`,
 				t.ID, i, p.AccountID, p.Amount); err != nil {
-				tx.Rollback()
+				_ = tx.Rollback()
 				return err
 			}
 		}
@@ -334,19 +334,19 @@ func (s *Store) dbSetSettings() error {
 		return e
 	}
 	if err := set("owner", s.owner); err != nil {
-		tx.Rollback()
+		_ = tx.Rollback()
 		return err
 	}
 	if err := set("currency", s.currency); err != nil {
-		tx.Rollback()
+		_ = tx.Rollback()
 		return err
 	}
 	if err := set("year", Itoa(s.year)); err != nil {
-		tx.Rollback()
+		_ = tx.Rollback()
 		return err
 	}
 	if err := set("number_format", s.numberFormat); err != nil {
-		tx.Rollback()
+		_ = tx.Rollback()
 		return err
 	}
 	return tx.Commit()

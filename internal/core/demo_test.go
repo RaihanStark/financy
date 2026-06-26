@@ -11,7 +11,7 @@ func TestSeedDemo(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	defer s.Close()
+	defer func() { _ = s.Close() }()
 	SeedDemo(s, "$")
 
 	if s.Currency() != "$" {
@@ -26,8 +26,8 @@ func TestSeedDemo(t *testing.T) {
 
 	// The brokerage is an off-budget tracking account: in Net Worth, out of the
 	// budget's funds pool.
-	if a := s.AccountByName("Brokerage"); a == nil || !a.OffBudget {
-		t.Fatal("Brokerage should exist and be off-budget")
+	if a := s.AccountByName("Investments"); a == nil || !a.OffBudget {
+		t.Fatal("Investments should exist and be off-budget")
 	}
 
 	// The Budget module is wired up: this month has real assignments, money has

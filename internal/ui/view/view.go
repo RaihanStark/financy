@@ -5,6 +5,8 @@
 package view
 
 import (
+	"image/color"
+
 	"fyne.io/fyne/v2"
 
 	"github.com/raihanstark/financy/internal/core"
@@ -100,14 +102,11 @@ var (
 	mono            = component.Mono
 	panel           = component.Panel
 	statCard        = component.StatCard
-	badge           = component.Badge
-	progressBar     = component.ProgressBar
 	hbar            = component.Hbar
 	divider         = component.Divider
 	spacerH         = component.SpacerH
 	spacerW         = component.SpacerW
 	sectionTitle    = component.SectionTitle
-	pageHeader      = component.PageHeader
 	moneyColor      = component.MoneyColor
 	withAlpha       = component.WithAlpha
 	alignRight      = component.AlignRight
@@ -115,9 +114,7 @@ var (
 	primaryButton   = component.PrimaryButton
 	secondaryButton = component.SecondaryButton
 	detailField     = component.DetailField
-	alertBanner     = component.AlertBanner
 	emptyState      = component.EmptyState
-	pillStat        = component.PillStat
 	padCell         = component.PadCell
 	newTappableRow  = component.NewTappableRow
 	barPairChart    = component.BarPairChart
@@ -130,20 +127,38 @@ var (
 )
 
 // ---- palette ----
+//
+// Local copies of the active palette kept concise. SyncPalette refreshes them
+// after a theme switch so freshly built screens pick up the new colors.
 
 var (
-	colBG        = style.BG
-	colSurface   = style.Surface
-	colSurfaceHi = style.SurfaceHi
-	colAltRow    = style.AltRow
-	colBorder    = style.Border
-	colText      = style.Text
-	colTextDim   = style.TextDim
-	colPrimary   = style.Primary
-	colPositive  = style.Positive
-	colNegative  = style.Negative
-	colWarning   = style.Warning
+	colSurface   color.NRGBA
+	colSurfaceHi color.NRGBA
+	colAltRow    color.NRGBA
+	colBorder    color.NRGBA
+	colText      color.NRGBA
+	colTextDim   color.NRGBA
+	colPrimary   color.NRGBA
+	colPositive  color.NRGBA
+	colNegative  color.NRGBA
+	colWarning   color.NRGBA
 )
+
+func init() { SyncPalette() }
+
+// SyncPalette refreshes the local palette aliases from the active style palette.
+func SyncPalette() {
+	colSurface = style.Surface
+	colSurfaceHi = style.SurfaceHi
+	colAltRow = style.AltRow
+	colBorder = style.Border
+	colText = style.Text
+	colTextDim = style.TextDim
+	colPrimary = style.Primary
+	colPositive = style.Positive
+	colNegative = style.Negative
+	colWarning = style.Warning
+}
 
 const (
 	radius   = style.Radius
