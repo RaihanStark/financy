@@ -91,23 +91,56 @@ type toolBtn struct {
 	widget.BaseWidget
 	icon   fyne.Resource
 	label  string
+	uid    string // nav target, "" for non-nav actions
 	action func()
 	bg     *canvas.Rectangle
+	active bool
 }
+
+// navButtons collects the screen-switching toolbar buttons so the active one
+// can be highlighted as the user moves between screens.
+var navButtons []*toolBtn
 
 func newToolBtn(icon fyne.Resource, label string, action func()) *toolBtn {
 	b := &toolBtn{icon: icon, label: label, action: action}
 	b.bg = canvas.NewRectangle(color.Transparent)
-	b.bg.CornerRadius = 4
+	b.bg.CornerRadius = 6
 	b.ExtendBaseWidget(b)
+	return b
+}
+
+// newNavBtn is a toolbar button that switches to a screen and can show an active
+// state. Registered in navButtons so highlightNav can manage the selection.
+func newNavBtn(icon fyne.Resource, label, uid string, action func()) *toolBtn {
+	b := newToolBtn(icon, label, action)
+	b.uid = uid
+	navButtons = append(navButtons, b)
 	return b
 }
 
 func (b *toolBtn) CreateRenderer() fyne.WidgetRenderer {
 	ic := widget.NewIcon(b.icon)
-	content := container.NewGridWrap(fyne.NewSize(38, 32),
+	content := container.NewGridWrap(fyne.NewSize(40, 34),
 		container.NewStack(b.bg, container.NewPadded(ic)))
 	return widget.NewSimpleRenderer(content)
+}
+
+// restFill is the button's color when not hovered — tinted if it's the active
+// screen, otherwise transparent.
+func (b *toolBtn) restFill() color.Color {
+	if b.active {
+		return withAlpha(colPrimary, 0x24)
+	}
+	return color.Transparent
+}
+
+func (b *toolBtn) setActive(on bool) {
+	if b.active == on {
+		return
+	}
+	b.active = on
+	b.bg.FillColor = b.restFill()
+	b.bg.Refresh()
 }
 
 func (b *toolBtn) Tapped(_ *fyne.PointEvent) {
@@ -118,7 +151,7 @@ func (b *toolBtn) Tapped(_ *fyne.PointEvent) {
 }
 
 func (b *toolBtn) MouseIn(_ *desktop.MouseEvent) {
-	b.bg.FillColor = withAlpha(colPrimary, 0x2a)
+	b.bg.FillColor = withAlpha(colPrimary, 0x33)
 	b.bg.Refresh()
 	pos := fyne.CurrentApp().Driver().AbsolutePositionForObject(b)
 	pos.Y += b.Size().Height + 3
@@ -128,12 +161,19 @@ func (b *toolBtn) MouseIn(_ *desktop.MouseEvent) {
 func (b *toolBtn) MouseMoved(_ *desktop.MouseEvent) {}
 
 func (b *toolBtn) MouseOut() {
-	b.bg.FillColor = color.Transparent
+	b.bg.FillColor = b.restFill()
 	b.bg.Refresh()
 	hideToolTip()
 }
 
 func (b *toolBtn) Cursor() desktop.Cursor { return desktop.PointerCursor }
+
+// highlightNav marks the toolbar button for uid as active and clears the rest.
+func highlightNav(uid string) {
+	for _, b := range navButtons {
+		b.setActive(b.uid == uid)
+	}
+}
 
 // toolSep is a thin vertical divider between toolbar groups.
 func toolSep() fyne.CanvasObject {
@@ -142,16 +182,19 @@ func toolSep() fyne.CanvasObject {
 	return container.NewPadded(line)
 }
 
-// buildToolbar assembles the custom toolbar with hover + tooltips.
+// buildToolbar assembles the custom toolbar with hover + tooltips. The
+// screen-switching buttons highlight to show which screen is active.
 func buildToolbar(c *appController) fyne.CanvasObject {
+	navButtons = nil
 	left := container.NewHBox(
 		newToolBtn(theme.ContentAddIcon(), "Add (new entry)", func() { quickAdd(c) }),
 		toolSep(),
-		newToolBtn(theme.StorageIcon(), "Accounts", func() { c.show("accounts") }),
-		newToolBtn(theme.HistoryIcon(), "Transactions", func() { c.show("transactions") }),
-		newToolBtn(theme.GridIcon(), "Analytics", func() { c.show("analytics") }),
-		newToolBtn(theme.DocumentIcon(), "Reports", func() { c.show("reports") }),
-		newToolBtn(theme.MediaReplayIcon(), "Recurring", func() { c.show("recurring") }),
+		newNavBtn(theme.StorageIcon(), "Accounts", "accounts", func() { c.show("accounts") }),
+		newNavBtn(theme.HistoryIcon(), "Transactions", "transactions", func() { c.show("transactions") }),
+		newNavBtn(theme.MediaReplayIcon(), "Recurring", "recurring", func() { c.show("recurring") }),
+		toolSep(),
+		newNavBtn(theme.GridIcon(), "Analytics", "analytics", func() { c.show("analytics") }),
+		newNavBtn(theme.DocumentIcon(), "Reports", "reports", func() { c.show("reports") }),
 	)
 	right := container.NewHBox(
 		newToolBtn(theme.ListIcon(), "Categories", func() {
@@ -166,7 +209,7 @@ func buildToolbar(c *appController) fyne.CanvasObject {
 		}),
 	)
 
-	bar := canvas.NewRectangle(colSurfaceHi)
+	bar := canvas.NewRectangle(colSurface)
 	line := canvas.NewRectangle(colBorder)
 	line.SetMinSize(fyne.NewSize(0, 1))
 	inner := container.NewBorder(nil, nil, container.NewPadded(left), container.NewPadded(right))

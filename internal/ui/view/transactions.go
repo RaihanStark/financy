@@ -213,6 +213,7 @@ func txnLedger(rows []Transaction) fyne.CanvasObject {
 
 func dateHeader(date, net int) fyne.CanvasObject {
 	bg := canvas.NewRectangle(colSurfaceHi)
+	bg.CornerRadius = radiusSm
 	netCol := colTextDim
 	netStr := "Net " + fmtMoney(net)
 	if net > 0 {
@@ -296,7 +297,7 @@ func txnRow(t Transaction) fyne.CanvasObject {
 // checkBox is a small square selection indicator for bulk-select rows.
 func checkBox(on bool) fyne.CanvasObject {
 	bg := canvas.NewRectangle(colSurface)
-	bg.CornerRadius = 3
+	bg.CornerRadius = 4
 	bg.StrokeColor = colBorder
 	bg.StrokeWidth = 1
 	var glyph fyne.CanvasObject = spacerW(0)
@@ -396,9 +397,10 @@ func typeChip(kind string) fyne.CanvasObject {
 	if glyph == "" {
 		glyph = "•"
 	}
-	bg := canvas.NewRectangle(withAlpha(col, 0x22))
-	bg.StrokeColor = withAlpha(col, 0x99)
+	bg := canvas.NewRectangle(withAlpha(col, 0x1f))
+	bg.StrokeColor = withAlpha(col, 0x70)
 	bg.StrokeWidth = 1
+	bg.CornerRadius = radiusSm
 	g := txt(glyph, col, 16, true)
 	g.Alignment = fyne.TextAlignCenter
 	return container.NewGridWrap(fyne.NewSize(32, 32), container.NewStack(bg, container.NewCenter(g)))

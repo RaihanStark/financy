@@ -9,21 +9,28 @@ import (
 	"fyne.io/fyne/v2/theme"
 )
 
-// Palette — a light, neutral "classic native enterprise" look
-// (think Quicken / MS Money / back-office banking software).
+// Palette — a clean, modern light look: soft off-white chrome, crisp white
+// surfaces, hairline borders and a confident blue accent. Generous rounding and
+// spacing (see Size) keep it airy and approachable rather than dense.
 var (
-	BG        = color.NRGBA{R: 0xec, G: 0xec, B: 0xec, A: 0xff} // window chrome / app background
-	Surface   = color.NRGBA{R: 0xff, G: 0xff, B: 0xff, A: 0xff} // grids / panels / inputs
-	SurfaceHi = color.NRGBA{R: 0xe6, G: 0xe8, B: 0xeb, A: 0xff} // header fill / hover / toolbar
-	AltRow    = color.NRGBA{R: 0xf5, G: 0xf6, B: 0xf7, A: 0xff} // alternating grid row
-	Border    = color.NRGBA{R: 0xbf, G: 0xc4, B: 0xc9, A: 0xff} // grid lines / panel borders
-	Text      = color.NRGBA{R: 0x1c, G: 0x20, B: 0x24, A: 0xff}
-	TextDim   = color.NRGBA{R: 0x5b, G: 0x62, B: 0x69, A: 0xff}
-	Primary   = color.NRGBA{R: 0x0a, G: 0x5f, B: 0xa4, A: 0xff} // corporate blue (selection)
+	BG        = color.NRGBA{R: 0xf5, G: 0xf6, B: 0xf8, A: 0xff} // window chrome / app background
+	Surface   = color.NRGBA{R: 0xff, G: 0xff, B: 0xff, A: 0xff} // cards / panels / inputs
+	SurfaceHi = color.NRGBA{R: 0xed, G: 0xf0, B: 0xf4, A: 0xff} // header fill / hover / toolbar
+	AltRow    = color.NRGBA{R: 0xf7, G: 0xf9, B: 0xfb, A: 0xff} // alternating grid row
+	Border    = color.NRGBA{R: 0xe2, G: 0xe6, B: 0xec, A: 0xff} // hairline borders / grid lines
+	Text      = color.NRGBA{R: 0x16, G: 0x19, B: 0x1d, A: 0xff} // near-black slate
+	TextDim   = color.NRGBA{R: 0x6b, G: 0x72, B: 0x80, A: 0xff} // muted captions
+	Primary   = color.NRGBA{R: 0x25, G: 0x63, B: 0xeb, A: 0xff} // modern blue accent
 
-	Positive = color.NRGBA{R: 0x15, G: 0x73, B: 0x47, A: 0xff} // green
-	Negative = color.NRGBA{R: 0xb0, G: 0x2a, B: 0x37, A: 0xff} // red
-	Warning  = color.NRGBA{R: 0x9a, G: 0x66, B: 0x00, A: 0xff} // amber/brown
+	Positive = color.NRGBA{R: 0x15, G: 0x80, B: 0x3d, A: 0xff} // emerald green
+	Negative = color.NRGBA{R: 0xdc, G: 0x26, B: 0x26, A: 0xff} // clear red
+	Warning  = color.NRGBA{R: 0xb4, G: 0x53, B: 0x09, A: 0xff} // amber
+)
+
+// Corner radii used across the custom canvas widgets (cards, chips, banners).
+const (
+	Radius   float32 = 10 // cards / panels
+	RadiusSm float32 = 6  // chips / badges / small controls
 )
 
 // Theme implements fyne.Theme with the palette above.
@@ -53,13 +60,13 @@ func (Theme) Color(name fyne.ThemeColorName, _ fyne.ThemeVariant) color.Color {
 		// A translucent darken overlay — Fyne blends this over the button's base
 		// color, so it tints (darker blue on primary, darker gray on others)
 		// instead of replacing it with a flat gray.
-		return color.NRGBA{R: 0, G: 0, B: 0, A: 0x1f}
+		return color.NRGBA{R: 0, G: 0, B: 0, A: 0x1a}
 	case theme.ColorNameInputBorder, theme.ColorNameSeparator:
 		return Border
 	case theme.ColorNameSelection:
-		return color.NRGBA{R: 0x0a, G: 0x5f, B: 0xa4, A: 0x33}
+		return color.NRGBA{R: 0x25, G: 0x63, B: 0xeb, A: 0x29}
 	case theme.ColorNameScrollBar:
-		return color.NRGBA{R: 0xb0, G: 0xb4, B: 0xb8, A: 0xff}
+		return color.NRGBA{R: 0xc2, G: 0xc7, B: 0xce, A: 0xff}
 	case theme.ColorNameError:
 		return Negative
 	case theme.ColorNameSuccess:
@@ -79,18 +86,24 @@ func (Theme) Icon(name fyne.ThemeIconName) fyne.Resource {
 func (Theme) Size(name fyne.ThemeSizeName) float32 {
 	switch name {
 	case theme.SizeNamePadding:
-		return 4
-	case theme.SizeNameInnerPadding:
 		return 6
+	case theme.SizeNameInnerPadding:
+		return 8
 	case theme.SizeNameText:
-		return 12.5
+		return 13
 	case theme.SizeNameHeadingText:
-		return 18
+		return 20
 	case theme.SizeNameSubHeadingText:
-		return 14
+		return 15
+	case theme.SizeNameInputRadius:
+		return 8
+	case theme.SizeNameSelectionRadius:
+		return 6
 	case theme.SizeNameScrollBar:
 		return 12
 	case theme.SizeNameScrollBarSmall:
+		return 4
+	case theme.SizeNameScrollBarRadius:
 		return 4
 	}
 	return theme.DefaultTheme().Size(name)

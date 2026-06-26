@@ -137,3 +137,8 @@ var (
 	colNegative  = style.Negative
 	colWarning   = style.Warning
 )
+
+const (
+	radius   = style.Radius
+	radiusSm = style.RadiusSm
+)

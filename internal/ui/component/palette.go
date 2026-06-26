@@ -16,3 +16,9 @@ var (
 	colNegative  = style.Negative
 	colWarning   = style.Warning
 )
+
+// Corner radii for the custom canvas widgets.
+const (
+	radius   = style.Radius
+	radiusSm = style.RadiusSm
+)
