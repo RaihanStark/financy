@@ -94,9 +94,17 @@ func TestLineChartHoverPicksNearestPoint(t *testing.T) {
 	if !c.guide.Visible() {
 		t.Fatal("guide line should show on hover")
 	}
+	if !c.marker.Visible() {
+		t.Fatal("focus marker should show on hover")
+	}
 
 	moveTo(obj, 54+8, 40) // closest to p0
 	if *got != "p0" {
 		t.Fatalf("hover tip = %q, want p0", *got)
+	}
+
+	c.MouseOut()
+	if c.guide.Visible() || c.marker.Visible() || *shown {
+		t.Fatal("MouseOut should hide guide, marker, and tooltip")
 	}
 }
