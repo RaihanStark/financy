@@ -10,23 +10,25 @@ import (
 	"fyne.io/fyne/v2/widget"
 )
 
-// panel wraps content in a flat white box with a thin square border.
+// panel wraps content in a clean white card with a hairline border and soft
+// rounded corners.
 func panel(content fyne.CanvasObject) *fyne.Container {
 	bg := canvas.NewRectangle(colSurface)
 	bg.StrokeColor = colBorder
 	bg.StrokeWidth = 1
+	bg.CornerRadius = radius
 	return container.NewStack(bg, container.NewPadded(content))
 }
 
-// groupBox is a classic titled border group (Windows GroupBox style).
+// groupBox is a titled card group with a tinted header strip.
 func groupBox(title string, content fyne.CanvasObject) fyne.CanvasObject {
 	bg := canvas.NewRectangle(colSurface)
 	bg.StrokeColor = colBorder
 	bg.StrokeWidth = 1
+	bg.CornerRadius = radius
 
 	titleBar := canvas.NewRectangle(colSurfaceHi)
-	titleBar.StrokeColor = colBorder
-	titleBar.StrokeWidth = 1
+	titleBar.CornerRadius = radiusSm
 	header := container.NewStack(titleBar, container.NewPadded(txt(title, colText, 12.5, true)))
 
 	body := container.NewPadded(content)
@@ -73,7 +75,8 @@ func statCard(caption, value string, valueCol color.Color, sub string) fyne.Canv
 	bg := canvas.NewRectangle(colSurface)
 	bg.StrokeColor = colBorder
 	bg.StrokeWidth = 1
-	return container.NewStack(bg, container.NewPadded(container.NewVBox(items...)))
+	bg.CornerRadius = radius
+	return container.NewStack(bg, container.New(layout.NewCustomPaddedLayout(10, 10, 12, 12), container.NewVBox(items...)))
 }
 
 // sectionTitle is a heading used above a block of content.
@@ -90,13 +93,14 @@ func pageHeader(title, subtitle string) fyne.CanvasObject {
 	return container.NewVBox(t, txt(subtitle, colTextDim, 11, false))
 }
 
-// badge renders a small squared, lightly tinted status chip with a thin border.
+// badge renders a small lightly tinted pill-shaped status chip.
 func badge(label string, col color.Color) fyne.CanvasObject {
-	bg := canvas.NewRectangle(withAlpha(col, 0x22))
-	bg.StrokeColor = withAlpha(col, 0x99)
+	bg := canvas.NewRectangle(withAlpha(col, 0x1f))
+	bg.StrokeColor = withAlpha(col, 0x70)
 	bg.StrokeWidth = 1
+	bg.CornerRadius = 8
 	t := txt(label, col, 10.5, true)
-	cell := container.NewStack(bg, container.New(layout.NewCustomPaddedLayout(1, 1, 6, 6), t))
+	cell := container.NewStack(bg, container.New(layout.NewCustomPaddedLayout(2, 2, 8, 8), t))
 	// Keep the chip from stretching across the whole grid column.
 	return container.NewHBox(cell, layout.NewSpacer())
 }
@@ -112,8 +116,10 @@ func progressBar(ratio float64, col color.Color) fyne.CanvasObject {
 	track := canvas.NewRectangle(colSurfaceHi)
 	track.StrokeColor = colBorder
 	track.StrokeWidth = 1
+	track.CornerRadius = radiusSm
 	track.SetMinSize(fyne.NewSize(0, 14))
 	fill := canvas.NewRectangle(col)
+	fill.CornerRadius = radiusSm
 	var filler fyne.CanvasObject
 	if ratio <= 0 {
 		filler = layout.NewSpacer()

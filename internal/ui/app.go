@@ -39,6 +39,7 @@ func (c *appController) render() {
 		c.renderWelcome()
 		return
 	}
+	highlightNav(c.currentUID)
 	c.content.Objects = []fyne.CanvasObject{
 		container.NewScroll(container.NewPadded(n.build())),
 	}
@@ -47,6 +48,7 @@ func (c *appController) render() {
 }
 
 func (c *appController) renderWelcome() {
+	highlightNav("")
 	c.content.Objects = []fyne.CanvasObject{welcomeScreen()}
 	c.content.Refresh()
 	c.updateStatus()
