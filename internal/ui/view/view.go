@@ -5,6 +5,8 @@
 package view
 
 import (
+	"image/color"
+
 	"fyne.io/fyne/v2"
 
 	"github.com/raihanstark/financy/internal/core"
@@ -15,13 +17,14 @@ import (
 // Injected services, set by ui.Run via Init.
 var (
 	store  *core.Store
+	nav    func(string)
 	render func()
 	win    fyne.Window
 )
 
 // Init wires the view package to the running application.
-func Init(s *core.Store, rerender func(), w fyne.Window) {
-	store, render, win = s, rerender, w
+func Init(s *core.Store, navigate func(string), rerender func(), w fyne.Window) {
+	store, nav, render, win = s, navigate, rerender, w
 }
 
 // ---- domain type aliases ----
@@ -117,18 +120,36 @@ var (
 )
 
 // ---- palette ----
+//
+// Local copies of the active palette kept concise. SyncPalette refreshes them
+// after a theme switch so freshly built screens pick up the new colors.
 
 var (
-	colSurface   = style.Surface
-	colSurfaceHi = style.SurfaceHi
-	colBorder    = style.Border
-	colText      = style.Text
-	colTextDim   = style.TextDim
-	colPrimary   = style.Primary
-	colPositive  = style.Positive
-	colNegative  = style.Negative
-	colWarning   = style.Warning
+	colSurface   color.NRGBA
+	colSurfaceHi color.NRGBA
+	colBorder    color.NRGBA
+	colText      color.NRGBA
+	colTextDim   color.NRGBA
+	colPrimary   color.NRGBA
+	colPositive  color.NRGBA
+	colNegative  color.NRGBA
+	colWarning   color.NRGBA
 )
+
+func init() { SyncPalette() }
+
+// SyncPalette refreshes the local palette aliases from the active style palette.
+func SyncPalette() {
+	colSurface = style.Surface
+	colSurfaceHi = style.SurfaceHi
+	colBorder = style.Border
+	colText = style.Text
+	colTextDim = style.TextDim
+	colPrimary = style.Primary
+	colPositive = style.Positive
+	colNegative = style.Negative
+	colWarning = style.Warning
+}
 
 const (
 	radius   = style.Radius

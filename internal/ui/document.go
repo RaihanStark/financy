@@ -37,7 +37,7 @@ func useStore(s *core.Store, path string) {
 	}
 	store = s
 	docPath = path
-	view.Init(store, ctl.refresh, ctl.win)
+	view.Init(store, ctl.show, ctl.refresh, ctl.win)
 	if store != nil {
 		store.Subscribe(ctl.refresh)
 		store.SetErrorHandler(func(err error) {
@@ -191,7 +191,9 @@ func welcomeScreen() fyne.CanvasObject {
 
 // startup opens the last-used file, or shows the first-run setup dialog.
 func startup() {
-	prefs = loadPrefs()
+	if prefs == nil {
+		prefs = loadPrefs()
+	}
 	if prefs.LastPath != "" {
 		if _, err := os.Stat(prefs.LastPath); err == nil {
 			openDocumentAt(prefs.LastPath)

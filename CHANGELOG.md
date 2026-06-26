@@ -14,6 +14,9 @@ See `RELEASING.md`.
 ## [Unreleased]
 
 ### Added
+- **Dark mode** — a 🎨 toggle in the toolbar switches the whole app between the
+  light and a new dark theme (deep-slate surfaces with accents tuned to read well
+  on a dark ground). Your choice is remembered and restored on the next launch.
 - **Linux `.deb` and `.rpm` packages** — releases now ship native Debian/Ubuntu and
   Fedora/RHEL packages (built with nfpm). Installing puts `financy` on your `PATH`,
   adds a desktop launcher and app icon, and registers the `.financy` file type so
