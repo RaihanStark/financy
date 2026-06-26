@@ -40,7 +40,7 @@ func TestPersistenceRoundTrip(t *testing.T) {
 	if err != nil {
 		t.Fatalf("OpenStore: %v", err)
 	}
-	defer s2.Close()
+	defer func() { _ = s2.Close() }()
 
 	if s2.NetWorth() != wantNW || s2.NetWorth() != 1_000_000 {
 		t.Fatalf("net worth after reopen = %d, want %d", s2.NetWorth(), wantNW)
@@ -61,13 +61,13 @@ func TestPersistenceRoundTrip(t *testing.T) {
 	if len(s2.Transactions()) != 0 {
 		t.Fatal("delete not applied in memory")
 	}
-	s2.Close()
+	_ = s2.Close()
 
 	s3, err := OpenStore(path)
 	if err != nil {
 		t.Fatalf("OpenStore 3: %v", err)
 	}
-	defer s3.Close()
+	defer func() { _ = s3.Close() }()
 	if len(s3.Transactions()) != 0 {
 		t.Fatal("delete not persisted")
 	}
@@ -82,7 +82,7 @@ func TestOpenRefusesFileFromNewerVersion(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	s.Close()
+	_ = s.Close()
 
 	db, err := sql.Open("sqlite", path)
 	if err != nil {
@@ -91,7 +91,7 @@ func TestOpenRefusesFileFromNewerVersion(t *testing.T) {
 	if _, err := db.Exec(fmt.Sprintf(`PRAGMA user_version = %d;`, LatestVersion()+1)); err != nil {
 		t.Fatal(err)
 	}
-	db.Close()
+	_ = db.Close()
 
 	if _, err := OpenStore(path); !errors.Is(err, ErrFileTooNew) {
 		t.Fatalf("OpenStore on newer file = %v, want ErrFileTooNew", err)
@@ -106,7 +106,7 @@ func TestPersistenceErrorSurfaced(t *testing.T) {
 	}
 	var captured error
 	s.SetErrorHandler(func(e error) { captured = e })
-	s.Close() // close the DB so subsequent writes fail
+	_ = s.Close() // close the DB so subsequent writes fail
 
 	ok := s.AddTransaction(Transaction{Date: TodaySerial,
 		Posts: []Posting{P("checking", 100), P("opening", -100)}})

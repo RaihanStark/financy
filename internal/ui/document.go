@@ -33,7 +33,7 @@ func appTitle(path string) string {
 // useStore makes s the active document and refreshes the whole UI.
 func useStore(s *core.Store, path string) {
 	if store != nil {
-		store.Close()
+		_ = store.Close()
 	}
 	store = s
 	docPath = path
@@ -96,7 +96,7 @@ func doOpen() {
 			return
 		}
 		path := r.URI().Path()
-		r.Close()
+		_ = r.Close()
 		openDocumentAt(path)
 	}, ctl.win)
 	d.SetFilter(storage.NewExtensionFileFilter([]string{".financy"}))
@@ -112,7 +112,7 @@ func doSaveCopy() {
 			return
 		}
 		path := w.URI().Path()
-		w.Close()
+		_ = w.Close()
 		_ = os.Remove(path) // VACUUM INTO requires a non-existent target
 		if err := store.SaveCopy(path); err != nil {
 			dialog.ShowError(err, ctl.win)
@@ -138,7 +138,7 @@ func doExportCSV() {
 		if err != nil || w == nil {
 			return
 		}
-		defer w.Close()
+		defer func() { _ = w.Close() }()
 		if _, err := w.Write(data); err != nil {
 			dialog.ShowError(err, ctl.win)
 			return

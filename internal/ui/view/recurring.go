@@ -54,9 +54,10 @@ func dueBanner() fyne.CanvasObject {
 
 func recurringRow(r Recurring) fyne.CanvasObject {
 	amtCol := colNegative
-	if r.Kind == "Income" {
+	switch r.Kind {
+	case "Income":
 		amtCol = colPositive
-	} else if r.Kind == "Transfer" {
+	case "Transfer":
 		amtCol = colText
 	}
 
@@ -427,9 +428,10 @@ func showDuePrompt(items []DueItem) {
 	rows := make([]fyne.CanvasObject, 0, len(items))
 	for i, it := range items {
 		amtCol := colNegative
-		if it.Kind == "Income" {
+		switch it.Kind {
+		case "Income":
 			amtCol = colPositive
-		} else if it.Kind == "Transfer" {
+		case "Transfer":
 			amtCol = colText
 		}
 

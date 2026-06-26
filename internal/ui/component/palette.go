@@ -19,7 +19,6 @@ var (
 	colPrimary   color.NRGBA
 	colPositive  color.NRGBA
 	colNegative  color.NRGBA
-	colWarning   color.NRGBA
 )
 
 func init() { SyncPalette() }
@@ -37,7 +36,6 @@ func SyncPalette() {
 	colPrimary = style.Primary
 	colPositive = style.Positive
 	colNegative = style.Negative
-	colWarning = style.Warning
 }
 
 // Corner radii for the custom canvas widgets.
