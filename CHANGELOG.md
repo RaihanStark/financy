@@ -13,6 +13,8 @@ See `RELEASING.md`.
 
 ## [Unreleased]
 
+## [0.5.0] - 2026-06-26
+
 ### Added
 - **Richer demo data** — the sample document now exercises every module coherently:
   an off-budget **Investments** account that grows via monthly auto-invest, plus a full
@@ -181,7 +183,8 @@ double-entry accounting, with data in a single `.financy` file you own.
   automatic `.bak` before any file upgrade.
 - Cross-platform release bundles (Linux / Windows / macOS) published from CI on tag.
 
-[Unreleased]: https://github.com/raihanstark/financy/compare/v0.4.0...HEAD
+[Unreleased]: https://github.com/raihanstark/financy/compare/v0.5.0...HEAD
+[0.5.0]: https://github.com/raihanstark/financy/compare/v0.4.0...v0.5.0
 [0.4.0]: https://github.com/raihanstark/financy/compare/v0.3.0...v0.4.0
 [0.3.0]: https://github.com/raihanstark/financy/compare/v0.2.0...v0.3.0
 [0.2.0]: https://github.com/raihanstark/financy/compare/v0.1.0...v0.2.0
