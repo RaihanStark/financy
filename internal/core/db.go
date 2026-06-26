@@ -59,6 +59,33 @@ var migrations = []string{
 		enabled  INTEGER NOT NULL DEFAULT 1
 	);
 	`,
+	// v3 — debts (BNPL etc.) and their installment schedules.
+	`
+	CREATE TABLE debts (
+		id           TEXT PRIMARY KEY,
+		name         TEXT NOT NULL,
+		type         TEXT NOT NULL,
+		lender       TEXT NOT NULL DEFAULT '',
+		acct_money   TEXT NOT NULL,
+		acct_expense TEXT NOT NULL,
+		note         TEXT NOT NULL DEFAULT ''
+	);
+	CREATE TABLE debt_installments (
+		id       TEXT PRIMARY KEY,
+		debt_id  TEXT NOT NULL REFERENCES debts(id) ON DELETE CASCADE,
+		seq      INTEGER NOT NULL,
+		due_date INTEGER NOT NULL,
+		amount   INTEGER NOT NULL,
+		paid     INTEGER NOT NULL DEFAULT 0,
+		txn_id   TEXT NOT NULL DEFAULT ''
+	);
+	CREATE INDEX idx_installments_debt ON debt_installments(debt_id);
+	`,
+	// v4 — each debt owns a Liability account and a purchase transaction.
+	`
+	ALTER TABLE debts ADD COLUMN acct_liability TEXT NOT NULL DEFAULT '';
+	ALTER TABLE debts ADD COLUMN origin_txn TEXT NOT NULL DEFAULT '';
+	`,
 }
 
 // schemaVersion is the number of migrations that define the current schema.

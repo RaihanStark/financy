@@ -109,4 +109,33 @@ func SeedDemo(s *Store, currency string) {
 		Amount: 50000, Payee: "Transfer to Savings", Freq: "Monthly", NextDue: d + 3, Enabled: true})
 	s.AddRecurring(Recurring{Kind: KindExpense, AcctA: "checking", AcctB: "subs",
 		Amount: 2998, Payee: "Netflix & Spotify", Freq: "Monthly", NextDue: d + 8, Enabled: true})
+
+	// BNPL debts — installment plans at different points in their life so the Debts
+	// screen shows progress bars, paid history, and upcoming/overdue payments.
+	// addDebt generates an equal monthly schedule then pays off every installment
+	// already due, leaving the rest outstanding.
+	addDebt := func(name, lender, cat string, total, n, firstDue int) string {
+		s.AddDebt(Debt{Name: name, Type: DebtBNPL, Lender: lender,
+			AcctMoney: "checking", AcctExpense: cat}, GenerateInstallments(total, n, firstDue, "Monthly"))
+		id := s.debts[len(s.debts)-1].ID
+		for _, in := range s.Installments(id) {
+			if in.DueDate <= d {
+				s.PayInstallment(in.ID)
+			}
+		}
+		return id
+	}
+
+	// A year-long phone plan, five months in.
+	addDebt("iPhone 15 Pro", "Klarna", "shopping", 120000, 12, d-150)
+	// A longer fitness-equipment plan, three months in.
+	addDebt("Peloton Bike", "Affirm", "ent", 150000, 18, d-90)
+
+	// A "Pay in 4" with uneven installments (a bigger first payment) to show that
+	// amounts can differ month to month — one paid, the rest upcoming.
+	desk := addDebt("Standing Desk", "PayPal Pay in 4", "shopping", 80000, 4, d-15)
+	uneven := []int{35000, 15000, 15000, 15000}
+	for i, in := range s.Installments(desk) {
+		s.UpdateInstallment(in.ID, in.DueDate, uneven[i])
+	}
 }

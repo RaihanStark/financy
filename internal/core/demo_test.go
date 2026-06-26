@@ -17,8 +17,18 @@ func TestSeedDemo(t *testing.T) {
 	if s.Currency() != "$" {
 		t.Fatalf("currency = %q, want $", s.Currency())
 	}
-	if got := len(s.MoneyAccounts()); got != 4 {
-		t.Fatalf("money accounts = %d, want 4", got)
+	// 4 hand-made money accounts (3 assets + the credit card) plus one Liability
+	// account per demo BNPL debt.
+	if got := len(s.MoneyAccounts()); got != 7 {
+		t.Fatalf("money accounts = %d, want 7", got)
+	}
+	if got := len(s.Debts()); got != 3 {
+		t.Fatalf("demo debts = %d, want 3", got)
+	}
+	for _, d := range s.Debts() {
+		if s.AccountByID(d.AcctLiability) == nil {
+			t.Fatalf("demo debt %q has no liability account", d.Name)
+		}
 	}
 	if got := len(s.Recurrings()); got != 4 {
 		t.Fatalf("recurring templates = %d, want 4", got)

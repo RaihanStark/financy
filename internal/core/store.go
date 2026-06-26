@@ -10,11 +10,13 @@ import (
 // journal of balanced transactions; all balances and totals are derived. When
 // backed by a database (db != nil) every mutation writes through to disk.
 type Store struct {
-	db        *sql.DB
-	accounts  []Account
-	txns      []Transaction
-	recurring []Recurring
-	nextID    int
+	db           *sql.DB
+	accounts     []Account
+	txns         []Transaction
+	recurring    []Recurring
+	debts        []Debt
+	installments []Installment
+	nextID       int
 	owner        string
 	currency     string
 	year         int

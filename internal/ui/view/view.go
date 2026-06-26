@@ -40,6 +40,9 @@ type (
 	CategorySlice    = core.CategorySlice
 	Recurring        = core.Recurring
 	DueItem          = core.DueItem
+	Debt             = core.Debt
+	Installment      = core.Installment
+	DebtStatus       = core.DebtStatus
 	IncomeStatement  = core.IncomeStatement
 	BalanceSheet     = core.BalanceSheet
 	CashFlow         = core.CashFlow
@@ -76,6 +79,8 @@ var (
 	p               = core.P
 	postingsFor     = core.PostingsFor
 	frequencies     = core.Frequencies
+	debtTypes            = core.DebtTypes
+	generateInstallments = core.GenerateInstallments
 	todaySerial     = core.TodaySerial
 	version         = core.Version
 )
