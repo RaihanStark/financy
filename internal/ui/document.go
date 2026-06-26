@@ -191,7 +191,9 @@ func welcomeScreen() fyne.CanvasObject {
 
 // startup opens the last-used file, or shows the first-run setup dialog.
 func startup() {
-	prefs = loadPrefs()
+	if prefs == nil {
+		prefs = loadPrefs()
+	}
 	if prefs.LastPath != "" {
 		if _, err := os.Stat(prefs.LastPath); err == nil {
 			openDocumentAt(prefs.LastPath)

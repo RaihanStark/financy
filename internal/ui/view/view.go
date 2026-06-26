@@ -5,6 +5,8 @@
 package view
 
 import (
+	"image/color"
+
 	"fyne.io/fyne/v2"
 
 	"github.com/raihanstark/financy/internal/core"
@@ -123,20 +125,40 @@ var (
 )
 
 // ---- palette ----
+//
+// Local copies of the active palette kept concise. SyncPalette refreshes them
+// after a theme switch so freshly built screens pick up the new colors.
 
 var (
-	colBG        = style.BG
-	colSurface   = style.Surface
-	colSurfaceHi = style.SurfaceHi
-	colAltRow    = style.AltRow
-	colBorder    = style.Border
-	colText      = style.Text
-	colTextDim   = style.TextDim
-	colPrimary   = style.Primary
-	colPositive  = style.Positive
-	colNegative  = style.Negative
-	colWarning   = style.Warning
+	colBG        color.NRGBA
+	colSurface   color.NRGBA
+	colSurfaceHi color.NRGBA
+	colAltRow    color.NRGBA
+	colBorder    color.NRGBA
+	colText      color.NRGBA
+	colTextDim   color.NRGBA
+	colPrimary   color.NRGBA
+	colPositive  color.NRGBA
+	colNegative  color.NRGBA
+	colWarning   color.NRGBA
 )
+
+func init() { SyncPalette() }
+
+// SyncPalette refreshes the local palette aliases from the active style palette.
+func SyncPalette() {
+	colBG = style.BG
+	colSurface = style.Surface
+	colSurfaceHi = style.SurfaceHi
+	colAltRow = style.AltRow
+	colBorder = style.Border
+	colText = style.Text
+	colTextDim = style.TextDim
+	colPrimary = style.Primary
+	colPositive = style.Positive
+	colNegative = style.Negative
+	colWarning = style.Warning
+}
 
 const (
 	radius   = style.Radius

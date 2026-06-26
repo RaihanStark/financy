@@ -11,6 +11,7 @@ import (
 type appPrefs struct {
 	LastPath string   `json:"last_path"`
 	Recent   []string `json:"recent"`
+	Dark     bool     `json:"dark"`
 }
 
 const maxRecent = 8
