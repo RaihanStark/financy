@@ -13,6 +13,12 @@ See `RELEASING.md`.
 
 ## [Unreleased]
 
+### Added
+- **Linux `.deb` and `.rpm` packages** — releases now ship native Debian/Ubuntu and
+  Fedora/RHEL packages (built with nfpm). Installing puts `financy` on your `PATH`,
+  adds a desktop launcher and app icon, and registers the `.financy` file type so
+  documents open with a double-click. See the README install section.
+
 ## [0.4.0] - 2026-06-23
 
 ### Added

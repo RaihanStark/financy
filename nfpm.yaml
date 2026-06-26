@@ -1,0 +1,54 @@
+# nfpm configuration — builds the Linux .deb and .rpm packages.
+#
+# Build a binary first (`make build`), then:
+#   VERSION=$(make print-version) nfpm package --packager deb --target dist/
+#   VERSION=$(make print-version) nfpm package --packager rpm --target dist/
+# or simply `make nfpm`, which wires both up. See RELEASING.md.
+#
+# nfpm is pure Go (github.com/goreleaser/nfpm) so it builds both formats on any
+# OS without native dpkg/rpmbuild tooling. Docs: https://nfpm.goreleaser.com/
+name: financy
+arch: amd64
+platform: linux
+version: ${VERSION}
+version_schema: semver
+section: misc
+priority: optional
+maintainer: Raihan <dev@byraihan.com>
+vendor: Financy
+homepage: https://raihanstark.github.io/financy/
+license: MIT
+description: |
+  A fast, local-first personal finance manager built on real double-entry accounting.
+  Track accounts, money movements and net worth in a native desktop app — your data
+  lives in a single .financy SQLite file you own, and the books can never drift out
+  of balance.
+
+contents:
+  - src: ./financy
+    dst: /usr/bin/financy
+    file_info:
+      mode: 0755
+  - src: ./packaging/financy.desktop
+    dst: /usr/share/applications/app.financy.desktop
+  - src: ./Icon.png
+    dst: /usr/share/icons/hicolor/512x512/apps/app.financy.png
+  - src: ./packaging/financy.xml
+    dst: /usr/share/mime/packages/app.financy.xml
+  - src: ./LICENSE
+    dst: /usr/share/doc/financy/copyright
+
+# Refresh the desktop / MIME / icon caches after install & removal.
+scripts:
+  postinstall: ./packaging/scripts/postinstall.sh
+  postremove: ./packaging/scripts/postremove.sh
+
+overrides:
+  deb:
+    depends:
+      - libgl1
+      - libx11-6
+  rpm:
+    depends:
+      - mesa-libGL
+      - libX11

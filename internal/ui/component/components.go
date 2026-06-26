@@ -76,10 +76,12 @@ func (r *TappableRow) SetSelected(b bool) {
 // SetOnSecondary sets the right-click handler.
 func (r *TappableRow) SetOnSecondary(fn func(fyne.Position)) { r.onSecondary = fn }
 
-// SetBordered draws a thin border around the row (used for card-style rows).
+// SetBordered draws a hairline border with rounded corners around the row
+// (used for card-style rows).
 func (r *TappableRow) SetBordered() {
 	r.bg.StrokeColor = colBorder
 	r.bg.StrokeWidth = 1
+	r.bg.CornerRadius = radius
 }
 
 // appBar is the in-content header: title + subtitle on the left, action buttons
@@ -130,6 +132,7 @@ func alertBanner(icon fyne.Resource, message string, col color.Color, action fyn
 	bg := canvas.NewRectangle(withAlpha(col, 0x1e))
 	bg.StrokeColor = withAlpha(col, 0x88)
 	bg.StrokeWidth = 1
+	bg.CornerRadius = radius
 	ic := widget.NewIcon(icon)
 	left := container.NewHBox(ic, txt(message, col, 12.5, true))
 	var row fyne.CanvasObject

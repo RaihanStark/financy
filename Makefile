@@ -11,7 +11,7 @@ HUGO := $(shell command -v hugo 2>/dev/null || echo $(shell go env GOPATH)/bin/h
 # Where the screenshot harness writes its PNGs before they're copied into the docs.
 SHOTDIR := /tmp/financy-shots
 
-.PHONY: help run test vet check build shot set-version package release clean docs docs-build
+.PHONY: help run test vet check build shot set-version package nfpm print-version release clean docs docs-build
 
 help:
 	@echo "Financy — make targets:"
@@ -24,6 +24,7 @@ help:
 	@echo "  make docs-build               build the docs to website/public"
 	@echo "  make set-version VERSION=x.y.z  stamp version into code + FyneApp.toml"
 	@echo "  make package                  package for THIS OS (needs the fyne CLI)"
+	@echo "  make nfpm                     build the Linux .deb and .rpm into dist/ (needs the nfpm CLI)"
 	@echo "  make release VERSION=x.y.z    stamp, verify, build — then commit & tag"
 
 run:
@@ -81,6 +82,20 @@ set-version:
 
 package: build
 	fyne package
+
+# Print the version the build is stamped with (used by CI/nfpm). Handy on its own.
+print-version:
+	@echo $(VERSION)
+
+# Build the Linux .deb and .rpm from the freshly built binary using nfpm.
+# Install the CLI once: go install github.com/goreleaser/nfpm/v2/cmd/nfpm@latest
+nfpm: build
+	@command -v nfpm >/dev/null 2>&1 || { echo "nfpm not found. Install: go install github.com/goreleaser/nfpm/v2/cmd/nfpm@latest"; exit 1; }
+	@mkdir -p dist
+	VERSION=$(VERSION) nfpm package --config nfpm.yaml --packager deb --target dist/
+	VERSION=$(VERSION) nfpm package --config nfpm.yaml --packager rpm --target dist/
+	@echo "Built Linux packages in dist/:"
+	@ls -1 dist/*.deb dist/*.rpm
 
 # Local release prep: stamp + verify + build. Then commit and tag to trigger CI.
 release:
