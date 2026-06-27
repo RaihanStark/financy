@@ -13,6 +13,28 @@ See `RELEASING.md`.
 
 ## [Unreleased]
 
+### Added
+- **Debts** — a new module for tracking Buy-Now-Pay-Later (and other installment)
+  debts, with a **Debts** screen in the toolbar between Recurring and Analytics. Add
+  a debt (name, lender, pay-from account, total, number of installments, purchase
+  date, first due date, frequency) and a near-equal schedule is generated
+  automatically. Each debt is a **tab** with an inline installment table — **Pay** or
+  **Undo** each installment, or tap an unpaid one to edit its due date/amount. The
+  header summarises what's **Outstanding**, **Due now**, due **This month**, and
+  **Next month**. Installment payments are dated when you actually pay (today), not
+  the scheduled due date.
+- **Debts in the budget (zero-based)** — each debt is its own envelope under a
+  **Debt Payments** group: you fund it monthly and paying an installment is budgeted
+  spending that draws the liability down, leaving **Ready to Assign** neutral. Every
+  debt also opens an off-budget **Liability** account that mirrors the outstanding
+  balance, so it counts in **Accounts** and **Net Worth**. The purchase is booked as
+  a balance-sheet-only financing event on its **purchase date** (distinct from the
+  first payment's due date) against an equity contra — Net Worth drops by what you
+  owe, with no expense category charged. Persisted via schema migrations v5–v7.
+- **Pay debt from Add Transaction** — the Add Transaction form gains a **Pay debt**
+  type: choose a debt and one of its unpaid installments to post the payment without
+  leaving the transaction flow.
+
 ## [0.5.1] - 2026-06-27
 
 ### Changed

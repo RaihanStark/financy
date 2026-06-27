@@ -9,6 +9,7 @@ import (
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/canvas"
 	"fyne.io/fyne/v2/container"
+	"fyne.io/fyne/v2/dialog"
 	"fyne.io/fyne/v2/theme"
 	"fyne.io/fyne/v2/widget"
 )
@@ -495,6 +496,7 @@ func filteredTransactions() []Transaction {
 func TransactionForm(id, prefillMoney string) {
 	var existing *Transaction
 	var v txnView
+	var formDialog dialog.Dialog
 	if id != "" {
 		existing = store.TxnByID(id)
 		if existing != nil {
@@ -502,7 +504,13 @@ func TransactionForm(id, prefillMoney string) {
 		}
 	}
 
-	kind := widget.NewSelect([]string{"Expense", "Income", "Transfer"}, nil)
+	// When adding (not editing) and debts exist, offer "Pay debt" — picking it
+	// swaps to the focused pay-installment form.
+	kinds := []string{"Expense", "Income", "Transfer"}
+	if id == "" && len(store.Debts()) > 0 {
+		kinds = append(kinds, "Pay debt")
+	}
+	kind := widget.NewSelect(kinds, nil)
 	date := newDateEntry(0)
 	amount := newAmountEntry()
 	amount.Validator = func(s string) error {
@@ -537,7 +545,16 @@ func TransactionForm(id, prefillMoney string) {
 		acctA.Refresh()
 		acctB.Refresh()
 	}
-	kind.OnChanged = func(k string) { configure(k) }
+	kind.OnChanged = func(k string) {
+		if k == "Pay debt" {
+			if formDialog != nil {
+				formDialog.Hide()
+			}
+			payInstallmentForm()
+			return
+		}
+		configure(k)
+	}
 
 	title := "Add Transaction"
 	if existing != nil {
@@ -582,7 +599,10 @@ func TransactionForm(id, prefillMoney string) {
 		widget.NewFormItem("Memo", memo),
 	}
 
-	showForm(title, items, func() {
+	formDialog = dialog.NewForm(title, "Save", "Cancel", items, func(ok bool) {
+		if !ok {
+			return
+		}
 		serial := parseDateSerial(date.Text)
 		amt := parseAmount(amount.Text)
 		if serial == 0 || amt <= 0 || acctA.Selected == "" || acctB.Selected == "" {
@@ -598,6 +618,80 @@ func TransactionForm(id, prefillMoney string) {
 		} else {
 			store.AddTransaction(nt)
 		}
+	}, win)
+	formDialog.Resize(fyne.NewSize(460, 420))
+	formDialog.Show()
+}
+
+// payInstallmentForm is the "Pay debt" path of the Add Transaction flow: pick a
+// debt and one of its unpaid installments; saving posts that installment as a
+// payment dated when you actually pay (today by default). The amount comes from
+// the installment, and the money leaves the debt's configured pay-from account.
+func payInstallmentForm() {
+	debts := store.Debts()
+	if len(debts) == 0 {
+		showInfo("No debts", "Add a debt on the Debts screen first.")
+		return
+	}
+	debtNames := make([]string, len(debts))
+	for i, d := range debts {
+		debtNames[i] = d.Name
+	}
+
+	debtSel := widget.NewSelect(debtNames, nil)
+	instSel := widget.NewSelect(nil, nil)
+	date := newDateEntry(todaySerial)
+	amountLabel := widget.NewLabel("—")
+
+	instID := map[string]string{} // installment label → ID
+	instAmt := map[string]int{}   // installment label → amount
+	reload := func(debtName string) {
+		instID, instAmt = map[string]string{}, map[string]int{}
+		var labels []string
+		for _, d := range debts {
+			if d.Name != debtName {
+				continue
+			}
+			for _, in := range store.Installments(d.ID) {
+				if in.Paid {
+					continue
+				}
+				lab := "#" + itoa(in.Seq) + "    due " + fmtSerialDate(in.DueDate) + "    " + fmtMoney(in.Amount)
+				labels = append(labels, lab)
+				instID[lab] = in.ID
+				instAmt[lab] = in.Amount
+			}
+		}
+		instSel.Options = labels
+		instSel.Refresh()
+		if len(labels) > 0 {
+			instSel.SetSelected(labels[0]) // fires OnChanged → fills the amount
+		} else {
+			instSel.SetSelected("")
+			amountLabel.SetText("—")
+		}
+	}
+	debtSel.OnChanged = reload
+	instSel.OnChanged = func(lab string) {
+		if a, ok := instAmt[lab]; ok {
+			amountLabel.SetText(fmtMoney(a))
+		}
+	}
+	debtSel.SetSelected(debtNames[0])
+
+	items := []*widget.FormItem{
+		widget.NewFormItem("Debt", debtSel),
+		widget.NewFormItem("Installment", instSel),
+		widget.NewFormItem("Amount", amountLabel),
+		widget.NewFormItem("Date (YYYY-MM-DD)", date),
+	}
+	showForm("Pay debt", items, func() {
+		id := instID[instSel.Selected]
+		serial := parseDateSerial(date.Text)
+		if id == "" || serial == 0 {
+			return
+		}
+		store.PayInstallment(id, serial)
 	})
 }
 

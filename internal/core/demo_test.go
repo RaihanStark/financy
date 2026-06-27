@@ -17,8 +17,18 @@ func TestSeedDemo(t *testing.T) {
 	if s.Currency() != "$" {
 		t.Fatalf("currency = %q, want $", s.Currency())
 	}
-	if got := len(s.MoneyAccounts()); got != 5 {
-		t.Fatalf("money accounts = %d, want 5", got)
+	// 5 hand-made money accounts (4 assets incl. the off-budget brokerage + the
+	// credit card) plus one Liability account per demo BNPL debt.
+	if got := len(s.MoneyAccounts()); got != 8 {
+		t.Fatalf("money accounts = %d, want 8", got)
+	}
+	if got := len(s.Debts()); got != 3 {
+		t.Fatalf("demo debts = %d, want 3", got)
+	}
+	for _, d := range s.Debts() {
+		if s.AccountByID(d.AcctLiability) == nil {
+			t.Fatalf("demo debt %q has no liability account", d.Name)
+		}
 	}
 	if got := len(s.Recurrings()); got != 4 {
 		t.Fatalf("recurring templates = %d, want 4", got)
@@ -74,13 +84,12 @@ func TestSeedDemo(t *testing.T) {
 	}
 
 	// Double-entry must hold globally: every posting nets to zero, so the sum of
-	// all account balances across the whole chart is exactly zero.
+	// all account balances across the whole chart (every type, including equity
+	// such as opening balances and the debt-financing contra) is exactly zero.
 	total := 0
-	for _, a := range append(append(s.AssetAccounts(), s.LiabilityAccounts()...),
-		append(s.IncomeAccounts(), s.ExpenseAccounts()...)...) {
+	for _, a := range s.accounts {
 		total += s.Balance(a.ID)
 	}
-	total += s.Balance("opening") // equity
 	if total != 0 {
 		t.Fatalf("books are out of balance: all postings sum to %d, want 0", total)
 	}

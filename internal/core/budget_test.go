@@ -270,6 +270,54 @@ func TestCreditCardSpendingIsBudgetNeutral(t *testing.T) {
 	}
 }
 
+func TestDebtIsBudgetEnvelope(t *testing.T) {
+	s := budgetStore()
+	// Fund the budget with 1000 of cash (opening balance).
+	s.AddTransaction(Transaction{Date: ParseDateSerial("2026-06-01"), Payee: "open",
+		Posts: []Posting{P("cash", 1000), P("opening", -1000)}})
+	if rta := s.ReadyToAssign("2026-06"); rta != 1000 {
+		t.Fatalf("RTA after funding = %d, want 1000", rta)
+	}
+
+	// Take on a debt: 120 over 12 monthly installments, first due in June.
+	first := ParseDateSerial("2026-06-15")
+	s.AddDebt(Debt{Name: "Phone", Type: DebtBNPL, Lender: "PayLater", AcctMoney: "cash"},
+		GenerateInstallments(120, 12, first, "Monthly"))
+	d := s.Debts()[0]
+
+	// Origination is balance-sheet only: Ready to Assign must NOT move — you took
+	// on a tracked liability, you didn't spend budget money.
+	if rta := s.ReadyToAssign("2026-06"); rta != 1000 {
+		t.Fatalf("RTA after origination = %d, want 1000 (financing isn't budget spending)", rta)
+	}
+
+	// The debt shows up as its own budget envelope, keyed to its liability account.
+	if env := findCat(t, s.BudgetFor("2026-06"), d.AcctLiability); !env.IsDebt {
+		t.Fatalf("debt category should be flagged IsDebt")
+	}
+
+	// Assign 10 to the debt envelope (RTA drops by the assignment), then pay the
+	// first installment of 10.
+	s.SetAssigned("2026-06", d.AcctLiability, 10)
+	if rta := s.ReadyToAssign("2026-06"); rta != 990 {
+		t.Fatalf("RTA after assigning 10 to the debt = %d, want 990", rta)
+	}
+	s.PayInstallment(s.Installments(d.ID)[0].ID, first)
+
+	// Paying is budgeted spending: the envelope nets to zero and Ready to Assign
+	// stays put (the payment drew from the envelope, not from unassigned funds).
+	env := findCat(t, s.BudgetFor("2026-06"), d.AcctLiability)
+	if env.Activity != -10 {
+		t.Fatalf("debt envelope Activity after payment = %d, want -10", env.Activity)
+	}
+	if env.Available != 0 {
+		t.Fatalf("debt envelope Available = %d, want 0 (assigned 10, paid 10)", env.Available)
+	}
+	if rta := s.ReadyToAssign("2026-06"); rta != 990 {
+		t.Fatalf("RTA after paying installment = %d, want 990 (payment was budgeted)", rta)
+	}
+}
+
 func TestReadyToAssignTracksTotalAssets(t *testing.T) {
 	s := budgetStore()
 	s.accounts = append(s.accounts, Account{ID: "savings", Name: "Savings", Type: Asset})

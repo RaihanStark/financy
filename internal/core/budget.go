@@ -25,9 +25,10 @@ import (
 type BudgetCategory struct {
 	ID        string
 	Name      string
-	Assigned  int // assigned to this category THIS month
-	Activity  int // net flow this month; spending is negative
-	Available int // rolling envelope balance through this month
+	Assigned  int  // assigned to this category THIS month
+	Activity  int  // net flow this month; spending is negative
+	Available int  // rolling envelope balance through this month
+	IsDebt    bool // true for a debt's payment envelope (backed by its liability account)
 }
 
 // Overspent reports whether the envelope has gone negative.
@@ -146,24 +147,52 @@ func (s *Store) categorySpentInMonth(catID, month string) int {
 	return sum
 }
 
-// spendIndex sums every expense posting into a "categoryID|YYYY-MM" → amount map
+// spendIndex sums every category posting into a "categoryID|YYYY-MM" → amount map
 // in a single pass, so the month-by-month simulation can run without rescanning
 // the journal per category.
+//
+// Expense accounts count every posting. A debt's liability account is also a
+// category (its payment envelope), but there only pay-downs count: an installment
+// payment posts a POSITIVE amount into the liability (drawing it toward zero),
+// whereas the origination posts a negative amount. Counting only positive postings
+// keeps the envelope's activity equal to what you actually paid that month.
 func (s *Store) spendIndex() map[string]int {
 	expense := map[string]bool{}
 	for _, c := range s.ExpenseAccounts() {
 		expense[c.ID] = true
 	}
+	debt := map[string]bool{}
+	for _, d := range s.debts {
+		if d.AcctLiability != "" {
+			debt[d.AcctLiability] = true
+		}
+	}
 	idx := map[string]int{}
 	for _, t := range s.txns {
 		m := FmtSerialMonth(t.Date)
 		for _, p := range t.Posts {
-			if expense[p.AccountID] {
+			switch {
+			case expense[p.AccountID]:
+				idx[p.AccountID+"|"+m] += p.Amount
+			case debt[p.AccountID] && p.Amount > 0:
 				idx[p.AccountID+"|"+m] += p.Amount
 			}
 		}
 	}
 	return idx
+}
+
+// budgetCategories is the ordered set of category accounts the envelope view is
+// built from: the Expense accounts followed by each debt's liability account
+// (its payment envelope).
+func (s *Store) budgetCategories() []Account {
+	cats := s.ExpenseAccounts()
+	for _, d := range s.debts {
+		if a := s.AccountByID(d.AcctLiability); a != nil {
+			cats = append(cats, *a)
+		}
+	}
+	return cats
 }
 
 // earliestMonth is the earliest "YYYY-MM" appearing in any transaction or
@@ -228,7 +257,7 @@ func (s *Store) budgetCompute(month string) (cats []BudgetCategory, sumAvail int
 	if start == "" || start > month {
 		start = month
 	}
-	for _, c := range s.ExpenseAccounts() {
+	for _, c := range s.budgetCategories() {
 		avail := 0
 		for m := start; m <= month; m = ShiftMonth(m, 1) {
 			if avail < 0 {
@@ -243,6 +272,7 @@ func (s *Store) budgetCompute(month string) (cats []BudgetCategory, sumAvail int
 			Assigned:  s.Assigned(month, c.ID),
 			Activity:  -spentMonth,
 			Available: avail,
+			IsDebt:    c.Type == Liability,
 		}
 		cats = append(cats, bc)
 		sumAvail += avail

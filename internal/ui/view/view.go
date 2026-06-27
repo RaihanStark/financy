@@ -42,6 +42,9 @@ type (
 	CategorySlice    = core.CategorySlice
 	Recurring        = core.Recurring
 	DueItem          = core.DueItem
+	Debt             = core.Debt
+	Installment      = core.Installment
+	DebtStatus       = core.DebtStatus
 	IncomeStatement  = core.IncomeStatement
 	BalanceSheet     = core.BalanceSheet
 	CashFlow         = core.CashFlow
@@ -80,6 +83,8 @@ var (
 	p               = core.P
 	postingsFor     = core.PostingsFor
 	frequencies     = core.Frequencies
+	debtTypes            = core.DebtTypes
+	generateInstallments = core.GenerateInstallments
 	todaySerial     = core.TodaySerial
 	version         = core.Version
 
@@ -115,6 +120,9 @@ var (
 	secondaryButton = component.SecondaryButton
 	detailField     = component.DetailField
 	emptyState      = component.EmptyState
+	badge           = component.Badge
+	progressBar     = component.ProgressBar
+	pillStat        = component.PillStat
 	padCell         = component.PadCell
 	newTappableRow  = component.NewTappableRow
 	barPairChart    = component.BarPairChart

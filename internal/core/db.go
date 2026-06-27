@@ -73,6 +73,38 @@ var migrations = []string{
 	`
 	ALTER TABLE accounts ADD COLUMN off_budget INTEGER NOT NULL DEFAULT 0;
 	`,
+	// v5 — debts (BNPL etc.) and their installment schedules.
+	`
+	CREATE TABLE debts (
+		id           TEXT PRIMARY KEY,
+		name         TEXT NOT NULL,
+		type         TEXT NOT NULL,
+		lender       TEXT NOT NULL DEFAULT '',
+		acct_money   TEXT NOT NULL,
+		note         TEXT NOT NULL DEFAULT ''
+	);
+	CREATE TABLE debt_installments (
+		id       TEXT PRIMARY KEY,
+		debt_id  TEXT NOT NULL REFERENCES debts(id) ON DELETE CASCADE,
+		seq      INTEGER NOT NULL,
+		due_date INTEGER NOT NULL,
+		amount   INTEGER NOT NULL,
+		paid     INTEGER NOT NULL DEFAULT 0,
+		txn_id   TEXT NOT NULL DEFAULT ''
+	);
+	CREATE INDEX idx_installments_debt ON debt_installments(debt_id);
+	`,
+	// v6 — each debt owns a Liability account and a purchase transaction.
+	`
+	ALTER TABLE debts ADD COLUMN acct_liability TEXT NOT NULL DEFAULT '';
+	ALTER TABLE debts ADD COLUMN origin_txn TEXT NOT NULL DEFAULT '';
+	`,
+	// v7 — a debt's purchase (origination) date, distinct from its first payment's
+	// due date. Default 0 is treated as "today" at creation; existing rows keep 0
+	// and fall back to their origination transaction's date.
+	`
+	ALTER TABLE debts ADD COLUMN purchase_date INTEGER NOT NULL DEFAULT 0;
+	`,
 }
 
 // schemaVersion is the number of migrations that define the current schema.

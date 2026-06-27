@@ -14,6 +14,8 @@ type Store struct {
 	accounts     []Account
 	txns         []Transaction
 	recurring    []Recurring
+	debts        []Debt
+	installments []Installment
 	assignments  map[string]int // "YYYY-MM|categoryID" → assigned minor units
 	nextID       int
 	owner        string

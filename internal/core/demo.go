@@ -149,11 +149,9 @@ func SeedDemo(s *Store, currency string) {
 	for _, pl := range plan {
 		s.SetAssigned(month, pl.cat, pl.amt)
 	}
-	// Zero-based finish: give every remaining dollar a job by topping up the
-	// Emergency Fund, so Ready to Assign lands exactly on 0.
-	if left := s.ReadyToAssign(month); left > 0 {
-		s.SetAssigned(month, "emergency", s.Assigned(month, "emergency")+left)
-	}
+	// The zero-based finish (topping up Emergency so Ready to Assign lands on 0)
+	// happens AFTER the debts below, since funding their payment envelopes also
+	// has a claim on the remaining dollars.
 
 	// Recurring templates, due in the next couple of weeks so the Recurring screen
 	// is populated without nagging on load.
@@ -165,4 +163,59 @@ func SeedDemo(s *Store, currency string) {
 		Amount: 50000, Payee: "Transfer to Savings", Freq: "Monthly", NextDue: d + 3, Enabled: true})
 	s.AddRecurring(Recurring{Kind: KindExpense, AcctA: "checking", AcctB: "subs",
 		Amount: 2998, Payee: "Netflix & Spotify", Freq: "Monthly", NextDue: d + 8, Enabled: true})
+
+	// BNPL debts — installment plans at different points in their life so the Debts
+	// screen shows progress bars, paid history, and upcoming/overdue payments.
+	// addDebt generates an equal monthly schedule then pays off every installment
+	// already due, leaving the rest outstanding.
+	addDebt := func(name, lender string, total, n, firstDue int) string {
+		s.AddDebt(Debt{Name: name, Type: DebtBNPL, Lender: lender,
+			AcctMoney: "checking", PurchaseDate: firstDue}, GenerateInstallments(total, n, firstDue, "Monthly"))
+		id := s.debts[len(s.debts)-1].ID
+		for _, in := range s.Installments(id) {
+			if in.DueDate <= d {
+				s.PayInstallment(in.ID, in.DueDate) // historical: paid on its due date
+			}
+		}
+		return id
+	}
+
+	// A year-long phone plan, five months in.
+	addDebt("iPhone 15 Pro", "Klarna", 120000, 12, d-150)
+	// A longer fitness-equipment plan, three months in.
+	addDebt("Peloton Bike", "Affirm", 150000, 18, d-90)
+
+	// A "Pay in 4" with uneven installments (a bigger first payment) to show that
+	// amounts can differ month to month — one paid, the rest upcoming.
+	desk := addDebt("Standing Desk", "PayPal Pay in 4", 80000, 4, d-15)
+	uneven := []int{35000, 15000, 15000, 15000}
+	for i, in := range s.Installments(desk) {
+		s.UpdateInstallment(in.ID, in.DueDate, uneven[i])
+	}
+
+	// Fund each debt's payment envelope the zero-based way: every installment that
+	// has already been paid is assigned in the month it fell due (so the envelope
+	// nets to zero — no phantom overspend), and each debt's next upcoming payment
+	// is assigned in the current month, so the Budget screen shows money set aside
+	// for the debts you owe.
+	for _, dbt := range s.Debts() {
+		nextAmt, haveNext := 0, false
+		for _, in := range s.Installments(dbt.ID) {
+			if in.Paid {
+				m := FmtSerialMonth(in.DueDate)
+				s.SetAssigned(m, dbt.AcctLiability, s.Assigned(m, dbt.AcctLiability)+in.Amount)
+			} else if !haveNext {
+				nextAmt, haveNext = in.Amount, true
+			}
+		}
+		if haveNext {
+			s.SetAssigned(month, dbt.AcctLiability, s.Assigned(month, dbt.AcctLiability)+nextAmt)
+		}
+	}
+
+	// Zero-based finish: give every remaining dollar a job by topping up the
+	// Emergency Fund, so Ready to Assign lands exactly on 0.
+	if left := s.ReadyToAssign(month); left > 0 {
+		s.SetAssigned(month, "emergency", s.Assigned(month, "emergency")+left)
+	}
 }

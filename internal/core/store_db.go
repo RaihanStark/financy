@@ -128,6 +128,37 @@ func loadStore(db *sql.DB) (*Store, error) {
 	}
 	_ = brows.Close()
 
+	// Debts (table added in migration v5) and their installment schedules.
+	drows, err := db.Query(`SELECT id, name, type, lender, acct_money, purchase_date, note, acct_liability, origin_txn FROM debts ORDER BY rowid`)
+	if err != nil {
+		return nil, err
+	}
+	for drows.Next() {
+		var d Debt
+		if err := drows.Scan(&d.ID, &d.Name, &d.Type, &d.Lender, &d.AcctMoney, &d.PurchaseDate, &d.Note, &d.AcctLiability, &d.OriginTxnID); err != nil {
+			_ = drows.Close()
+			return nil, err
+		}
+		s.debts = append(s.debts, d)
+	}
+	_ = drows.Close()
+
+	irows, err := db.Query(`SELECT id, debt_id, seq, due_date, amount, paid, txn_id FROM debt_installments ORDER BY debt_id, seq`)
+	if err != nil {
+		return nil, err
+	}
+	for irows.Next() {
+		var in Installment
+		var paid int
+		if err := irows.Scan(&in.ID, &in.DebtID, &in.Seq, &in.DueDate, &in.Amount, &paid, &in.TxnID); err != nil {
+			_ = irows.Close()
+			return nil, err
+		}
+		in.Paid = paid != 0
+		s.installments = append(s.installments, in)
+	}
+	_ = irows.Close()
+
 	s.nextID = s.computeNextID()
 	SetCurrencySymbol(s.currency)
 	ApplyNumberFormat(s.numberFormat)
@@ -158,6 +189,48 @@ func (s *Store) dbDeleteRecurring(id string) error {
 		return nil
 	}
 	_, err := s.db.Exec(`DELETE FROM recurring WHERE id = ?`, id)
+	return err
+}
+
+func (s *Store) dbUpsertDebt(d Debt) error {
+	if s.db == nil {
+		return nil
+	}
+	_, err := s.db.Exec(`
+		INSERT INTO debts (id, name, type, lender, acct_money, purchase_date, note, acct_liability, origin_txn)
+		VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+		ON CONFLICT(id) DO UPDATE SET
+			name = excluded.name, type = excluded.type, lender = excluded.lender,
+			acct_money = excluded.acct_money, purchase_date = excluded.purchase_date,
+			note = excluded.note, acct_liability = excluded.acct_liability,
+			origin_txn = excluded.origin_txn`,
+		d.ID, d.Name, d.Type, d.Lender, d.AcctMoney, d.PurchaseDate, d.Note, d.AcctLiability, d.OriginTxnID)
+	return err
+}
+
+func (s *Store) dbDeleteDebt(id string) error {
+	if s.db == nil {
+		return nil
+	}
+	_, err := s.db.Exec(`DELETE FROM debts WHERE id = ?`, id) // cascades to installments
+	return err
+}
+
+func (s *Store) dbUpsertInstallment(in Installment) error {
+	if s.db == nil {
+		return nil
+	}
+	paid := 0
+	if in.Paid {
+		paid = 1
+	}
+	_, err := s.db.Exec(`
+		INSERT INTO debt_installments (id, debt_id, seq, due_date, amount, paid, txn_id)
+		VALUES (?, ?, ?, ?, ?, ?, ?)
+		ON CONFLICT(id) DO UPDATE SET
+			debt_id = excluded.debt_id, seq = excluded.seq, due_date = excluded.due_date,
+			amount = excluded.amount, paid = excluded.paid, txn_id = excluded.txn_id`,
+		in.ID, in.DebtID, in.Seq, in.DueDate, in.Amount, paid, in.TxnID)
 	return err
 }
 

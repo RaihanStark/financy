@@ -115,12 +115,29 @@ func budgetTable(bm BudgetMonth) fyne.CanvasObject {
 	if len(bm.Categories) == 0 {
 		rows = append(rows, container.New(padCell(18, 10), emptyState("No categories yet — add Expense categories to start budgeting")))
 	}
+	// Spending categories first, then the "Add category" line, then the debts you
+	// owe under their own subheader — each debt is an envelope you fund as you pay
+	// it down. (Categories arrive grouped: expense accounts before debt envelopes.)
+	debtsStarted := false
 	for i, c := range bm.Categories {
+		if c.IsDebt && !debtsStarted {
+			debtsStarted = true
+			rows = append(rows, budgetAddRow(), budgetSubheader("DEBT PAYMENTS"))
+		}
 		rows = append(rows, budgetCategoryRow(c, i))
 	}
-	rows = append(rows, budgetAddRow(), budgetTotalsRow(bm))
+	if !debtsStarted {
+		rows = append(rows, budgetAddRow())
+	}
+	rows = append(rows, budgetTotalsRow(bm))
 
 	return panel(container.NewVBox(rows...))
+}
+
+// budgetSubheader is a small section label dividing the category list (e.g. the
+// "Debt Payments" group that separates debt envelopes from spending categories).
+func budgetSubheader(label string) fyne.CanvasObject {
+	return container.NewVBox(divider(), container.New(padCell(8, 6), txt(label, colTextDim, 11, true)))
 }
 
 // budgetAddRow is the inline "+ Add Category" line at the bottom of the list,
