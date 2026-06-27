@@ -13,11 +13,15 @@ See `RELEASING.md`.
 
 ## [Unreleased]
 
-### Added
+## [0.5.1] - 2026-06-27
+
+### Changed
 - **`make run-dev`** — run against an isolated dev profile so development never touches
   your real data. It repoints `$XDG_CONFIG_HOME` at `./.devdata/config` (gitignored),
   giving dev its own `prefs.json`, recent-files list, and `.financy` database; your
   `~/.config/financy` is left untouched. (Linux/BSD only — macOS ignores `XDG_CONFIG_HOME`.)
+- **Funding & sponsorship** — added a GitHub Sponsors funding configuration and a
+  "Support / sponsorship" section to the README. No application changes.
 
 ## [0.5.0] - 2026-06-26
 
@@ -189,7 +193,8 @@ double-entry accounting, with data in a single `.financy` file you own.
   automatic `.bak` before any file upgrade.
 - Cross-platform release bundles (Linux / Windows / macOS) published from CI on tag.
 
-[Unreleased]: https://github.com/raihanstark/financy/compare/v0.5.0...HEAD
+[Unreleased]: https://github.com/raihanstark/financy/compare/v0.5.1...HEAD
+[0.5.1]: https://github.com/raihanstark/financy/compare/v0.5.0...v0.5.1
 [0.5.0]: https://github.com/raihanstark/financy/compare/v0.4.0...v0.5.0
 [0.4.0]: https://github.com/raihanstark/financy/compare/v0.3.0...v0.4.0
 [0.3.0]: https://github.com/raihanstark/financy/compare/v0.2.0...v0.3.0
