@@ -1,8 +1,11 @@
 module github.com/raihanstark/financy
 
-go 1.25.10
+go 1.25.11
 
-require fyne.io/fyne/v2 v2.7.4
+require (
+	fyne.io/fyne/v2 v2.7.4
+	modernc.org/sqlite v1.53.0
+)
 
 require (
 	fyne.io/systray v1.12.1 // indirect
@@ -39,13 +42,12 @@ require (
 	github.com/srwiley/rasterx v0.0.0-20220730225603-2ab79fcdd4ef // indirect
 	github.com/stretchr/testify v1.11.1 // indirect
 	github.com/yuin/goldmark v1.7.8 // indirect
-	golang.org/x/image v0.24.0 // indirect
+	golang.org/x/image v0.43.0 // indirect
 	golang.org/x/net v0.35.0 // indirect
 	golang.org/x/sys v0.44.0 // indirect
-	golang.org/x/text v0.22.0 // indirect
+	golang.org/x/text v0.38.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 	modernc.org/libc v1.73.4 // indirect
 	modernc.org/mathutil v1.7.1 // indirect
 	modernc.org/memory v1.11.0 // indirect
-	modernc.org/sqlite v1.53.0 // indirect
 )

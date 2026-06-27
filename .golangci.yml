@@ -1,0 +1,8 @@
+version: "2"
+
+# Low-noise baseline: the default linters only. These are high-signal and
+# rarely produce false positives. Add more (gosec, revive, etc.) later once
+# the codebase is clean against these.
+linters:
+  default: standard
+  # standard = errcheck, govet, ineffassign, staticcheck, unused

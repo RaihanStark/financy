@@ -42,7 +42,7 @@ func TestGenerateInstallmentsSplit(t *testing.T) {
 func TestPayInstallmentPostsTransaction(t *testing.T) {
 	s := debtStore()
 	first := serialOf(2026, 1, 1)
-	d := Debt{Name: "Phone", Type: DebtBNPL, Lender: "PayLater", AcctMoney: "checking", AcctExpense: "shopping"}
+	d := Debt{Name: "Phone", Type: DebtBNPL, Lender: "PayLater", AcctMoney: "checking"}
 	s.AddDebt(d, GenerateInstallments(12000, 12, first, "Monthly"))
 
 	debts := s.Debts()
@@ -56,23 +56,27 @@ func TestPayInstallmentPostsTransaction(t *testing.T) {
 		t.Fatalf("got %d installments, want 12", len(insts))
 	}
 
-	// Creating the debt opens a Liability account and books the purchase: the
-	// expense category is charged the full amount and the liability matches it.
+	// Creating the debt opens an off-budget Liability account and books the
+	// purchase as a balance-sheet-only financing event: the liability rises to the
+	// schedule total against an Equity contra, and no expense category is charged.
 	if a := s.AccountByID(liab); a == nil || a.Type != Liability {
 		t.Fatalf("liability account not created: %v", a)
+	}
+	if a := s.AccountByID(liab); a == nil || !a.OffBudget {
+		t.Fatalf("debt liability should be off-budget (tracking) so it doesn't drain Ready to Assign")
 	}
 	if got := len(s.Transactions()); got != 1 {
 		t.Fatalf("got %d transactions after AddDebt, want 1 (the purchase)", got)
 	}
-	if bal := s.Balance("shopping"); bal != 12000 {
-		t.Errorf("shopping balance after purchase = %d, want 12000", bal)
+	if bal := s.Balance("shopping"); bal != 0 {
+		t.Errorf("shopping balance after purchase = %d, want 0 (financing isn't an expense)", bal)
 	}
 	if out := s.DisplayBalance(*s.AccountByID(liab)); out != 12000 {
 		t.Errorf("liability outstanding after purchase = %d, want 12000", out)
 	}
 
 	// Paying the first installment moves money into the liability (drawing it down).
-	if !s.PayInstallment(insts[0].ID) {
+	if !s.PayInstallment(insts[0].ID, insts[0].DueDate) {
 		t.Fatal("PayInstallment returned false")
 	}
 	if got := len(s.Transactions()); got != 2 {
@@ -108,7 +112,7 @@ func TestPayInstallmentPostsTransaction(t *testing.T) {
 func TestUpdateInstallment(t *testing.T) {
 	s := debtStore()
 	first := serialOf(2026, 1, 1)
-	s.AddDebt(Debt{Name: "Sofa", Type: DebtBNPL, AcctMoney: "checking", AcctExpense: "shopping"},
+	s.AddDebt(Debt{Name: "Sofa", Type: DebtBNPL, AcctMoney: "checking"},
 		GenerateInstallments(6000, 6, first, "Monthly"))
 	id := s.Debts()[0].ID
 	liab := s.Debts()[0].AcctLiability
@@ -130,7 +134,7 @@ func TestUpdateInstallment(t *testing.T) {
 
 	// Editing a PAID installment rewrites its payment so the books match: checking
 	// reflects the new payment amount, and the liability draws down by it.
-	if !s.PayInstallment(insts[0].ID) {
+	if !s.PayInstallment(insts[0].ID, insts[0].DueDate) {
 		t.Fatal("pay failed")
 	}
 	if !s.UpdateInstallment(insts[0].ID, first, 1200) {
@@ -153,7 +157,7 @@ func TestUpdateInstallment(t *testing.T) {
 func TestDebtStatusDueAndDelete(t *testing.T) {
 	s := debtStore()
 	first := serialOf(2026, 1, 1)
-	s.AddDebt(Debt{Name: "Laptop", Type: DebtBNPL, AcctMoney: "checking", AcctExpense: "shopping"},
+	s.AddDebt(Debt{Name: "Laptop", Type: DebtBNPL, AcctMoney: "checking"},
 		GenerateInstallments(6000, 6, first, "Monthly"))
 	id := s.Debts()[0].ID
 
@@ -184,6 +188,59 @@ func TestDebtStatusDueAndDelete(t *testing.T) {
 	}
 }
 
+func TestDebtBuckets(t *testing.T) {
+	s := debtStore()
+	// Six monthly 1000-installments from Jan 15. As of Mar 10: Jan & Feb are
+	// already due, Mar 15 is still coming this month, Apr 15 is next month.
+	first := serialOf(2026, 1, 15)
+	s.AddDebt(Debt{Name: "Sofa", Type: DebtBNPL, AcctMoney: "checking"},
+		GenerateInstallments(6000, 6, first, "Monthly"))
+
+	b := s.DebtBuckets(serialOf(2026, 3, 10))
+	if b.Outstanding != 6000 {
+		t.Errorf("Outstanding = %d, want 6000", b.Outstanding)
+	}
+	if b.Due != 2000 {
+		t.Errorf("Due = %d, want 2000 (Jan+Feb)", b.Due)
+	}
+	if b.ThisMonth != 1000 {
+		t.Errorf("ThisMonth = %d, want 1000 (Mar 15)", b.ThisMonth)
+	}
+	if b.NextMonth != 1000 {
+		t.Errorf("NextMonth = %d, want 1000 (Apr 15)", b.NextMonth)
+	}
+}
+
+func TestDebtPurchaseDateDrivesOrigination(t *testing.T) {
+	s := debtStore()
+	bought := serialOf(2026, 1, 1)
+	firstDue := serialOf(2026, 2, 1) // first payment a month AFTER the purchase
+	s.AddDebt(Debt{Name: "Laptop", Type: DebtBNPL, AcctMoney: "checking", PurchaseDate: bought},
+		GenerateInstallments(6000, 6, firstDue, "Monthly"))
+	d := s.Debts()[0]
+
+	// The liability is booked on the purchase date, not the first due date.
+	if orig := s.TxnByID(d.OriginTxnID); orig == nil || orig.Date != bought {
+		t.Fatalf("origination date = %v, want purchase date %d (not first due %d)", orig, bought, firstDue)
+	}
+	// So Net Worth reflects the debt from the day you incur it — before any payment
+	// is even due — and not before.
+	if nw := s.netWorthAsOf(bought); nw != -6000 {
+		t.Errorf("net worth as of purchase = %d, want -6000", nw)
+	}
+	if nw := s.netWorthAsOf(bought - 1); nw != 0 {
+		t.Errorf("net worth the day before purchase = %d, want 0", nw)
+	}
+
+	// Unset PurchaseDate defaults to today.
+	s2 := debtStore()
+	s2.AddDebt(Debt{Name: "Phone", Type: DebtBNPL, AcctMoney: "checking"},
+		GenerateInstallments(1200, 12, serialOf(2026, 3, 1), "Monthly"))
+	if got := s2.Debts()[0].PurchaseDate; got != TodaySerial {
+		t.Errorf("default PurchaseDate = %d, want today %d", got, TodaySerial)
+	}
+}
+
 func TestDebtPersistRoundTrip(t *testing.T) {
 	dir := t.TempDir()
 	path := dir + "/debt.financy"
@@ -193,18 +250,19 @@ func TestDebtPersistRoundTrip(t *testing.T) {
 	}
 	s.AddAccount(Account{ID: "checking", Name: "Checking", Type: Asset})
 	first := TimeToSerial(time.Date(2026, 5, 1, 0, 0, 0, 0, time.UTC))
-	s.AddDebt(Debt{Name: "TV", Type: DebtBNPL, Lender: "Kredivo", AcctMoney: "checking", AcctExpense: "shopping"},
+	bought := TimeToSerial(time.Date(2026, 4, 20, 0, 0, 0, 0, time.UTC))
+	s.AddDebt(Debt{Name: "TV", Type: DebtBNPL, Lender: "Kredivo", AcctMoney: "checking", PurchaseDate: bought},
 		GenerateInstallments(9000, 9, first, "Monthly"))
 	id := s.Debts()[0].ID
-	s.PayInstallment(s.Installments(id)[0].ID)
-	s.Close()
+	s.PayInstallment(s.Installments(id)[0].ID, first)
+	_ = s.Close()
 
 	// Reopen and confirm the debt, its schedule, and the paid flag survived.
 	s2, err := OpenStore(path)
 	if err != nil {
 		t.Fatal(err)
 	}
-	defer s2.Close()
+	defer func() { _ = s2.Close() }()
 	if len(s2.Debts()) != 1 {
 		t.Fatalf("got %d debts after reopen, want 1", len(s2.Debts()))
 	}
@@ -222,6 +280,9 @@ func TestDebtPersistRoundTrip(t *testing.T) {
 	rd := s2.Debts()[0]
 	if rd.AcctLiability == "" || rd.OriginTxnID == "" {
 		t.Errorf("debt liability/origin links didn't persist: %+v", rd)
+	}
+	if rd.PurchaseDate != bought {
+		t.Errorf("PurchaseDate after reopen = %d, want %d", rd.PurchaseDate, bought)
 	}
 	if a := s2.AccountByID(rd.AcctLiability); a == nil || a.Type != Liability {
 		t.Errorf("liability account missing after reopen: %v", a)

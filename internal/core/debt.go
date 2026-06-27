@@ -15,20 +15,24 @@ const DebtBNPL = "BNPL"
 // DebtTypes returns the selectable debt kinds, in order.
 func DebtTypes() []string { return []string{DebtBNPL} }
 
-// Debt is one tracked liability with an installment schedule. Each debt owns a
-// Liability account (AcctLiability) that mirrors its outstanding balance, so it
-// shows up in Accounts and Net Worth. When the debt is created we book the
-// purchase as a transaction (OriginTxnID): the expense category is charged and
-// the liability rises by the full amount. Paying an installment then moves money
-// from AcctMoney into the liability, drawing the balance down.
+// Debt is one tracked liability with an installment schedule. Each debt owns an
+// off-budget Liability account (AcctLiability) that mirrors its outstanding
+// balance, so it shows up in Accounts and Net Worth. When the debt is created we
+// book the purchase as a balance-sheet-only financing event (OriginTxnID): the
+// liability rises by the schedule total against an Equity contra — Net Worth
+// drops by what you owe, but no expense category is charged. The debt is its own
+// budget envelope; paying an installment moves money from AcctMoney into the
+// liability (drawing it down) and counts as that envelope's spending.
 type Debt struct {
-	ID          string
-	Name        string // what it's for, e.g. "iPhone 15"
-	Type        string // DebtBNPL
-	Lender      string // e.g. "Shopee PayLater"
-	AcctMoney   string // money account installments are paid from
-	AcctExpense string // expense category the purchase is booked to
-	Note        string
+	ID           string
+	Name         string // what it's for, e.g. "iPhone 15"
+	Type         string // DebtBNPL
+	Lender       string // e.g. "Shopee PayLater"
+	AcctMoney    string // money account installments are paid from
+	PurchaseDate int    // when the debt was incurred — the origination date. The
+	// whole point of "buy now, pay later" is this differs from the first payment's
+	// due date. 0 means "today" at creation time.
+	Note string
 
 	AcctLiability string // Liability account mirroring the outstanding balance
 	OriginTxnID   string // the purchase transaction that opened the liability
@@ -103,20 +107,30 @@ func (s *Store) installmentByID(id string) *Installment {
 }
 
 // AddDebt persists a debt together with its generated schedule. It also creates
-// the debt's Liability account and books the purchase: the expense category is
-// charged the full amount and the liability rises to match, so the debt appears
-// in Accounts and Net Worth from day one.
+// the debt's off-budget Liability account and books the purchase against an Equity
+// contra (dated the purchase date, defaulting to today — NOT the first payment's
+// due date), so the debt appears in Accounts and Net Worth from the moment you
+// incur it, even when the first installment is weeks away.
 func (s *Store) AddDebt(d Debt, insts []Installment) {
 	if d.ID == "" {
 		d.ID = s.genDebtID()
 	}
+	if d.PurchaseDate == 0 {
+		d.PurchaseDate = TodaySerial
+	}
 
-	// The Liability account that mirrors the outstanding balance.
-	liab := Account{ID: "debt_" + d.ID, Name: d.Name, Type: Liability, Institution: d.Lender, Notes: d.Type}
+	// The Liability account that mirrors the outstanding balance. It's a tracking
+	// (off-budget) account: the debt shows in Accounts and Net Worth, but the money
+	// you still owe is NOT counted as assignable budget funds. Instead each debt is
+	// its own budget envelope (see budget.go) that you fund as you pay it down.
+	liab := Account{ID: "debt_" + d.ID, Name: d.Name, Type: Liability, Institution: d.Lender, Notes: d.Type, OffBudget: true}
 	s.AddAccount(liab)
 	d.AcctLiability = liab.ID
 
-	// Book the purchase: expense up, liability up by the total of the schedule.
+	// Book the purchase as a balance-sheet-only financing event: the liability
+	// rises by the schedule total against an Equity contra. Net Worth drops by what
+	// you now owe, but Ready to Assign is untouched — the cost is recognised in the
+	// budget as you assign to the debt's envelope and pay each installment.
 	total := 0
 	for _, in := range insts {
 		total += in.Amount
@@ -124,10 +138,10 @@ func (s *Store) AddDebt(d Debt, insts []Installment) {
 	d.OriginTxnID = s.genID()
 	s.AddTransaction(Transaction{
 		ID:    d.OriginTxnID,
-		Date:  firstDueOf(insts),
+		Date:  d.PurchaseDate,
 		Payee: debtPayee(d),
 		Memo:  d.Name + " · purchase",
-		Posts: PostingsFor(KindExpense, d.AcctLiability, d.AcctExpense, total),
+		Posts: PostingsFor(KindExpense, d.AcctLiability, s.ensureFinancedEquity(), total),
 	})
 
 	if err := s.dbUpsertDebt(d); err != nil {
@@ -240,7 +254,7 @@ func (s *Store) syncDebtOrigination(d *Debt) {
 		Date:  date,
 		Payee: debtPayee(*d),
 		Memo:  d.Name + " · purchase",
-		Posts: PostingsFor(KindExpense, d.AcctLiability, d.AcctExpense, total),
+		Posts: PostingsFor(KindExpense, d.AcctLiability, s.ensureFinancedEquity(), total),
 	})
 }
 
@@ -264,9 +278,15 @@ func (s *Store) UpdateInstallment(instID string, dueDate, amount int) bool {
 	in.Amount = amount
 	d := s.DebtByID(in.DebtID)
 	if in.Paid && in.TxnID != "" && d != nil {
+		// Keep the actual payment date — editing the schedule shouldn't move the
+		// date the money already left your account.
+		paidOn := dueDate
+		if old := s.TxnByID(in.TxnID); old != nil {
+			paidOn = old.Date
+		}
 		s.UpdateTransaction(in.TxnID, Transaction{
 			ID:    in.TxnID,
-			Date:  dueDate,
+			Date:  paidOn,
 			Payee: debtPayee(*d),
 			Memo:  d.Name + " · installment " + Itoa(in.Seq),
 			Posts: PostingsFor(KindExpense, d.AcctMoney, d.AcctLiability, amount),
@@ -280,10 +300,13 @@ func (s *Store) UpdateInstallment(instID string, dueDate, amount int) bool {
 	return true
 }
 
-// PayInstallment posts an installment as an Expense transaction (dated its due
-// date) and marks it paid, linking it to that transaction. Returns whether it
-// posted.
-func (s *Store) PayInstallment(instID string) bool {
+// PayInstallment posts an installment as an Expense transaction dated `on` — the
+// actual payment date, which is when the cash really leaves your account. That's
+// "today" when you pay from the UI (paying early, or clearing an overdue one, both
+// happen now); the due date stays the schedule, used only for "overdue" detection.
+// Pass 0 to default to today. Marks the installment paid and links it to the
+// transaction. Returns whether it posted.
+func (s *Store) PayInstallment(instID string, on int) bool {
 	in := s.installmentByID(instID)
 	if in == nil || in.Paid {
 		return false
@@ -292,10 +315,13 @@ func (s *Store) PayInstallment(instID string) bool {
 	if d == nil {
 		return false
 	}
+	if on == 0 {
+		on = TodaySerial
+	}
 	txnID := s.genID()
 	txn := Transaction{
 		ID:    txnID,
-		Date:  in.DueDate,
+		Date:  on,
 		Payee: debtPayee(*d),
 		Memo:  d.Name + " · installment " + Itoa(in.Seq),
 		Posts: PostingsFor(KindExpense, d.AcctMoney, d.AcctLiability, in.Amount),
@@ -364,6 +390,38 @@ func (s *Store) DebtStatus(debtID string, asOf int) DebtStatus {
 	return st
 }
 
+// DebtBuckets summarizes unpaid installments by timing relative to asOf: what's
+// already due, what's still coming later this month, and what falls in the next
+// calendar month. The buckets are disjoint; Outstanding is the total of all unpaid.
+type DebtBuckets struct {
+	Outstanding int // every unpaid installment
+	Due         int // unpaid and due on or before asOf — already owed
+	ThisMonth   int // unpaid, due later this month (after asOf)
+	NextMonth   int // unpaid, due in the next calendar month
+}
+
+// DebtBuckets rolls every unpaid installment across all debts into timing buckets.
+func (s *Store) DebtBuckets(asOf int) DebtBuckets {
+	var b DebtBuckets
+	thisM := FmtSerialMonth(asOf)
+	nextM := ShiftMonth(thisM, 1)
+	for _, in := range s.installments {
+		if in.Paid {
+			continue
+		}
+		b.Outstanding += in.Amount
+		switch {
+		case in.DueDate <= asOf:
+			b.Due += in.Amount
+		case FmtSerialMonth(in.DueDate) == thisM:
+			b.ThisMonth += in.Amount
+		case FmtSerialMonth(in.DueDate) == nextM:
+			b.NextMonth += in.Amount
+		}
+	}
+	return b
+}
+
 // DueDebtCount counts unpaid installments due on or before asOf across all debts.
 func (s *Store) DueDebtCount(asOf int) int {
 	n := 0
@@ -385,6 +443,25 @@ func (s *Store) TotalDebtOutstanding() int {
 		}
 	}
 	return sum
+}
+
+// acctFinancedEquity is the shared Equity contra account that backs debt
+// originations. Equity accounts are outside both the budget funds pool and the
+// spending categories, so booking a purchase against it raises the liability
+// (lowering Net Worth) without touching Ready to Assign or any expense category.
+const acctFinancedEquity = "equity_financed"
+
+// ensureFinancedEquity returns the financing contra account, creating it once.
+func (s *Store) ensureFinancedEquity() string {
+	if s.AccountByID(acctFinancedEquity) == nil {
+		s.AddAccount(Account{
+			ID:    acctFinancedEquity,
+			Name:  "Financed Purchases",
+			Type:  Equity,
+			Notes: "Contra account for debts bought on a payment plan",
+		})
+	}
+	return acctFinancedEquity
 }
 
 func debtPayee(d Debt) string {

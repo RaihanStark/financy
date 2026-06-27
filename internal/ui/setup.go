@@ -105,7 +105,7 @@ func promptCreateDocument(demo bool, currency string) {
 			return
 		}
 		path := w.URI().Path()
-		w.Close() // creates an empty file; NewDocument initializes the schema
+		_ = w.Close() // creates an empty file; NewDocument initializes the schema
 
 		s, e := core.NewDocument(path)
 		if e != nil {

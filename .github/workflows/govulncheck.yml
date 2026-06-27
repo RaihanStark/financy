@@ -1,0 +1,29 @@
+name: govulncheck
+
+# Scans dependencies and the stdlib for known vulnerabilities that the code
+# actually reaches. The weekly schedule re-runs against the latest vuln database
+# so the badge reflects newly-disclosed CVEs even when the code hasn't changed.
+on:
+  push:
+    branches: [main]
+  pull_request:
+  schedule:
+    - cron: "0 6 * * 1" # Mondays 06:00 UTC
+
+jobs:
+  govulncheck:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+
+      - name: Install Fyne build dependencies
+        run: sudo apt-get update && sudo apt-get install -y gcc pkg-config libgl1-mesa-dev xorg-dev
+
+      - name: Run govulncheck
+        run: |
+          go install golang.org/x/vuln/cmd/govulncheck@latest
+          govulncheck ./...

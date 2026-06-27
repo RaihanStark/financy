@@ -16,13 +16,14 @@ type Store struct {
 	recurring    []Recurring
 	debts        []Debt
 	installments []Installment
+	assignments  map[string]int // "YYYY-MM|categoryID" → assigned minor units
 	nextID       int
 	owner        string
 	currency     string
 	year         int
 	numberFormat string // separator style override; "" = currency default
 	listeners    []func()
-	onError   func(error)
+	onError      func(error)
 }
 
 // SetErrorHandler registers a callback invoked when a persistence write fails,
@@ -47,11 +48,12 @@ func todaySerial() int {
 // tests and ephemeral sessions. It is not persisted (db is nil).
 func NewStore() *Store {
 	s := &Store{
-		accounts: seedAccounts(),
-		txns:     seedTransactions(),
-		owner:    settingsOwner,
-		currency: settingsCurrency,
-		year:     settingsYear,
+		accounts:    seedAccounts(),
+		txns:        seedTransactions(),
+		assignments: map[string]int{},
+		owner:       settingsOwner,
+		currency:    settingsCurrency,
+		year:        settingsYear,
 	}
 	s.nextID = len(s.txns) + 1
 	SetCurrencySymbol(s.currency)
@@ -76,19 +78,19 @@ func NewDocument(path string) (*Store, error) {
 	}
 	var n int
 	if err := db.QueryRow(`SELECT COUNT(*) FROM accounts`).Scan(&n); err != nil {
-		db.Close()
+		_ = db.Close()
 		return nil, err
 	}
 	if n == 0 {
 		seed := &Store{db: db, currency: "Rp", year: settingsYear}
 		for _, a := range seedAccounts() {
 			if err := seed.dbUpsertAccount(a); err != nil {
-				db.Close()
+				_ = db.Close()
 				return nil, err
 			}
 		}
 		if err := seed.dbSetSettings(); err != nil {
-			db.Close()
+			_ = db.Close()
 			return nil, err
 		}
 	}
@@ -494,6 +496,7 @@ func (s *Store) DeleteAccount(id string) bool {
 				return false
 			}
 			s.accounts = append(s.accounts[:i], s.accounts[i+1:]...)
+			s.deleteAssignmentsFor(id)
 			s.notify()
 			return true
 		}

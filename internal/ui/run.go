@@ -24,6 +24,7 @@ func initNav() {
 	nav = map[string]node{
 		"accounts":     {label: "Accounts", icon: iconAccounts(), build: view.ScreenAccounts},
 		"transactions": {label: "Transactions", icon: iconTransactions(), build: view.ScreenTransactions},
+		"budget":       {label: "Budget", icon: iconBudget(), build: view.ScreenBudget},
 		"analytics":    {label: "Analytics", icon: iconAnalytics(), build: view.ScreenAnalytics},
 		"recurring":    {label: "Recurring", icon: iconRecurring(), build: view.ScreenRecurring},
 		"debts":        {label: "Debts", icon: iconDebts(), build: view.ScreenDebts},
@@ -47,6 +48,10 @@ func Run(icon fyne.Resource) {
 	}
 
 	a := app.NewWithID("app.financy")
+	// Restore the saved light/dark choice before any UI is built so the first
+	// render is already in the right palette.
+	prefs = loadPrefs()
+	applyPalette(prefs.Dark)
 	a.Settings().SetTheme(style.Theme{})
 	if icon != nil {
 		a.SetIcon(icon)

@@ -49,8 +49,22 @@ func runShots(outDir string) {
 	capture("analytics")
 	c.show("recurring")
 	capture("recurring")
+	c.show("debts")
+	capture("debts")
 	c.show("reports")
 	capture("reports")
+
+	// Budget is already populated by SeedDemo; capture it and the assign dialog.
+	c.show("budget")
+	capture("budget")
+	view.ShotAssignDialog("Groceries")
+	capture("budget-assign")
+	dropOverlay()
+	// A locked past month (view-only).
+	view.ShotBudgetMonth(-1)
+	c.show("budget")
+	capture("budget-locked")
+	view.ShotBudgetMonth(1)
 
 	// Preferences tabs.
 	c.show("accounts")
@@ -84,6 +98,6 @@ func writePNG(path string, img image.Image) {
 	if err != nil {
 		panic(err)
 	}
-	defer f.Close()
+	defer func() { _ = f.Close() }()
 	_ = png.Encode(f, img)
 }

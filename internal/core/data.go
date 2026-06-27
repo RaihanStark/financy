@@ -33,6 +33,10 @@ type Account struct {
 	Type        AcctType
 	Institution string // for Asset/Liability
 	Notes       string
+	// OffBudget excludes an Asset/Liability account from the budget's funds pool
+	// (i.e. a "tracking" account like investments or a mortgage). Zero value is
+	// false, so accounts are on-budget by default. Ignored for Income/Expense.
+	OffBudget bool
 }
 
 // Posting is one leg of a transaction: a signed change to an account balance.
@@ -74,24 +78,24 @@ func P(acct string, amt int) Posting { return Posting{AccountID: acct, Amount: a
 func seedAccounts() []Account {
 	return []Account{
 		// Income categories
-		{"salary", "Salary", Income, "", "Primary income"},
-		{"side", "Side Income", Income, "", "Freelance / extra"},
-		{"invest", "Investment Income", Income, "", "Interest / dividends"},
+		{ID: "salary", Name: "Salary", Type: Income, Notes: "Primary income"},
+		{ID: "side", Name: "Side Income", Type: Income, Notes: "Freelance / extra"},
+		{ID: "invest", Name: "Investment Income", Type: Income, Notes: "Interest / dividends"},
 		// Expense categories
-		{"housing", "Housing", Expense, "", "Rent / mortgage"},
-		{"utilities", "Utilities", Expense, "", "Water / gas / electricity"},
-		{"groceries", "Groceries", Expense, "", ""},
-		{"dining", "Dining Out", Expense, "", "Restaurants / takeout"},
-		{"transport", "Transportation", Expense, "", "Fuel / transit"},
-		{"insurance", "Insurance", Expense, "", "Health / vehicle"},
-		{"health", "Healthcare", Expense, "", "Medical"},
-		{"subs", "Subscriptions", Expense, "", "Streaming / SaaS"},
-		{"ent", "Entertainment", Expense, "", "Hobbies / fun"},
-		{"shopping", "Shopping", Expense, "", "Goods"},
-		{"loanfees", "Loan Fees & Interest", Expense, "", "Financing cost"},
-		{"misc", "Miscellaneous", Expense, "", "Catch-all"},
+		{ID: "housing", Name: "Housing", Type: Expense, Notes: "Rent / mortgage"},
+		{ID: "utilities", Name: "Utilities", Type: Expense, Notes: "Water / gas / electricity"},
+		{ID: "groceries", Name: "Groceries", Type: Expense},
+		{ID: "dining", Name: "Dining Out", Type: Expense, Notes: "Restaurants / takeout"},
+		{ID: "transport", Name: "Transportation", Type: Expense, Notes: "Fuel / transit"},
+		{ID: "insurance", Name: "Insurance", Type: Expense, Notes: "Health / vehicle"},
+		{ID: "health", Name: "Healthcare", Type: Expense, Notes: "Medical"},
+		{ID: "subs", Name: "Subscriptions", Type: Expense, Notes: "Streaming / SaaS"},
+		{ID: "ent", Name: "Entertainment", Type: Expense, Notes: "Hobbies / fun"},
+		{ID: "shopping", Name: "Shopping", Type: Expense, Notes: "Goods"},
+		{ID: "loanfees", Name: "Loan Fees & Interest", Type: Expense, Notes: "Financing cost"},
+		{ID: "misc", Name: "Miscellaneous", Type: Expense, Notes: "Catch-all"},
 		// Equity (internal, used by opening balances)
-		{"opening", "Opening Balances", Equity, "", "Starting balances when an account is created"},
+		{ID: "opening", Name: "Opening Balances", Type: Equity, Notes: "Starting balances when an account is created"},
 	}
 }
 

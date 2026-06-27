@@ -13,11 +13,58 @@ See `RELEASING.md`.
 
 ## [Unreleased]
 
+## [0.5.1] - 2026-06-27
+
+### Changed
+- **`make run-dev`** — run against an isolated dev profile so development never touches
+  your real data. It repoints `$XDG_CONFIG_HOME` at `./.devdata/config` (gitignored),
+  giving dev its own `prefs.json`, recent-files list, and `.financy` database; your
+  `~/.config/financy` is left untouched. (Linux/BSD only — macOS ignores `XDG_CONFIG_HOME`.)
+- **Funding & sponsorship** — added a GitHub Sponsors funding configuration and a
+  "Support / sponsorship" section to the README. No application changes.
+
+## [0.5.0] - 2026-06-26
+
 ### Added
+- **Richer demo data** — the sample document now exercises every module coherently:
+  an off-budget **Investments** account that grows via monthly auto-invest, plus a full
+  **budget** — monthly assignments for every category, sinking funds (Emergency Fund,
+  Insurance, Vacation) that roll an Available balance forward, a mid-year vacation that
+  draws its envelope down, and a few categories left intentionally tight so overspending
+  shows. Accounts, Transactions, Budget, Recurring, Analytics and Reports all tie out.
+- **Budget** — a new zero-based ("envelope") budgeting screen modelled on YNAB.
+  Pick a month and give every unit of currency a job: each Expense category shows
+  what you **Assigned**, its **Activity**, and a rolling **Available** balance, with
+  a **Ready to Assign** banner up top. Ready to Assign is a single global pool —
+  your on-budget funds minus everything you've committed to a category in *any*
+  month — so it reads the same whatever month you view, money assigned to a future
+  month draws it down today, and the goal is to budget until it reaches 0.
+  **Past months are locked** (view-only) — you can only change the current and
+  future months, so a budget you've already lived through can't be rewritten.
+  Available carries forward month to month;
+  cash overspending turns a category red and is absorbed by the next month's Ready
+  to Assign (it doesn't drag the envelope negative forever). Click a category to
+  assign an amount with one-tap quick-budget suggestions (last month's assigned,
+  last month's spent, 3-month average), or **Auto-Assign** to copy the previous
+  month's plan. Assignments are saved in the document (schema v3).
+- **On-budget / tracking accounts** — accounts have an **Include in budget** toggle.
+  Ready to Assign is computed from your on-budget **Asset and Liability** balances
+  (so a credit card's debt nets against your cash and card spending is budget-neutral,
+  the way YNAB handles it), while tracking accounts you exclude — investments, a
+  mortgage — no longer inflate the money you can assign. Stored per account (schema v4).
+- **Dark mode** — a 🎨 toggle in the toolbar switches the whole app between the
+  light and a new dark theme (deep-slate surfaces with accents tuned to read well
+  on a dark ground). Your choice is remembered and restored on the next launch.
 - **Linux `.deb` and `.rpm` packages** — releases now ship native Debian/Ubuntu and
   Fedora/RHEL packages (built with nfpm). Installing puts `financy` on your `PATH`,
   adds a desktop launcher and app icon, and registers the `.financy` file type so
   documents open with a double-click. See the README install section.
+
+### Changed
+- **Repositioned as a zero-based budgeting (ZBB) app** — the README, website and docs
+  now lead with budgeting ("give every dollar a job"), with double-entry accounting as
+  the trustworthy engine underneath. Added a Budget user-guide page and updated the
+  desktop entry/package metadata. The app name, file format and data are unchanged.
 
 ## [0.4.0] - 2026-06-23
 
@@ -146,7 +193,9 @@ double-entry accounting, with data in a single `.financy` file you own.
   automatic `.bak` before any file upgrade.
 - Cross-platform release bundles (Linux / Windows / macOS) published from CI on tag.
 
-[Unreleased]: https://github.com/raihanstark/financy/compare/v0.4.0...HEAD
+[Unreleased]: https://github.com/raihanstark/financy/compare/v0.5.1...HEAD
+[0.5.1]: https://github.com/raihanstark/financy/compare/v0.5.0...v0.5.1
+[0.5.0]: https://github.com/raihanstark/financy/compare/v0.4.0...v0.5.0
 [0.4.0]: https://github.com/raihanstark/financy/compare/v0.3.0...v0.4.0
 [0.3.0]: https://github.com/raihanstark/financy/compare/v0.2.0...v0.3.0
 [0.2.0]: https://github.com/raihanstark/financy/compare/v0.1.0...v0.2.0

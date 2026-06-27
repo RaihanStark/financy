@@ -28,6 +28,9 @@ fyne-cross/
 *.prof
 coverage.*
 
+# Isolated dev profile + database (make run-dev)
+/.devdata/
+
 # Editor / OS
 .idea/
 .vscode/

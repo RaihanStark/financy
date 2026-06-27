@@ -164,13 +164,13 @@ func TestRecurringPersistence(t *testing.T) {
 	s.AddAccount(Account{ID: "checking", Name: "Checking", Type: Asset})
 	s.AddRecurring(Recurring{Kind: KindIncome, AcctA: "checking", AcctB: "salary",
 		Amount: 450000, Payee: "Payroll", Freq: "Monthly", NextDue: TodaySerial, Enabled: true})
-	s.Close()
+	_ = s.Close()
 
 	s2, err := OpenStore(path)
 	if err != nil {
 		t.Fatal(err)
 	}
-	defer s2.Close()
+	defer func() { _ = s2.Close() }()
 	got := s2.Recurrings()
 	if len(got) != 1 {
 		t.Fatalf("recurring after reopen = %d, want 1", len(got))
