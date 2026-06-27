@@ -11,11 +11,12 @@ HUGO := $(shell command -v hugo 2>/dev/null || echo $(shell go env GOPATH)/bin/h
 # Where the screenshot harness writes its PNGs before they're copied into the docs.
 SHOTDIR := /tmp/financy-shots
 
-.PHONY: help run test vet check build shot set-version package nfpm print-version release clean docs docs-build
+.PHONY: help run run-dev test vet check build shot set-version package nfpm print-version release clean docs docs-build
 
 help:
 	@echo "Financy — make targets:"
 	@echo "  make run                      run the app (go run .)"
+	@echo "  make run-dev                  run with an isolated dev profile + db (won't touch prod state)"
 	@echo "  make test                     run all tests"
 	@echo "  make check                    build + vet + test"
 	@echo "  make build                    build ./$(APP) with version $(VERSION)"
@@ -29,6 +30,19 @@ help:
 
 run:
 	go run .
+
+# Run against an ISOLATED dev profile so you never touch your real ("prod") data.
+# Financy stores which file to reopen (prefs.json), the recent list, and the Fyne
+# settings under the OS config dir. On Linux that dir is $XDG_CONFIG_HOME, so we
+# repoint ONLY that at ./.devdata/config — giving dev its own prefs, its own
+# recent-files list, and its own .financy database. Your prod ~/.config/financy
+# is never read or written. We build with the normal Go cache first (fast; keeps
+# the toolchain's cache/telemetry out of .devdata), then run the binary with the
+# config redirect. First run shows the setup wizard; save the dev database
+# somewhere like ./.devdata/ and it'll reopen next time.
+run-dev: build
+	@mkdir -p .devdata/config
+	XDG_CONFIG_HOME=$(CURDIR)/.devdata/config ./$(APP)
 
 test:
 	go test ./...

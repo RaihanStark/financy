@@ -13,6 +13,12 @@ See `RELEASING.md`.
 
 ## [Unreleased]
 
+### Added
+- **`make run-dev`** — run against an isolated dev profile so development never touches
+  your real data. It repoints `$XDG_CONFIG_HOME` at `./.devdata/config` (gitignored),
+  giving dev its own `prefs.json`, recent-files list, and `.financy` database; your
+  `~/.config/financy` is left untouched. (Linux/BSD only — macOS ignores `XDG_CONFIG_HOME`.)
+
 ## [0.5.0] - 2026-06-26
 
 ### Added

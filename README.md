@@ -151,8 +151,15 @@ independently testable — that's where new logic and tests belong.
 make check      # build + vet + test   (run before committing)
 make test       # tests only
 make run        # run the app
+make run-dev    # run with an isolated dev profile + database (won't touch your real data)
 make shot       # regenerate screenshots (into /tmp/financy-shots)
 ```
+
+`make run-dev` repoints `$XDG_CONFIG_HOME` at `./.devdata/config` (gitignored) so dev
+gets its own `prefs.json`, recent-files list, and `.financy` database — your real
+`~/.config/financy` is never read or written. First run shows the setup wizard; save the
+dev document inside `./.devdata/` and it reopens next time. (Linux/BSD only — macOS
+doesn't honour `XDG_CONFIG_HOME`.)
 
 **Two rules that protect user data:**
 1. **Migrations are append-only** — add a new entry to `migrations` in `internal/core/db.go`; never edit an existing one.
