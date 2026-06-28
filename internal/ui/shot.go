@@ -51,8 +51,6 @@ func runShots(outDir string) {
 	capture("recurring")
 	c.show("debts")
 	capture("debts")
-	c.show("reports")
-	capture("reports")
 
 	// Budget is already populated by SeedDemo; capture it and the assign dialog.
 	c.show("budget")

@@ -45,11 +45,6 @@ type (
 	Debt             = core.Debt
 	Installment      = core.Installment
 	DebtStatus       = core.DebtStatus
-	IncomeStatement  = core.IncomeStatement
-	BalanceSheet     = core.BalanceSheet
-	CashFlow         = core.CashFlow
-	StmtLine         = core.StmtLine
-	CashLine         = core.CashLine
 	BudgetMonth      = core.BudgetMonth
 	BudgetCategory   = core.BudgetCategory
 )
