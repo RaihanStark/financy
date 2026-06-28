@@ -100,7 +100,6 @@ func TestShellNavigatesAllScreens(t *testing.T) {
 		"transactions": "Journal",
 		"analytics":    "SAVINGS RATE",
 		"recurring":    "Recurring",
-		"reports":      "Balance Sheet",
 	}
 	for uid, marker := range want {
 		c.show(uid)

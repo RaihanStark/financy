@@ -12,4 +12,3 @@ func iconBudget() fyne.Resource       { return theme.AccountIcon() }
 func iconAnalytics() fyne.Resource    { return theme.GridIcon() }
 func iconRecurring() fyne.Resource    { return theme.MediaReplayIcon() }
 func iconDebts() fyne.Resource        { return theme.ContentPasteIcon() }
-func iconReports() fyne.Resource      { return theme.DocumentIcon() }

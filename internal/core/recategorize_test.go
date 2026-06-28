@@ -2,9 +2,27 @@ package core
 
 import "testing"
 
+// recatStore seeds opening balances plus a month of income/expense activity used
+// by the recategorization test.
+func recatStore() *Store {
+	SetCurrencySymbol("$")
+	s := &Store{accounts: seedAccounts(), nextID: 1}
+	s.AddAccount(Account{ID: "checking", Name: "Checking", Type: Asset})
+	s.AddAccount(Account{ID: "visa", Name: "Credit Card", Type: Liability})
+	s.AddTransaction(Transaction{Date: serialOf(2026, 6, 1), Payee: "Opening",
+		Posts: []Posting{P("checking", 300000), P("opening", -300000)}})
+	s.AddTransaction(Transaction{Date: serialOf(2026, 6, 2), Payee: "Payroll",
+		Posts: PostingsFor(KindIncome, "checking", "salary", 450000)})
+	s.AddTransaction(Transaction{Date: serialOf(2026, 6, 3), Payee: "Rent",
+		Posts: PostingsFor(KindExpense, "checking", "housing", 140000)})
+	s.AddTransaction(Transaction{Date: serialOf(2026, 6, 4), Payee: "Groceries on card",
+		Posts: PostingsFor(KindExpense, "visa", "groceries", 9000)})
+	return s
+}
+
 func TestRecategorize(t *testing.T) {
-	s := reportStore()
-	// The two expense txns in reportStore: Rent→housing, Groceries→groceries.
+	s := recatStore()
+	// The two expense txns: Rent→housing, Groceries→groceries.
 	var rent, groc, payroll, opening string
 	for _, txn := range s.Transactions() {
 		switch txn.Payee {
@@ -44,10 +62,13 @@ func TestRecategorize(t *testing.T) {
 		t.Fatalf("groceries category = %q, want shopping", got)
 	}
 
-	// Income statement now lumps both under Shopping; totals are unchanged.
-	is := s.IncomeStatementFor(serialOf(2026, 6, 1), serialOf(2026, 6, 30))
-	if is.TotalExpenses != 149000 {
-		t.Fatalf("expenses total changed to %d, want 149000", is.TotalExpenses)
+	// Both expenses now lump under Shopping; the total is unchanged.
+	total := 0
+	for _, c := range s.CategoryBreakdown(serialOf(2026, 6, 1), serialOf(2026, 6, 30), Expense) {
+		total += c.Total
+	}
+	if total != 149000 {
+		t.Fatalf("expenses total changed to %d, want 149000", total)
 	}
 
 	// Re-running is a no-op (already there) and an unknown category does nothing.

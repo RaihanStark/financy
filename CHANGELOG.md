@@ -13,6 +13,11 @@ See `RELEASING.md`.
 
 ## [Unreleased]
 
+### Removed
+- **Reports** — the *Reports* screen (Income Statement, Balance Sheet, Cash Flow)
+  has been removed. It added complexity without meaningful returns; the figures
+  were purely derived from the journal and overlapped with Analytics.
+
 ### Changed
 - **Toolbar +** — now consistently opens the **Add Transaction** form on every
   screen. It previously changed meaning by page (an account form on Accounts, a
