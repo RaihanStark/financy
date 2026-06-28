@@ -95,6 +95,16 @@ func deriveView(t Transaction) txnView {
 	return v
 }
 
+// displayPayee is the title shown for a transaction row. When the payee is
+// blank it falls back to the transaction's type (e.g. "Expense", "Transfer")
+// rather than leaving the line empty.
+func displayPayee(t Transaction, v txnView) string {
+	if t.Payee != "" {
+		return t.Payee
+	}
+	return v.kind
+}
+
 func abs(n int) int {
 	if n < 0 {
 		return -n
@@ -260,13 +270,8 @@ func txnRow(t Transaction) fyne.CanvasObject {
 	default:
 		sub = v.catName + " · " + v.moneyName
 	}
-	payee := t.Payee
-	if payee == "" {
-		payee = v.catName
-	}
-
 	center := container.NewVBox(
-		txt(payee, colText, 13, true),
+		txt(displayPayee(t, v), colText, 13, true),
 		txt(sub, colTextDim, 10.5, false),
 	)
 	right := container.NewVBox(

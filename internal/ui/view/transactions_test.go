@@ -105,6 +105,20 @@ func TestDeriveViewKinds(t *testing.T) {
 	_ = s
 }
 
+// displayPayee shows the payee when present, and falls back to the transaction
+// type (not the category) when the payee is blank.
+func TestDisplayPayee(t *testing.T) {
+	if got := displayPayee(Transaction{Payee: "Netflix"}, txnView{kind: "Expense", catName: "Subscriptions"}); got != "Netflix" {
+		t.Errorf("with payee: got %q, want %q", got, "Netflix")
+	}
+	if got := displayPayee(Transaction{Payee: ""}, txnView{kind: "Expense", catName: "Subscriptions"}); got != "Expense" {
+		t.Errorf("blank payee: got %q, want %q", got, "Expense")
+	}
+	if got := displayPayee(Transaction{Payee: ""}, txnView{kind: "Transfer"}); got != "Transfer" {
+		t.Errorf("blank payee transfer: got %q, want %q", got, "Transfer")
+	}
+}
+
 // Adding a transaction through the form posts a balanced entry to the store.
 func TestTransactionFormAdd(t *testing.T) {
 	resetTxnFilters(t)
