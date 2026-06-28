@@ -36,7 +36,7 @@ balance. Your data lives in a single file you own — no cloud, no account, no t
 - 🏦 **Accounts & net worth** — asset & liability cards, a net-worth overview, and a per-account **register with running balance**.
 - 🧾 **Transactions** — a clean, date-grouped journal with a familiar **Income / Expense / Transfer** entry form, live filters and search, plus a **bulk-select mode** to recategorize many entries at once.
 - 🗓️ **Debts (BNPL & installments)** — track Buy-Now-Pay-Later and other installment debts on a fixed schedule. Each debt opens an off-budget **Liability** account (so it shows in Accounts & Net Worth) and becomes its own **budget envelope** you fund monthly — paying an installment is budgeted spending that draws the balance down, leaving Ready to Assign neutral. The purchase is booked on its **purchase date** against an equity contra (no expense double-count). A tabbed screen shows each debt's installment table with **Pay / Undo**, plus an **Outstanding · Due now · This month · Next month** summary.
-- 📊 **Analytics & Reports** — KPIs, income-vs-expenses, net-worth-over-time and spending-by-category charts, plus the three financial statements (Income Statement, Balance Sheet, Cash Flow) — all derived from the journal, so they never drift from your transactions.
+- 📊 **Analytics** — KPIs, income-vs-expenses, net-worth-over-time and spending-by-category charts — all derived from the journal, so they never drift from your transactions.
 - 💾 **Local-first persistence** — each document is a single **`.financy` SQLite file** that is *always auto-saved* (ACID writes — no save button, no lost work).
 - ⚡ **Quick start** — first-run setup lets you **load demo data** (a complete worked budget) or **start from scratch** with your chosen currency.
 - 🔐 **Safe by design** — atomic writes, append-only schema migrations, and an automatic `.bak` before any file upgrade.
@@ -140,7 +140,7 @@ internal/
   ui/
     style/               palette + theme
     component/           reusable widgets (cards, table, rows, app bar, tooltips, charts)
-    view/                screens (Budget, Accounts, Transactions, Debts, Recurring, Analytics, Reports) + Preferences + forms
+    view/                screens (Budget, Accounts, Transactions, Debts, Recurring, Analytics) + Preferences + forms
     (root)               app shell, controller, toolbar, File menu, document manager
 ```
 
