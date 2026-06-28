@@ -109,17 +109,12 @@ func buildStatusBar(c *appController) fyne.CanvasObject {
 	return container.NewStack(bar, row)
 }
 
-// quickAdd is the toolbar "+" — context-aware add for the current screen.
+// quickAdd is the toolbar "+" — it always opens the add-transaction form so the
+// button means the same thing on every screen. Per-screen adds (accounts,
+// budget categories, …) live as dedicated buttons within those screens.
 func quickAdd(c *appController) {
 	if store == nil {
 		return
 	}
-	switch c.currentUID {
-	case "accounts":
-		view.AccountForm(nil)
-	case "budget":
-		view.AddBudgetCategory()
-	default:
-		view.TransactionForm("", "")
-	}
+	view.TransactionForm("", "")
 }

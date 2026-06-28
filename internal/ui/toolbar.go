@@ -187,7 +187,7 @@ func toolSep() fyne.CanvasObject {
 func buildToolbar(c *appController) fyne.CanvasObject {
 	navButtons = nil
 	left := container.NewHBox(
-		newToolBtn(theme.ContentAddIcon(), "Add (new entry)", func() { quickAdd(c) }),
+		newToolBtn(theme.ContentAddIcon(), "Add transaction", func() { quickAdd(c) }),
 		toolSep(),
 		newNavBtn(theme.StorageIcon(), "Accounts", "accounts", func() { c.show("accounts") }),
 		newNavBtn(theme.HistoryIcon(), "Transactions", "transactions", func() { c.show("transactions") }),
