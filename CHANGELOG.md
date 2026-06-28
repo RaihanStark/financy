@@ -19,6 +19,11 @@ See `RELEASING.md`.
   budget-category form on Budget); per-screen adds remain as dedicated buttons
   within those screens.
 
+### Fixed
+- **Transactions** — a journal row with no payee now shows the transaction type
+  (e.g. **Expense**, **Transfer**) instead of the category name, so the row title
+  reads consistently regardless of category.
+
 ## [0.6.0] - 2026-06-27
 
 ### Added
