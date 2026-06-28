@@ -138,26 +138,22 @@ func TestShellUnknownScreenIgnored(t *testing.T) {
 	}
 }
 
-// The toolbar quick-add is context aware: an account form on Accounts, a
-// transaction form elsewhere.
+// The toolbar quick-add always opens the add-transaction form, regardless of
+// the current screen.
 func TestShellQuickAdd(t *testing.T) {
 	c, w := newShellTest(t)
 
-	c.show("accounts")
-	quickAdd(c)
-	if d := w.Canvas().Overlays().Top(); d == nil {
-		t.Fatal("quickAdd on accounts opened no dialog")
-	} else if !strings.Contains(uiText(d), "Add Account") {
-		t.Errorf("quickAdd on accounts didn't open the account form")
-	}
-	w.Canvas().Overlays().Remove(w.Canvas().Overlays().Top())
-
-	c.show("transactions")
-	quickAdd(c)
-	if d := w.Canvas().Overlays().Top(); d == nil {
-		t.Fatal("quickAdd on transactions opened no dialog")
-	} else if !strings.Contains(uiText(d), "Add Transaction") {
-		t.Errorf("quickAdd on transactions didn't open the transaction form")
+	for _, uid := range []string{"accounts", "budget", "transactions"} {
+		c.show(uid)
+		quickAdd(c)
+		d := w.Canvas().Overlays().Top()
+		if d == nil {
+			t.Fatalf("quickAdd on %s opened no dialog", uid)
+		}
+		if !strings.Contains(uiText(d), "Add Transaction") {
+			t.Errorf("quickAdd on %s didn't open the transaction form", uid)
+		}
+		w.Canvas().Overlays().Remove(d)
 	}
 }
 

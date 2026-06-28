@@ -13,6 +13,12 @@ See `RELEASING.md`.
 
 ## [Unreleased]
 
+### Changed
+- **Toolbar +** — now consistently opens the **Add Transaction** form on every
+  screen. It previously changed meaning by page (an account form on Accounts, a
+  budget-category form on Budget); per-screen adds remain as dedicated buttons
+  within those screens.
+
 ### Fixed
 - **Transactions** — a journal row with no payee now shows the transaction type
   (e.g. **Expense**, **Transfer**) instead of the category name, so the row title
