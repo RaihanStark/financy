@@ -14,7 +14,9 @@ import (
 var ErrFileTooNew = errors.New("this file was created by a newer version of Financy")
 
 // migrations are applied in order; the DB's PRAGMA user_version tracks how many
-// have run. Append new migrations — never edit an existing one.
+// have run. Append new migrations — never edit an existing one. When you add
+// one, also add the new schema version to schemaReleases in backup.go so
+// downgrade hints stay accurate.
 var migrations = []string{
 	// v1 — initial schema.
 	`
