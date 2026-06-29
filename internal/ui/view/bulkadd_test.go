@@ -1,6 +1,7 @@
 package view
 
 import (
+	"strings"
 	"testing"
 )
 
@@ -171,5 +172,27 @@ func TestQuickAddRowAddRemove(t *testing.T) {
 	}
 	if got := len(findSelects(d)); got != start {
 		t.Fatalf("after remove: %d selects, want %d", got, start)
+	}
+}
+
+// Each date field shows an explicit calendar-picker button (a real layout
+// sibling), matching the single transaction form, so users can pick a day
+// instead of only typing.
+func TestQuickAddDateHasCalendarButton(t *testing.T) {
+	resetTxnFilters(t)
+	_, w := newViewTest(t)
+
+	QuickAddForm()
+	d := dialogContent(w)
+
+	cal := 0
+	for _, b := range findButtons(d) {
+		if b.Icon != nil && strings.Contains(strings.ToLower(b.Icon.Name()), "calendar") {
+			cal++
+		}
+	}
+	// One income/expense row + one transfer row are present by default.
+	if cal != 2 {
+		t.Fatalf("calendar picker buttons = %d, want 2 (one per date field)", cal)
 	}
 }

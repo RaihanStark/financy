@@ -79,7 +79,7 @@ func QuickAddForm() {
 	}
 	addIERow = func() {
 		r := &ieRow{
-			date:   newDateEntry(todaySerial),
+			date:   newDateField(todaySerial),
 			money:  widget.NewSelect(moneyNames, nil),
 			amount: newAmountEntry(),
 			cat:    widget.NewSelect(catNames, nil),
@@ -92,7 +92,7 @@ func QuickAddForm() {
 		r.cat.PlaceHolder = "Category…"
 		r.payee.SetPlaceHolder("Payee")
 		r.box = rowWithRemove(
-			container.New(&columnsLayout{Weights: colWeights, Gap: 6}, r.date, r.money, r.amount, r.cat, r.payee),
+			container.New(&columnsLayout{Weights: colWeights, Gap: 6}, dateCell(r.date), r.money, r.amount, r.cat, r.payee),
 			func() { removeIE(r) },
 		)
 		ieRows = append(ieRows, r)
@@ -125,7 +125,7 @@ func QuickAddForm() {
 	}
 	addTRRow = func() {
 		r := &trRow{
-			date:   newDateEntry(todaySerial),
+			date:   newDateField(todaySerial),
 			from:   widget.NewSelect(moneyNames, nil),
 			to:     widget.NewSelect(moneyNames, nil),
 			amount: newAmountEntry(),
@@ -135,7 +135,7 @@ func QuickAddForm() {
 		r.to.PlaceHolder = "To…"
 		r.payee.SetPlaceHolder("Payee")
 		r.box = rowWithRemove(
-			container.New(&columnsLayout{Weights: colWeights, Gap: 6}, r.date, r.from, r.to, r.amount, r.payee),
+			container.New(&columnsLayout{Weights: colWeights, Gap: 6}, dateCell(r.date), r.from, r.to, r.amount, r.payee),
 			func() { removeTR(r) },
 		)
 		trRows = append(trRows, r)
@@ -217,6 +217,14 @@ func QuickAddForm() {
 	d = dialog.NewCustomWithoutButtons("Quick Add", content, win)
 	d.Resize(fyne.NewSize(820, 620))
 	d.Show()
+}
+
+// dateCell pairs a bare YYYY-MM-DD field with an explicit calendar-picker button
+// docked to its right. Unlike Entry.ActionItem (used on the single transaction
+// form), the button is a real layout sibling here, so it always renders inside
+// the tight Quick Add row instead of being swallowed by the entry's renderer.
+func dateCell(e *widget.Entry) fyne.CanvasObject {
+	return container.NewBorder(nil, nil, nil, calendarButton(e), e)
 }
 
 // rowWithRemove docks a small ✕ button at the right edge of a row's fields.
