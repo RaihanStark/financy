@@ -248,8 +248,8 @@ func findEntries(obj fyne.CanvasObject) []*widget.Entry {
 		}
 		seen[o] = true
 		switch e := o.(type) {
-		case *widget.SelectEntry:
-			// SelectEntry embeds Entry; surface that embedded entry so payee
+		case *completionEntry:
+			// completionEntry embeds Entry; surface that embedded entry so payee
 			// autocomplete fields appear alongside plain entries in walk order.
 			out = append(out, &e.Entry)
 		case *widget.Entry:

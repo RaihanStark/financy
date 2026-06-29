@@ -525,7 +525,7 @@ func TransactionForm(id, prefillMoney string) {
 		}
 		return nil
 	}
-	payee := widget.NewSelectEntry(store.Payees())
+	payee := newCompletionEntry(store.Payees())
 	memo := widget.NewEntry()
 
 	moneyNames := namesOf(store.MoneyAccounts())

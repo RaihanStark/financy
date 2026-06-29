@@ -17,7 +17,7 @@ type ieRow struct {
 	money  *widget.Select
 	amount *widget.Entry
 	cat    *widget.Select
-	payee  *widget.SelectEntry
+	payee  *completionEntry
 	box    fyne.CanvasObject
 }
 
@@ -28,7 +28,7 @@ type trRow struct {
 	from   *widget.Select
 	to     *widget.Select
 	amount *widget.Entry
-	payee  *widget.SelectEntry
+	payee  *completionEntry
 	box    fyne.CanvasObject
 }
 
@@ -84,7 +84,7 @@ func QuickAddForm() {
 			money:  widget.NewSelect(moneyNames, nil),
 			amount: newAmountEntry(),
 			cat:    widget.NewSelect(catNames, nil),
-			payee:  widget.NewSelectEntry(payeeNames),
+			payee:  newCompletionEntry(payeeNames),
 		}
 		r.money.PlaceHolder = "Money…"
 		if defaultMoney != "" {
@@ -130,7 +130,7 @@ func QuickAddForm() {
 			from:   widget.NewSelect(moneyNames, nil),
 			to:     widget.NewSelect(moneyNames, nil),
 			amount: newAmountEntry(),
-			payee:  widget.NewSelectEntry(payeeNames),
+			payee:  newCompletionEntry(payeeNames),
 		}
 		r.from.PlaceHolder = "From…"
 		r.to.PlaceHolder = "To…"
