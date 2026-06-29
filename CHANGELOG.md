@@ -13,6 +13,13 @@ See `RELEASING.md`.
 
 ## [Unreleased]
 
+### Added
+- **Match debt payments** — paying an installment now opens the same review dialog
+  as recurring transactions: post a new payment, or link an installment to an
+  existing transaction that already paid it (re-pointed onto the debt's liability so
+  the balance stays correct), instead of always posting a fresh one. Handles
+  installments already paid manually/imported and amounts that aren't exact.
+
 ### Changed
 - **Payee autocomplete** — every payee field (Add Transaction, Bulk Add, Recurring,
   Debts) is now a searchable dropdown that suggests matching payees from your history

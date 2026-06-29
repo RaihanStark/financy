@@ -107,6 +107,14 @@ var migrations = []string{
 	`
 	ALTER TABLE debts ADD COLUMN purchase_date INTEGER NOT NULL DEFAULT 0;
 	`,
+	// v8 — an installment can be satisfied by linking an existing transaction
+	// (re-pointed onto the liability) rather than posting a fresh one. `linked`
+	// flags those rows; `orig_posts` snapshots the transaction's prior postings so
+	// undo can restore them. Existing rows keep linked=0 / orig_posts=''.
+	`
+	ALTER TABLE debt_installments ADD COLUMN linked INTEGER NOT NULL DEFAULT 0;
+	ALTER TABLE debt_installments ADD COLUMN orig_posts TEXT NOT NULL DEFAULT '';
+	`,
 }
 
 // schemaVersion is the number of migrations that define the current schema.

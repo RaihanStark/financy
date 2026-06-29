@@ -100,10 +100,10 @@ func TestCandidateSelect(t *testing.T) {
 	s, _ := newViewTest(t)
 	checking := s.AccountByName("Checking")
 	sel := candidateSelect(postNewTodayOption, nil, checking.ID, false)
-	if sel.Selected != postNewTodayOption {
-		t.Errorf("default selection = %q, want post-new", sel.Selected)
+	if !sel.isPostNew() {
+		t.Errorf("default selection = %q, want post-new", sel.widget.Selected)
 	}
-	if !optContains(sel.Options, browseAllOption) {
+	if !optContains(sel.widget.Options, browseAllOption) {
 		t.Error("candidate select missing the browse-all option")
 	}
 }
