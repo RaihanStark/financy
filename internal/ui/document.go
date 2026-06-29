@@ -63,11 +63,19 @@ func useStore(s *core.Store, path string) {
 }
 
 // openDocumentAt opens an existing file, backing it up first if it predates the
-// current schema (migrations run on open).
+// current schema (migrations run on open). The backup's name carries the old
+// schema version (e.g. budget.financy.v6.bak) so the user knows which Financy
+// version still reads it if they ever need to downgrade.
 func openDocumentAt(path string) {
+	backupName := ""
+	backupVersion := 0
 	if v, err := core.FileVersion(path); err == nil && v < core.LatestVersion() {
 		if data, e := os.ReadFile(path); e == nil {
-			_ = os.WriteFile(path+".bak", data, 0o644)
+			backup := path + core.BackupSuffix(v)
+			if os.WriteFile(backup, data, 0o644) == nil {
+				backupName = filepath.Base(backup)
+				backupVersion = v
+			}
 		}
 	}
 	s, err := core.OpenStore(path)
@@ -84,6 +92,17 @@ func openDocumentAt(path string) {
 		return
 	}
 	useStore(s, path)
+	if backupName != "" {
+		msg := "This file was upgraded to a newer format. A backup of the previous " +
+			"version was saved as:\n\n" + backupName + "\n\n"
+		if rel := core.ReleaseForVersion(backupVersion); rel != "" {
+			msg += "To downgrade, open that backup with Financy " + rel + " or later " +
+				"(earlier versions can't read this format)."
+		} else {
+			msg += "Keep it if you may want to downgrade to an older version of Financy."
+		}
+		dialog.ShowInformation("File upgraded", msg, ctl.win)
+	}
 }
 
 // ---- File menu actions ----
