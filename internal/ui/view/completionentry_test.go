@@ -24,7 +24,7 @@ func TestCompletionEntryLiveFilter(t *testing.T) {
 	if got := c.matches; len(got) != 2 {
 		t.Fatalf("after %q: matches = %v, want 2 (Netflix, Net Provider)", "net", got)
 	}
-	if !c.box.Visible() {
+	if !c.open {
 		t.Fatalf("dropdown should be visible while typing a partial match")
 	}
 
@@ -39,7 +39,7 @@ func TestCompletionEntryLiveFilter(t *testing.T) {
 	if len(c.matches) != 0 {
 		t.Fatalf("unexpected matches for novel text: %v", c.matches)
 	}
-	if c.box.Visible() {
+	if c.open {
 		t.Fatalf("dropdown should be hidden when nothing matches")
 	}
 	if c.Text() != "brand-new payee" {
@@ -53,7 +53,7 @@ func TestCompletionEntryLiveFilter(t *testing.T) {
 	if c.Text() != want {
 		t.Fatalf("after selecting suggestion: Text() = %q, want %q", c.Text(), want)
 	}
-	if c.box.Visible() {
+	if c.open {
 		t.Fatalf("dropdown should close after selecting a suggestion")
 	}
 }
@@ -66,7 +66,7 @@ func TestCompletionEntryKeyboardSelect(t *testing.T) {
 	mount(w, c)
 
 	c.input.SetText("net") // matches: [Netflix, Net Provider]
-	if !c.box.Visible() {
+	if !c.open {
 		t.Fatalf("dropdown should be open")
 	}
 	c.input.TypedKey(&keyDown)   // highlight first
@@ -76,7 +76,7 @@ func TestCompletionEntryKeyboardSelect(t *testing.T) {
 	if c.Text() != "Net Provider" {
 		t.Fatalf("Enter should commit highlighted row; Text() = %q", c.Text())
 	}
-	if c.box.Visible() {
+	if c.open {
 		t.Fatalf("dropdown should close after Enter selection")
 	}
 }
@@ -89,7 +89,7 @@ func TestCompletionEntrySetTextDoesNotOpen(t *testing.T) {
 	mount(w, c)
 
 	c.SetText("Net")
-	if c.box.Visible() {
+	if c.open {
 		t.Fatalf("programmatic SetText must not open the dropdown")
 	}
 }
