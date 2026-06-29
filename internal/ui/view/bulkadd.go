@@ -17,7 +17,7 @@ type ieRow struct {
 	money  *widget.Select
 	amount *widget.Entry
 	cat    *widget.Select
-	payee  *widget.Entry
+	payee  *completionEntry
 	box    fyne.CanvasObject
 }
 
@@ -28,7 +28,7 @@ type trRow struct {
 	from   *widget.Select
 	to     *widget.Select
 	amount *widget.Entry
-	payee  *widget.Entry
+	payee  *completionEntry
 	box    fyne.CanvasObject
 }
 
@@ -43,6 +43,7 @@ func QuickAddForm() {
 
 	moneyNames := namesOf(store.MoneyAccounts())
 	catNames := append(append([]string{}, namesOf(store.ExpenseAccounts())...), namesOf(store.IncomeAccounts())...)
+	payeeNames := store.Payees()
 	defaultMoney := ""
 	if len(moneyNames) > 0 {
 		defaultMoney = moneyNames[0]
@@ -83,7 +84,7 @@ func QuickAddForm() {
 			money:  widget.NewSelect(moneyNames, nil),
 			amount: newAmountEntry(),
 			cat:    widget.NewSelect(catNames, nil),
-			payee:  widget.NewEntry(),
+			payee:  newCompletionEntry(payeeNames),
 		}
 		r.money.PlaceHolder = "Money…"
 		if defaultMoney != "" {
@@ -129,7 +130,7 @@ func QuickAddForm() {
 			from:   widget.NewSelect(moneyNames, nil),
 			to:     widget.NewSelect(moneyNames, nil),
 			amount: newAmountEntry(),
-			payee:  widget.NewEntry(),
+			payee:  newCompletionEntry(payeeNames),
 		}
 		r.from.PlaceHolder = "From…"
 		r.to.PlaceHolder = "To…"
@@ -165,7 +166,7 @@ func QuickAddForm() {
 			}
 			txns = append(txns, Transaction{
 				Date:  serial,
-				Payee: r.payee.Text,
+				Payee: r.payee.Text(),
 				Posts: postingsFor(kind, money, a.ID, amt),
 			})
 		}
@@ -178,7 +179,7 @@ func QuickAddForm() {
 			}
 			txns = append(txns, Transaction{
 				Date:  serial,
-				Payee: r.payee.Text,
+				Payee: r.payee.Text(),
 				Posts: postingsFor("Transfer", from, to, amt),
 			})
 		}

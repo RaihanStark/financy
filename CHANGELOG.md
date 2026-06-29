@@ -20,6 +20,13 @@ See `RELEASING.md`.
   the balance stays correct), instead of always posting a fresh one. Handles
   installments already paid manually/imported and amounts that aren't exact.
 
+### Changed
+- **Payee autocomplete** — every payee field (Add Transaction, Bulk Add, Recurring,
+  Debts) is now a searchable dropdown that suggests matching payees from your history
+  as you type, so you can keep typing to filter and pick an existing payee instead of
+  retyping it. The list opens inline below the field and you can still enter a brand-new
+  payee.
+
 ## [0.7.0] - 2026-06-29
 
 ### Added

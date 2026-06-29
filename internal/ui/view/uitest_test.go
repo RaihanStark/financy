@@ -106,6 +106,10 @@ func collectText(obj fyne.CanvasObject) []string {
 			for _, c := range childObjects(v) {
 				walk(c)
 			}
+		case *completionInput:
+			if v.Text != "" {
+				out = append(out, v.Text)
+			}
 		case *widget.Entry:
 			if v.Text != "" {
 				out = append(out, v.Text)
@@ -247,7 +251,12 @@ func findEntries(obj fyne.CanvasObject) []*widget.Entry {
 			return
 		}
 		seen[o] = true
-		if e, ok := o.(*widget.Entry); ok {
+		switch e := o.(type) {
+		case *completionInput:
+			// completionInput embeds Entry; surface that embedded entry so payee
+			// autocomplete fields appear alongside plain entries in walk order.
+			out = append(out, &e.Entry)
+		case *widget.Entry:
 			out = append(out, e)
 		}
 		switch v := o.(type) {
