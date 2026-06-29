@@ -13,6 +13,8 @@ See `RELEASING.md`.
 
 ## [Unreleased]
 
+## [0.8.0] - 2026-06-29
+
 ### Added
 - **Password encryption** — a `.financy` file can now be protected with a passphrase.
   The document is encrypted at rest with **XChaCha20-Poly1305** and an **Argon2id**-derived
@@ -273,7 +275,8 @@ double-entry accounting, with data in a single `.financy` file you own.
   automatic `.bak` before any file upgrade.
 - Cross-platform release bundles (Linux / Windows / macOS) published from CI on tag.
 
-[Unreleased]: https://github.com/raihanstark/financy/compare/v0.7.0...HEAD
+[Unreleased]: https://github.com/raihanstark/financy/compare/v0.8.0...HEAD
+[0.8.0]: https://github.com/raihanstark/financy/compare/v0.7.0...v0.8.0
 [0.7.0]: https://github.com/raihanstark/financy/compare/v0.6.0...v0.7.0
 [0.6.0]: https://github.com/raihanstark/financy/compare/v0.5.1...v0.6.0
 [0.5.1]: https://github.com/raihanstark/financy/compare/v0.5.0...v0.5.1
