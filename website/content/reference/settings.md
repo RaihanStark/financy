@@ -36,3 +36,20 @@ using your chosen number format. Decimals are capped to the currency's places.
 Currency and number format are saved **per document**, so different `.financy`
 files can use different conventions.
 {{< /callout >}}
+
+## Checking for updates
+
+Financy checks **GitHub Releases** for a newer version — at most once a day on
+launch, and on demand via **File → Check for Updates…**. The check is a single
+anonymous request to GitHub; it sends no document data.
+
+When a newer release exists, a popup offers:
+
+- **Download** — opens the release page in your browser so you can grab the new
+  build for your platform.
+- **Skip This Version** — silences the automatic prompt for that one version
+  (a manual check still shows it).
+- **Later** — dismiss; you'll be reminded on a future launch.
+
+If you're offline the launch check fails silently. Financy never downloads or
+replaces itself — you stay in control of installing the update.

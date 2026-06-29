@@ -68,6 +68,8 @@ func Run(icon fyne.Resource) {
 
 	startup() // opens last-used or a default document, then renders
 
+	checkForUpdatesAsync(false) // silent, throttled background check
+
 	w.ShowAndRun()
 }
 
@@ -100,6 +102,8 @@ func buildMainMenu() *fyne.MainMenu {
 		}),
 		fyne.NewMenuItem("Export CSV…", doExportCSV),
 		fyne.NewMenuItem("Setup Wizard…", showSetup),
+		fyne.NewMenuItemSeparator(),
+		fyne.NewMenuItem("Check for Updates…", func() { checkForUpdatesAsync(true) }),
 		fyne.NewMenuItemSeparator(),
 		fyne.NewMenuItem("Save a Copy…", doSaveCopy),
 		fyne.NewMenuItem("Close", doClose),
