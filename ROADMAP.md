@@ -74,6 +74,14 @@ Candidate features under consideration, roughly in priority order. Feedback and
   updated **manually** first (privacy-first, no network), with an *optional* quote
   fetch later — and a dedicated **Investments** screen plus net-worth and
   allocation charts in Analytics. This is the centerpiece of the all-in-one vision.
+- **💳 In-depth debt management** — grow the Debts module beyond fixed BNPL/
+  installment schedules into full loan tracking: **interest / APR** with proper
+  principal-vs-interest split per payment and an **amortization schedule**, support
+  for **revolving credit** (credit cards, lines of credit) and amortizing loans
+  (mortgage, auto, student), **extra / early payments** and minimum-payment
+  handling, **payoff strategies** (snowball vs. avalanche) with a comparison view,
+  **payoff-date and total-interest projections**, and a debt overview dashboard
+  showing total owed, weighted average rate, and progress over time.
 - **Budget goals / targets** — per-category monthly or sinking-fund targets with
   progress indicators, so Ready to Assign can suggest how much to fund.
 - **Multi-currency** — hold accounts in different currencies within one document,
