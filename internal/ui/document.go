@@ -21,11 +21,16 @@ var (
 	docPath string
 )
 
-// appTitle builds the window title, including the app version and open file.
+// appTitle builds the window title, including the app version and open file. An
+// encrypted document with unsaved changes is marked with a leading bullet.
 func appTitle(path string) string {
 	t := "Financy v" + core.Version
 	if path != "" {
-		t += " — " + filepath.Base(path)
+		name := filepath.Base(path)
+		if store != nil && store.IsDirty() {
+			name = "• " + name
+		}
+		t += " — " + name
 	}
 	return t
 }
@@ -40,6 +45,7 @@ func useStore(s *core.Store, path string) {
 	view.Init(store, ctl.show, ctl.refresh, ctl.win)
 	if store != nil {
 		store.Subscribe(ctl.refresh)
+		store.Subscribe(updateTitle) // keep the unsaved-changes marker current
 		store.SetErrorHandler(func(err error) {
 			dialog.ShowError(err, ctl.win)
 		})
@@ -67,6 +73,13 @@ func useStore(s *core.Store, path string) {
 // schema version (e.g. budget.financy.v6.bak) so the user knows which Financy
 // version still reads it if they ever need to downgrade.
 func openDocumentAt(path string) {
+	if enc, err := core.IsEncrypted(path); err != nil {
+		dialog.ShowError(err, ctl.win)
+		return
+	} else if enc {
+		openEncryptedAt(path)
+		return
+	}
 	backupName := ""
 	backupVersion := 0
 	if v, err := core.FileVersion(path); err == nil && v < core.LatestVersion() {
@@ -107,19 +120,21 @@ func openDocumentAt(path string) {
 
 // ---- File menu actions ----
 
-func doNew() { promptNewDocument() }
+func doNew() { guardUnsaved(promptNewDocument) }
 
 func doOpen() {
-	d := dialog.NewFileOpen(func(r fyne.URIReadCloser, err error) {
-		if err != nil || r == nil {
-			return
-		}
-		path := r.URI().Path()
-		_ = r.Close()
-		openDocumentAt(path)
-	}, ctl.win)
-	d.SetFilter(storage.NewExtensionFileFilter([]string{".financy"}))
-	d.Show()
+	guardUnsaved(func() {
+		d := dialog.NewFileOpen(func(r fyne.URIReadCloser, err error) {
+			if err != nil || r == nil {
+				return
+			}
+			path := r.URI().Path()
+			_ = r.Close()
+			openDocumentAt(path)
+		}, ctl.win)
+		d.SetFilter(storage.NewExtensionFileFilter([]string{".financy"}))
+		d.Show()
+	})
 }
 
 func doSaveCopy() {
@@ -178,7 +193,7 @@ func exportFileName() string {
 }
 
 func doClose() {
-	useStore(nil, "")
+	guardUnsaved(func() { useStore(nil, "") })
 }
 
 // ---- welcome / empty state ----
@@ -215,6 +230,10 @@ func startup() {
 	}
 	if prefs.LastPath != "" {
 		if _, err := os.Stat(prefs.LastPath); err == nil {
+			// Render the welcome backdrop first so that if opening needs a prompt
+			// (an encrypted file's passphrase) and the user cancels, they land on a
+			// usable screen rather than a blank window.
+			ctl.renderWelcome()
 			openDocumentAt(prefs.LastPath)
 			return
 		}

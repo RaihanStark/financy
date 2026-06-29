@@ -14,6 +14,14 @@ See `RELEASING.md`.
 ## [Unreleased]
 
 ### Added
+- **Password encryption** — a `.financy` file can now be protected with a passphrase.
+  The document is encrypted at rest with **XChaCha20-Poly1305** and an **Argon2id**-derived
+  key, so a lost or leaked file is unreadable and tamper-evident without your password.
+  Encrypted documents use **manual save** (Cmd/Ctrl-S) and prompt you to save unsaved
+  changes before closing; your data is only decrypted in memory while the file is open,
+  never persisted to disk in plaintext. Set a password when creating a file, or
+  add/change/remove one later via **File → Set Password…**. A forgotten passphrase is
+  unrecoverable — there is no backdoor.
 - **Match debt payments** — paying an installment now opens the same review dialog
   as recurring transactions: post a new payment, or link an installment to an
   existing transaction that already paid it (re-pointed onto the debt's liability so

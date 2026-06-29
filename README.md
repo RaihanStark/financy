@@ -8,13 +8,16 @@ A fast, local-first **zero-based budget** in a native desktop app: assign every 
 of money to a category until *Ready to Assign* hits zero, then watch your envelopes
 through the month. Underneath it's **real double-entry accounting**, so your budget,
 balances and net worth are all derived from one journal and can never drift out of
-balance. Your data lives in a single file you own — no cloud, no account, no tracking.
+balance. Your data lives in a single file you own — no cloud, no account, no tracking —
+and can be **protected with strong password encryption**, so even the file on disk is
+unreadable without your passphrase.
 
 ![CI](https://github.com/raihanstark/financy/actions/workflows/ci.yml/badge.svg)
 &nbsp;![govulncheck](https://github.com/raihanstark/financy/actions/workflows/govulncheck.yml/badge.svg)
 &nbsp;![Go](https://img.shields.io/badge/Go-1.25+-00ADD8?logo=go&logoColor=white)
 &nbsp;![Fyne](https://img.shields.io/badge/UI-Fyne-1A1A2E)
 &nbsp;![SQLite](https://img.shields.io/badge/Storage-SQLite-003B57?logo=sqlite&logoColor=white)
+&nbsp;![Encryption](https://img.shields.io/badge/Encryption-XChaCha20--Poly1305-4B0082)
 &nbsp;![License](https://img.shields.io/badge/License-MIT-green)
 
 📖 **[Read the documentation](https://raihanstark.github.io/financy/docs/)** · 🌐 **[Website](https://raihanstark.github.io/financy/)**
@@ -37,9 +40,10 @@ balance. Your data lives in a single file you own — no cloud, no account, no t
 - 🧾 **Transactions** — a clean, date-grouped journal with a familiar **Income / Expense / Transfer** entry form, live filters and search, plus a **bulk-select mode** to recategorize many entries at once.
 - 🗓️ **Debts (BNPL & installments)** — track Buy-Now-Pay-Later and other installment debts on a fixed schedule. Each debt opens an off-budget **Liability** account (so it shows in Accounts & Net Worth) and becomes its own **budget envelope** you fund monthly — paying an installment is budgeted spending that draws the balance down, leaving Ready to Assign neutral. The purchase is booked on its **purchase date** against an equity contra (no expense double-count). A tabbed screen shows each debt's installment table with **Pay / Undo**, plus an **Outstanding · Due now · This month · Next month** summary.
 - 📊 **Analytics** — KPIs, income-vs-expenses, net-worth-over-time and spending-by-category charts — all derived from the journal, so they never drift from your transactions.
-- 💾 **Local-first persistence** — each document is a single **`.financy` SQLite file** that is *always auto-saved* (ACID writes — no save button, no lost work).
-- ⚡ **Quick start** — first-run setup lets you **load demo data** (a complete worked budget) or **start from scratch** with your chosen currency.
-- 🔐 **Safe by design** — atomic writes, append-only schema migrations, and an automatic `.bak` before any file upgrade.
+- 🔐 **Password encryption (optional)** — protect a document with a passphrase and the `.financy` file is encrypted at rest with **XChaCha20-Poly1305** and an **Argon2id**-derived key, and is tamper-evident. Your data is only ever decrypted in memory, never persisted to disk in plaintext. A forgotten passphrase is unrecoverable — there's no backdoor.
+- 💾 **Local-first persistence** — each document is a single **`.financy` SQLite file** you own. **Unencrypted** files are *always auto-saved* (ACID writes — no save button, no lost work); **encrypted** files use **manual save** (Cmd/Ctrl-S) with an *unsaved-changes prompt* when you close — the trade-off that keeps plaintext off your disk.
+- ⚡ **Quick start** — first-run setup lets you **load demo data** (a complete worked budget) or **start from scratch** with your chosen currency and an optional password.
+- 🛡️ **Safe by design** — atomic writes, append-only schema migrations, and an automatic `.bak` before any file upgrade.
 
 ---
 

@@ -4,6 +4,7 @@ go 1.25.11
 
 require (
 	fyne.io/fyne/v2 v2.7.4
+	golang.org/x/crypto v0.36.0
 	modernc.org/sqlite v1.53.0
 )
 

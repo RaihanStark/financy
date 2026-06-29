@@ -25,7 +25,28 @@ type Store struct {
 	numberFormat string // separator style override; "" = currency default
 	listeners    []func()
 	onError      func(error)
+
+	// Persistence mode. A plain document is a SQLite file written through on every
+	// mutation (path points at it, encrypted is false). An encrypted document
+	// keeps its working database in memory (db is ":memory:") and is saved
+	// manually: Save() serializes it and writes an encrypted blob to path. dirty
+	// tracks unsaved changes for encrypted documents.
+	path       string
+	encrypted  bool
+	passphrase string
+	dirty      bool
 }
+
+// Encrypted reports whether this document is password-protected (and therefore
+// uses the manual-save model rather than write-through auto-save).
+func (s *Store) Encrypted() bool { return s.encrypted }
+
+// IsDirty reports whether an encrypted document has unsaved changes. Plain
+// (auto-saved) documents are never dirty.
+func (s *Store) IsDirty() bool { return s.encrypted && s.dirty }
+
+// Path returns the document's file path ("" for an unsaved in-memory store).
+func (s *Store) Path() string { return s.path }
 
 // SetErrorHandler registers a callback invoked when a persistence write fails,
 // so the UI can surface it instead of failing silently.
@@ -61,13 +82,20 @@ func NewStore() *Store {
 	return s
 }
 
-// OpenStore opens an existing document file and loads it into memory.
+// OpenStore opens an existing (unencrypted) document file and loads it into
+// memory, writing through on every mutation. Encrypted files are opened with
+// OpenStoreEncrypted instead.
 func OpenStore(path string) (*Store, error) {
 	db, err := openDB(path)
 	if err != nil {
 		return nil, err
 	}
-	return loadStore(db)
+	s, err := loadStore(db)
+	if err != nil {
+		return nil, err
+	}
+	s.path = path
+	return s, nil
 }
 
 // NewDocument creates (or opens) a document file, seeding a fresh one with the
@@ -95,7 +123,12 @@ func NewDocument(path string) (*Store, error) {
 			return nil, err
 		}
 	}
-	return loadStore(db)
+	s, err := loadStore(db)
+	if err != nil {
+		return nil, err
+	}
+	s.path = path
+	return s, nil
 }
 
 // Close releases the database handle.
@@ -124,6 +157,9 @@ func LatestVersion() int                   { return schemaVersion() }
 
 func (s *Store) Subscribe(fn func()) { s.listeners = append(s.listeners, fn) }
 func (s *Store) notify() {
+	// Every mutation flows through notify(), so this is the single place that
+	// marks an encrypted document as having unsaved changes.
+	s.dirty = true
 	for _, fn := range s.listeners {
 		fn()
 	}
