@@ -196,6 +196,27 @@ them to the GitHub Release. See [RELEASING.md](RELEASING.md) for the full guide.
 
 ---
 
+## 🗺️ Roadmap
+
+Financy's core is feature-complete and the project is working toward a **stable
+v1.0**. The supported install target for 1.0 is **Linux** (`.deb` / `.rpm`);
+**Windows and macOS ship too, but unsigned first** (you'll see the usual
+"unidentified developer" prompt), with code-signing/notarization coming after 1.0.
+The rest of the v1.0 work is locking down the `.financy` file format plus a
+docs/accessibility/hardening pass. After 1.0 the goal is to grow Financy into an
+**all-in-one finance app**. The **first priority** is **💳 in-depth debt
+management** (interest/APR, amortization schedules, snowball vs. avalanche payoff
+strategies and payoff projections), followed by a full **📈 investment tracker**
+(holdings, cost basis, gains and allocation, built on the same double-entry
+journal). Other candidates include **budget goals/targets**, **multi-currency**,
+an **OFX/QFX-aware importer**, signed installers, and an *opt-in, self-hosted*
+end-to-end-encrypted **sync** (never a Financy cloud account).
+
+See **[ROADMAP.md](ROADMAP.md)** for the full plan, and
+[CHANGELOG.md](CHANGELOG.md) for what's already shipped.
+
+---
+
 ## ❤️ Support the Project
 
 Financy is free and open-source, built and maintained in my spare time. If it helps you
