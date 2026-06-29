@@ -33,24 +33,27 @@ func TestQuickAddIncomeExpenseRows(t *testing.T) {
 		t.Fatal("no Add row button")
 	}
 
-	// selects: [money, ieCat1, ieCat2, trFrom, trTo]
+	// Per row: selects [money, cat]; so two I&E rows then the transfer row give
+	// [ieMoney1, ieCat1, ieMoney2, ieCat2, trFrom, trTo].
 	selects := findSelects(d)
-	if len(selects) < 5 {
+	if len(selects) < 6 {
 		t.Fatalf("unexpected selects: %d", len(selects))
 	}
 	selects[0].SetSelected("Checking")
 	selects[1].SetSelected("Groceries") // expense
-	selects[2].SetSelected("Salary")    // income
+	selects[2].SetSelected("Checking")
+	selects[3].SetSelected("Salary") // income
 
-	// entries: [date, ieAmt1, iePayee1, ieAmt2, iePayee2, trAmt, trPayee]
+	// Per row: entries [date, amount, payee]; two I&E rows then the transfer row
+	// give [d1, a1, p1, d2, a2, p2, d3, a3, p3].
 	entries := findEntries(d)
-	if len(entries) < 7 {
+	if len(entries) < 9 {
 		t.Fatalf("unexpected entries: %d", len(entries))
 	}
 	entries[1].SetText("40")
 	entries[2].SetText("QA-exp")
-	entries[3].SetText("90")
-	entries[4].SetText("QA-inc")
+	entries[4].SetText("90")
+	entries[5].SetText("QA-inc")
 
 	if !tapButton(d, "Save all") {
 		t.Fatal("no Save all button")
@@ -72,22 +75,23 @@ func TestQuickAddTransferRow(t *testing.T) {
 	resetTxnFilters(t)
 	s, w := newViewTest(t)
 
-	// Valid transfer.
+	// Valid transfer. Default rows: one I&E row [ieMoney, ieCat] then one transfer
+	// row [trFrom, trTo]; entries are [ieDate, ieAmt, iePayee, trDate, trAmt, trPayee].
 	before := len(s.Transactions())
 	QuickAddForm()
 	d := dialogContent(w)
-	selects := findSelects(d) // [money, ieCat1, trFrom, trTo]
+	selects := findSelects(d)
 	if len(selects) < 4 {
 		t.Fatalf("unexpected selects: %d", len(selects))
 	}
 	selects[2].SetSelected("Checking")
 	selects[3].SetSelected("Savings")
-	entries := findEntries(d) // [date, ieAmt, iePayee, trAmt, trPayee]
-	if len(entries) < 5 {
+	entries := findEntries(d)
+	if len(entries) < 6 {
 		t.Fatalf("unexpected entries: %d", len(entries))
 	}
-	entries[3].SetText("100")
-	entries[4].SetText("QA-xfer")
+	entries[4].SetText("100")
+	entries[5].SetText("QA-xfer")
 	if !tapButton(d, "Save all") {
 		t.Fatal("no Save all button")
 	}
@@ -106,8 +110,8 @@ func TestQuickAddTransferRow(t *testing.T) {
 	selects[2].SetSelected("Checking")
 	selects[3].SetSelected("Checking")
 	entries = findEntries(d)
-	entries[3].SetText("100")
-	entries[4].SetText("QA-self")
+	entries[4].SetText("100")
+	entries[5].SetText("QA-self")
 	if !tapButton(d, "Save all") {
 		t.Fatal("no Save all button")
 	}
@@ -153,11 +157,13 @@ func TestQuickAddRowAddRemove(t *testing.T) {
 	d := dialogContent(w)
 	start := len(findSelects(d))
 
+	// Each I&E row has two selects (money + category), so adding one grows the
+	// count by 2 and removing it shrinks it back.
 	if !tapButton(d, "＋ Add row") {
 		t.Fatal("no Add row button")
 	}
-	if got := len(findSelects(d)); got != start+1 {
-		t.Fatalf("after add: %d selects, want %d", got, start+1)
+	if got := len(findSelects(d)); got != start+2 {
+		t.Fatalf("after add: %d selects, want %d", got, start+2)
 	}
 
 	if !tapButton(d, "✕") {

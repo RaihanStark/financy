@@ -9,18 +9,22 @@ import (
 	"fyne.io/fyne/v2/widget"
 )
 
-// ieRow is one line of the "Income & Expenses" table: an amount, a category
-// (whose account type decides income vs expense), and a payee.
+// ieRow is one line of the "Income & Expenses" table: its own date and money
+// account, an amount, a category (whose account type decides income vs expense),
+// and a payee.
 type ieRow struct {
+	date   *widget.Entry
+	money  *widget.Select
 	amount *widget.Entry
 	cat    *widget.Select
 	payee  *widget.Entry
 	box    fyne.CanvasObject
 }
 
-// trRow is one line of the "Transfers" table: a from/to money account pair plus
-// an amount and payee.
+// trRow is one line of the "Transfers" table: its own date, a from/to money
+// account pair, an amount and a payee.
 type trRow struct {
+	date   *widget.Entry
 	from   *widget.Select
 	to     *widget.Select
 	amount *widget.Entry
@@ -29,9 +33,9 @@ type trRow struct {
 }
 
 // QuickAddForm opens the bulk-entry modal: two appendable tables (income/expense
-// rows that share a money account, and transfer rows) sharing a single date.
-// Saving commits every valid row in one batch via store.AddTransactions, so a
-// stack of receipts becomes one quick pass instead of one dialog per entry.
+// rows and transfer rows), each row carrying its own date so a backlog spanning
+// several days can be entered in one pass. Saving commits every valid row in one
+// batch via store.AddTransactions, instead of one dialog per entry.
 func QuickAddForm() {
 	if win == nil {
 		return
@@ -39,12 +43,9 @@ func QuickAddForm() {
 
 	moneyNames := namesOf(store.MoneyAccounts())
 	catNames := append(append([]string{}, namesOf(store.ExpenseAccounts())...), namesOf(store.IncomeAccounts())...)
-
-	date := newDateEntry(todaySerial)
-	moneyAcct := widget.NewSelect(moneyNames, nil)
-	moneyAcct.PlaceHolder = "Money account…"
+	defaultMoney := ""
 	if len(moneyNames) > 0 {
-		moneyAcct.SetSelected(moneyNames[0])
+		defaultMoney = moneyNames[0]
 	}
 
 	// ---- Income & Expenses table ----
@@ -72,11 +73,21 @@ func QuickAddForm() {
 		rebuildIE()
 	}
 	addIERow = func() {
-		r := &ieRow{amount: newAmountEntry(), cat: widget.NewSelect(catNames, nil), payee: widget.NewEntry()}
+		r := &ieRow{
+			date:   newDateEntry(todaySerial),
+			money:  widget.NewSelect(moneyNames, nil),
+			amount: newAmountEntry(),
+			cat:    widget.NewSelect(catNames, nil),
+			payee:  widget.NewEntry(),
+		}
+		r.money.PlaceHolder = "Money…"
+		if defaultMoney != "" {
+			r.money.SetSelected(defaultMoney)
+		}
 		r.cat.PlaceHolder = "Category…"
 		r.payee.SetPlaceHolder("Payee")
 		r.box = rowWithRemove(
-			container.NewGridWithColumns(3, r.amount, r.cat, r.payee),
+			container.NewGridWithColumns(5, r.date, r.money, r.amount, r.cat, r.payee),
 			func() { removeIE(r) },
 		)
 		ieRows = append(ieRows, r)
@@ -109,6 +120,7 @@ func QuickAddForm() {
 	}
 	addTRRow = func() {
 		r := &trRow{
+			date:   newDateEntry(todaySerial),
 			from:   widget.NewSelect(moneyNames, nil),
 			to:     widget.NewSelect(moneyNames, nil),
 			amount: newAmountEntry(),
@@ -118,7 +130,7 @@ func QuickAddForm() {
 		r.to.PlaceHolder = "To…"
 		r.payee.SetPlaceHolder("Payee")
 		r.box = rowWithRemove(
-			container.NewGridWithColumns(4, r.from, r.to, r.amount, r.payee),
+			container.NewGridWithColumns(5, r.date, r.from, r.to, r.amount, r.payee),
 			func() { removeTR(r) },
 		)
 		trRows = append(trRows, r)
@@ -130,58 +142,52 @@ func QuickAddForm() {
 
 	// commit gathers every valid row from both tables and posts them in one batch.
 	commit := func() (int, error) {
-		serial := parseDateSerial(date.Text)
-		money := idOf(moneyAcct.Selected)
 		var txns []Transaction
-		if serial != 0 {
-			for _, r := range ieRows {
-				amt := parseAmount(r.amount.Text)
-				if amt <= 0 || money == "" || r.cat.Selected == "" {
-					continue
-				}
-				a := store.AccountByName(r.cat.Selected)
-				if a == nil {
-					continue
-				}
-				kind := "Expense"
-				if a.Type == Income {
-					kind = "Income"
-				}
-				txns = append(txns, Transaction{
-					Date:  serial,
-					Payee: r.payee.Text,
-					Posts: postingsFor(kind, money, a.ID, amt),
-				})
+		for _, r := range ieRows {
+			serial := parseDateSerial(r.date.Text)
+			amt := parseAmount(r.amount.Text)
+			money := idOf(r.money.Selected)
+			if serial == 0 || amt <= 0 || money == "" || r.cat.Selected == "" {
+				continue
 			}
-			for _, r := range trRows {
-				amt := parseAmount(r.amount.Text)
-				from, to := idOf(r.from.Selected), idOf(r.to.Selected)
-				if amt <= 0 || from == "" || to == "" || from == to {
-					continue
-				}
-				txns = append(txns, Transaction{
-					Date:  serial,
-					Payee: r.payee.Text,
-					Posts: postingsFor("Transfer", from, to, amt),
-				})
+			a := store.AccountByName(r.cat.Selected)
+			if a == nil {
+				continue
 			}
+			kind := "Expense"
+			if a.Type == Income {
+				kind = "Income"
+			}
+			txns = append(txns, Transaction{
+				Date:  serial,
+				Payee: r.payee.Text,
+				Posts: postingsFor(kind, money, a.ID, amt),
+			})
+		}
+		for _, r := range trRows {
+			serial := parseDateSerial(r.date.Text)
+			amt := parseAmount(r.amount.Text)
+			from, to := idOf(r.from.Selected), idOf(r.to.Selected)
+			if serial == 0 || amt <= 0 || from == "" || to == "" || from == to {
+				continue
+			}
+			txns = append(txns, Transaction{
+				Date:  serial,
+				Payee: r.payee.Text,
+				Posts: postingsFor("Transfer", from, to, amt),
+			})
 		}
 		return store.AddTransactions(txns)
 	}
 
 	body := container.NewVBox(
-		container.NewGridWithColumns(2,
-			labeledControl("Date (YYYY-MM-DD)", date),
-			labeledControl("Money account", moneyAcct),
-		),
-		spacerH(10),
 		sectionTitle("Income & Expenses"),
-		columnHeader("Amount", "Category", "Payee"),
+		columnHeader("Date", "Money", "Amount", "Category", "Payee"),
 		ieList,
 		secondaryButton("＋ Add row", theme.ContentAddIcon(), func() { addIERow() }),
 		spacerH(14),
 		sectionTitle("Transfers"),
-		columnHeader("From", "To", "Amount", "Payee"),
+		columnHeader("Date", "From", "To", "Amount", "Payee"),
 		trList,
 		secondaryButton("＋ Add transfer", theme.ContentAddIcon(), func() { addTRRow() }),
 	)
@@ -204,7 +210,7 @@ func QuickAddForm() {
 		container.NewScroll(container.NewPadded(body)),
 	)
 	d = dialog.NewCustomWithoutButtons("Quick Add", content, win)
-	d.Resize(fyne.NewSize(640, 600))
+	d.Resize(fyne.NewSize(820, 620))
 	d.Show()
 }
 
