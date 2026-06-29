@@ -13,16 +13,34 @@ See `RELEASING.md`.
 
 ## [Unreleased]
 
-### Removed
-- **Reports** — the *Reports* screen (Income Statement, Balance Sheet, Cash Flow)
-  has been removed. It added complexity without meaningful returns; the figures
-  were purely derived from the journal and overlapped with Analytics.
+## [0.7.0] - 2026-06-29
+
+### Added
+- **Update check** — Financy now checks GitHub Releases for a newer version once a
+  day on launch, or on demand via **File → Check for Updates…**, and shows a popup
+  with a **Download** link. It never downloads or replaces the binary itself — you
+  decide when and how to install. The check is an anonymous request to GitHub and
+  sends none of your data; **Skip This Version** silences the prompt for a release
+  you're not ready for.
+- **Bulk add** — a new bulk-entry form for faster bookkeeping: two appendable
+  tables (income/expense rows and transfers), each row carrying its own date, money
+  account, amount, category and payee, so a backlog spanning several days is entered
+  in one pass. Saving commits every valid row in a single batch instead of one
+  dialog per transaction.
 
 ### Changed
 - **Toolbar +** — now consistently opens the **Add Transaction** form on every
   screen. It previously changed meaning by page (an account form on Accounts, a
   budget-category form on Budget); per-screen adds remain as dedicated buttons
   within those screens.
+- **Pre-upgrade backups** — the automatic `.bak` written before a file is migrated
+  now embeds the document's schema version in its name (e.g. `My Budget.financy.v6.bak`),
+  so you can tell which earlier Financy version still opens it if you need to downgrade.
+
+### Removed
+- **Reports** — the *Reports* screen (Income Statement, Balance Sheet, Cash Flow)
+  has been removed. It added complexity without meaningful returns; the figures
+  were purely derived from the journal and overlapped with Analytics.
 
 ### Fixed
 - **Transactions** — a journal row with no payee now shows the transaction type
@@ -233,7 +251,8 @@ double-entry accounting, with data in a single `.financy` file you own.
   automatic `.bak` before any file upgrade.
 - Cross-platform release bundles (Linux / Windows / macOS) published from CI on tag.
 
-[Unreleased]: https://github.com/raihanstark/financy/compare/v0.6.0...HEAD
+[Unreleased]: https://github.com/raihanstark/financy/compare/v0.7.0...HEAD
+[0.7.0]: https://github.com/raihanstark/financy/compare/v0.6.0...v0.7.0
 [0.6.0]: https://github.com/raihanstark/financy/compare/v0.5.1...v0.6.0
 [0.5.1]: https://github.com/raihanstark/financy/compare/v0.5.0...v0.5.1
 [0.5.0]: https://github.com/raihanstark/financy/compare/v0.4.0...v0.5.0
