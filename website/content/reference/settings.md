@@ -37,6 +37,20 @@ Currency and number format are saved **per document**, so different `.financy`
 files can use different conventions.
 {{< /callout >}}
 
+## Password & encryption
+
+Encryption is managed from the **File** menu, not Preferences:
+
+- **Set Password…** — encrypt the open document with a passphrase. It immediately
+  becomes a [manual-save](../your-data/#saving) document.
+- **Change Password…** — re-key an already-encrypted document.
+- **Remove Password…** — convert an encrypted document back to a plain file.
+
+You can also set a password up front when creating a file (**Setup Wizard** or **File
+▸ New…**). See [Your Data → Password encryption](../your-data/#password-encryption)
+for how it works and the **no-backdoor** warning: a forgotten passphrase can't be
+recovered.
+
 ## Checking for updates
 
 Financy checks **GitHub Releases** for a newer version — at most once a day on

@@ -6,6 +6,7 @@ import (
 
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/app"
+	"fyne.io/fyne/v2/driver/desktop"
 
 	"github.com/raihanstark/financy/internal/ui/style"
 	"github.com/raihanstark/financy/internal/ui/view"
@@ -66,6 +67,13 @@ func Run(icon fyne.Resource) {
 	w.SetContent(assembleShell(ctl))
 	w.SetMainMenu(buildMainMenu())
 
+	// Cmd/Ctrl-S saves an encrypted document; closing with unsaved changes prompts.
+	w.Canvas().AddShortcut(&desktop.CustomShortcut{
+		KeyName:  fyne.KeyS,
+		Modifier: fyne.KeyModifierShortcutDefault,
+	}, func(fyne.Shortcut) { doSave() })
+	w.SetCloseIntercept(func() { guardUnsaved(func() { w.Close() }) })
+
 	startup() // opens last-used or a default document, then renders
 
 	checkForUpdatesAsync(false) // silent, throttled background check
@@ -90,10 +98,26 @@ func buildMainMenu() *fyne.MainMenu {
 	openRecent := fyne.NewMenuItem("Open Recent", nil)
 	openRecent.ChildMenu = fyne.NewMenu("", recentItems...)
 
+	// Save is only meaningful for encrypted documents (plain files auto-save).
+	saveItem := fyne.NewMenuItem("Save", doSave)
+	saveItem.Shortcut = &desktop.CustomShortcut{KeyName: fyne.KeyS, Modifier: fyne.KeyModifierShortcutDefault}
+	saveItem.Disabled = store == nil || !store.Encrypted()
+
+	pwLabel := "Set Password…"
+	if store != nil && store.Encrypted() {
+		pwLabel = "Change Password…"
+	}
+	setPwItem := fyne.NewMenuItem(pwLabel, doSetPassword)
+	setPwItem.Disabled = store == nil
+	removePwItem := fyne.NewMenuItem("Remove Password…", doRemovePassword)
+	removePwItem.Disabled = store == nil || !store.Encrypted()
+
 	file := fyne.NewMenu("File",
 		fyne.NewMenuItem("New…", doNew),
 		fyne.NewMenuItem("Open…", doOpen),
 		openRecent,
+		fyne.NewMenuItemSeparator(),
+		saveItem,
 		fyne.NewMenuItemSeparator(),
 		fyne.NewMenuItem("Import CSV…", func() {
 			if store != nil {
@@ -102,6 +126,9 @@ func buildMainMenu() *fyne.MainMenu {
 		}),
 		fyne.NewMenuItem("Export CSV…", doExportCSV),
 		fyne.NewMenuItem("Setup Wizard…", showSetup),
+		fyne.NewMenuItemSeparator(),
+		setPwItem,
+		removePwItem,
 		fyne.NewMenuItemSeparator(),
 		fyne.NewMenuItem("Check for Updates…", func() { checkForUpdatesAsync(true) }),
 		fyne.NewMenuItemSeparator(),
