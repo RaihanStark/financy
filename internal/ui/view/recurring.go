@@ -141,13 +141,13 @@ func postRecurringNow(r Recurring) {
 		txt("Posting early. The next occurrence will move to "+next+".", colTextDim, 11.5, false),
 		spacerH(10),
 		txt("Record this as:", colTextDim, 11.5, false),
-		sel,
+		sel.widget,
 	)
 
 	var d *dialog.CustomDialog
 	cancel := secondaryButton("Cancel", nil, func() { d.Hide() })
 	confirm := primaryButton("Confirm", theme.ConfirmIcon(), func() {
-		create := sel.Selected == postNewTodayOption
+		create := sel.isPostNew()
 		d.Hide()
 		if create {
 			if store.PostRecurringNow(r.ID, todaySerial) {
@@ -200,18 +200,43 @@ func acctTouches(c Transaction, accountID string) bool {
 
 const browseAllOption = "🔍 Browse all transactions…"
 
+// candidateSel pairs the "record this as" dropdown with a lookup from each option
+// label back to the transaction it represents, so callers can both ask "post a new
+// one?" and resolve which existing transaction was chosen for linking.
+type candidateSel struct {
+	widget  *widget.Select
+	known   map[string]Transaction // option label → its transaction (excludes post-new / Browse)
+	postNew string
+}
+
+// isPostNew reports whether the post-a-new-transaction option is selected.
+func (c *candidateSel) isPostNew() bool { return c.widget.Selected == c.postNew }
+
+// picked returns the existing transaction the dropdown currently points at, or nil
+// when post-new (or nothing resolvable) is selected.
+func (c *candidateSel) picked() *Transaction {
+	if t, ok := c.known[c.widget.Selected]; ok {
+		return &t
+	}
+	return nil
+}
+
 // candidateSelect builds the "record this occurrence as" dropdown: the post-new
 // option, the suggested candidates, and a Browse-all entry that opens a searchable
 // picker of every transaction on the account (so a match outside the suggestions
 // can still be linked).
-func candidateSelect(postNew string, candidates []Transaction, accountID string, preselect bool) *widget.Select {
+func candidateSelect(postNew string, candidates []Transaction, accountID string, preselect bool) *candidateSel {
+	known := make(map[string]Transaction)
 	opts := []string{postNew}
 	for _, c := range candidates {
-		opts = append(opts, candidateLabel(c, accountID))
+		label := candidateLabel(c, accountID)
+		opts = append(opts, label)
+		known[label] = c
 	}
 	opts = append(opts, browseAllOption)
 
 	sel := widget.NewSelect(opts, nil)
+	cs := &candidateSel{widget: sel, known: known, postNew: postNew}
 	if preselect && len(candidates) > 0 {
 		sel.SetSelected(opts[1])
 	} else {
@@ -229,6 +254,7 @@ func candidateSelect(postNew string, candidates []Transaction, accountID string,
 				return
 			}
 			label := candidateLabel(*picked, accountID)
+			known[label] = *picked
 			if !optContains(sel.Options, label) {
 				n := len(sel.Options)
 				merged := append([]string{}, sel.Options[:n-1]...) // all but Browse
@@ -239,7 +265,7 @@ func candidateSelect(postNew string, candidates []Transaction, accountID string,
 			sel.SetSelected(label)
 		})
 	}
-	return sel
+	return cs
 }
 
 func optContains(opts []string, v string) bool {
@@ -424,7 +450,7 @@ const postNewOption = "➕ Post a new transaction"
 // showDuePrompt lists each due occurrence with a dropdown to either post a new
 // transaction or link it to the existing transaction that already paid it.
 func showDuePrompt(items []DueItem) {
-	selects := make([]*widget.Select, len(items))
+	selects := make([]*candidateSel, len(items))
 	rows := make([]fyne.CanvasObject, 0, len(items))
 	for i, it := range items {
 		amtCol := colNegative
@@ -441,7 +467,7 @@ func showDuePrompt(items []DueItem) {
 		head := container.NewBorder(nil, nil,
 			txt(fmtSerialDate(it.Date)+"    "+orDash(it.Payee), colText, 12.5, true),
 			txt(amountLabel(it.Kind, it.Amount), amtCol, 12.5, true), nil)
-		rows = append(rows, container.NewVBox(head, sel, spacerH(8)))
+		rows = append(rows, container.NewVBox(head, sel.widget, spacerH(8)))
 	}
 
 	body := container.NewBorder(
@@ -460,7 +486,7 @@ func showDuePrompt(items []DueItem) {
 		var toPost []DueItem
 		linked := 0
 		for i, sel := range selects {
-			if sel.Selected == postNewOption {
+			if sel.isPostNew() {
 				toPost = append(toPost, items[i])
 			} else {
 				linked++ // already paid by an existing transaction → don't post

@@ -2,6 +2,7 @@ package core
 
 import (
 	"database/sql"
+	"encoding/json"
 	"strconv"
 )
 
@@ -143,18 +144,21 @@ func loadStore(db *sql.DB) (*Store, error) {
 	}
 	_ = drows.Close()
 
-	irows, err := db.Query(`SELECT id, debt_id, seq, due_date, amount, paid, txn_id FROM debt_installments ORDER BY debt_id, seq`)
+	irows, err := db.Query(`SELECT id, debt_id, seq, due_date, amount, paid, txn_id, linked, orig_posts FROM debt_installments ORDER BY debt_id, seq`)
 	if err != nil {
 		return nil, err
 	}
 	for irows.Next() {
 		var in Installment
-		var paid int
-		if err := irows.Scan(&in.ID, &in.DebtID, &in.Seq, &in.DueDate, &in.Amount, &paid, &in.TxnID); err != nil {
+		var paid, linked int
+		var origPosts string
+		if err := irows.Scan(&in.ID, &in.DebtID, &in.Seq, &in.DueDate, &in.Amount, &paid, &in.TxnID, &linked, &origPosts); err != nil {
 			_ = irows.Close()
 			return nil, err
 		}
 		in.Paid = paid != 0
+		in.Linked = linked != 0
+		in.OrigPosts = decodePosts(origPosts)
 		s.installments = append(s.installments, in)
 	}
 	_ = irows.Close()
@@ -224,14 +228,43 @@ func (s *Store) dbUpsertInstallment(in Installment) error {
 	if in.Paid {
 		paid = 1
 	}
+	linked := 0
+	if in.Linked {
+		linked = 1
+	}
 	_, err := s.db.Exec(`
-		INSERT INTO debt_installments (id, debt_id, seq, due_date, amount, paid, txn_id)
-		VALUES (?, ?, ?, ?, ?, ?, ?)
+		INSERT INTO debt_installments (id, debt_id, seq, due_date, amount, paid, txn_id, linked, orig_posts)
+		VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
 		ON CONFLICT(id) DO UPDATE SET
 			debt_id = excluded.debt_id, seq = excluded.seq, due_date = excluded.due_date,
-			amount = excluded.amount, paid = excluded.paid, txn_id = excluded.txn_id`,
-		in.ID, in.DebtID, in.Seq, in.DueDate, in.Amount, paid, in.TxnID)
+			amount = excluded.amount, paid = excluded.paid, txn_id = excluded.txn_id,
+			linked = excluded.linked, orig_posts = excluded.orig_posts`,
+		in.ID, in.DebtID, in.Seq, in.DueDate, in.Amount, paid, in.TxnID, linked, encodePosts(in.OrigPosts))
 	return err
+}
+
+// encodePosts / decodePosts (de)serialize an installment's snapshotted postings
+// for the orig_posts column. An empty slice maps to "" so unlinked rows stay tidy.
+func encodePosts(ps []Posting) string {
+	if len(ps) == 0 {
+		return ""
+	}
+	b, err := json.Marshal(ps)
+	if err != nil {
+		return ""
+	}
+	return string(b)
+}
+
+func decodePosts(s string) []Posting {
+	if s == "" {
+		return nil
+	}
+	var ps []Posting
+	if err := json.Unmarshal([]byte(s), &ps); err != nil {
+		return nil
+	}
+	return ps
 }
 
 func (s *Store) dbUpsertAssignment(month, catID string, amount int) error {

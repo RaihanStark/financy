@@ -46,7 +46,14 @@ type Installment struct {
 	DueDate int // Excel serial
 	Amount  int // minor units, positive
 	Paid    bool
-	TxnID   string // the posted transaction, set when paid
+	TxnID   string // the posted (or linked) transaction, set when paid
+	// Linked is true when the installment was satisfied by linking an existing
+	// transaction the user already recorded — TxnID points at a transaction we did
+	// NOT create. We re-point that transaction onto the liability so the books
+	// reconcile; OrigPosts snapshots its prior postings so undo can restore them
+	// instead of deleting a row that isn't ours.
+	Linked    bool
+	OrigPosts []Posting
 }
 
 // GenerateInstallments splits total into n near-equal installments starting at
@@ -336,18 +343,74 @@ func (s *Store) PayInstallment(instID string, on int) bool {
 	return true
 }
 
-// UnpayInstallment reverses a payment: it deletes the linked transaction and
-// marks the installment unpaid again. Returns whether it reversed.
+// LinkInstallment marks an installment paid by linking it to a transaction the
+// user already recorded for this payment (e.g. entered manually or imported),
+// instead of posting a fresh one. A normal payment draws the liability down by
+// moving money into it; an existing transaction was almost always booked against
+// a spending category instead, so it neither draws the liability down nor avoids
+// double-counting the cost (already recognised at origination). We therefore
+// re-point the chosen transaction onto the liability — preserving the amount that
+// actually left the money account — and snapshot its prior postings so undo can
+// restore them. Returns whether it linked.
+func (s *Store) LinkInstallment(instID, txnID string) bool {
+	in := s.installmentByID(instID)
+	if in == nil || in.Paid {
+		return false
+	}
+	d := s.DebtByID(in.DebtID)
+	if d == nil {
+		return false
+	}
+	t := s.TxnByID(txnID)
+	if t == nil {
+		return false
+	}
+	// The real amount paid is whatever left the money account on this transaction;
+	// fall back to the scheduled amount if it doesn't touch it.
+	paid := absInt(func() int { sum, _ := acctSum(*t, d.AcctMoney); return sum }())
+	if paid == 0 {
+		paid = in.Amount
+	}
+	orig := append([]Posting(nil), t.Posts...)
+	upd := *t
+	upd.Posts = PostingsFor(KindExpense, d.AcctMoney, d.AcctLiability, paid)
+	if !s.UpdateTransaction(txnID, upd) {
+		return false
+	}
+	in.Paid = true
+	in.TxnID = txnID
+	in.Linked = true
+	in.OrigPosts = orig
+	s.reportError(s.dbUpsertInstallment(*in))
+	s.notify()
+	return true
+}
+
+// UnpayInstallment reverses a payment and marks the installment unpaid again. A
+// payment we posted is deleted outright; a linked transaction (one the user
+// already had) is left in place with its original postings restored, so undo
+// never destroys a row we didn't create. Returns whether it reversed.
 func (s *Store) UnpayInstallment(instID string) bool {
 	in := s.installmentByID(instID)
 	if in == nil || !in.Paid {
 		return false
 	}
-	if in.TxnID != "" {
+	switch {
+	case in.Linked:
+		if in.TxnID != "" && len(in.OrigPosts) > 0 {
+			if t := s.TxnByID(in.TxnID); t != nil {
+				upd := *t
+				upd.Posts = append([]Posting(nil), in.OrigPosts...)
+				s.UpdateTransaction(in.TxnID, upd)
+			}
+		}
+	case in.TxnID != "":
 		s.DeleteTransaction(in.TxnID)
 	}
 	in.Paid = false
 	in.TxnID = ""
+	in.Linked = false
+	in.OrigPosts = nil
 	s.reportError(s.dbUpsertInstallment(*in))
 	s.notify()
 	return true
