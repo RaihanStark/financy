@@ -38,8 +38,12 @@ with backward-compatible file formats.
 
 - [ ] **Stabilize the `.financy` file format** — commit to forward/backward
       compatibility guarantees within the `1.x` series; document the schema.
-- [ ] **First-class installers for every OS** — signed/notarized macOS `.dmg` and a
-      Windows installer alongside the existing Linux `.deb` / `.rpm`.
+- [ ] **Linux as the supported install target** — polished, first-class Linux
+      `.deb` / `.rpm` packages are the officially supported way to install v1.0.
+- [ ] **Unsigned Windows & macOS builds** — ship Windows and macOS bundles for 1.0
+      too, but **unsigned** (no code-signing / notarization yet); users get the usual
+      OS "unidentified developer" prompt. Signing/notarization is a post-1.0 goal
+      (see below).
 - [ ] **Onboarding polish** — refine the first-run setup wizard and demo data so a
       new user reaches a useful budget in minutes.
 - [ ] **Documentation pass** — complete the user guide for every screen and a
@@ -70,6 +74,9 @@ Candidate features under consideration, roughly in priority order. Feedback and
 - **Saved filters / views** on the Transactions screen.
 - **Importer improvements** — more bank formats, OFX/QFX support, smarter
   payee/category learning.
+- **Signed & notarized builds** — code-sign the Windows installer and
+  sign/notarize the macOS bundle so they install without security warnings, and
+  add proper platform installers (`.dmg` / Windows setup).
 - **Optional self-hosted sync** — an *opt-in*, end-to-end-encrypted way to sync a
   document across your own devices, without a Financy cloud account.
 - **Localization** — translate the UI beyond English.

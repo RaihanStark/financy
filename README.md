@@ -199,11 +199,14 @@ them to the GitHub Release. See [RELEASING.md](RELEASING.md) for the full guide.
 ## 🗺️ Roadmap
 
 Financy's core is feature-complete and the project is working toward a **stable
-v1.0** — locking down the `.financy` file format, shipping first-class installers
-for macOS and Windows alongside the Linux packages, and a docs/accessibility/
-hardening pass. After 1.0, candidate features include **budget goals/targets**,
-**multi-currency**, an **OFX/QFX-aware importer**, and an *opt-in, self-hosted*
-end-to-end-encrypted **sync** (never a Financy cloud account).
+v1.0**. The supported install target for 1.0 is **Linux** (`.deb` / `.rpm`);
+**Windows and macOS ship too, but unsigned first** (you'll see the usual
+"unidentified developer" prompt), with code-signing/notarization coming after 1.0.
+The rest of the v1.0 work is locking down the `.financy` file format plus a
+docs/accessibility/hardening pass. After 1.0, candidate features include **budget
+goals/targets**, **multi-currency**, an **OFX/QFX-aware importer**, signed
+installers, and an *opt-in, self-hosted* end-to-end-encrypted **sync** (never a
+Financy cloud account).
 
 See **[ROADMAP.md](ROADMAP.md)** for the full plan, and
 [CHANGELOG.md](CHANGELOG.md) for what's already shipped.
