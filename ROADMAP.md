@@ -59,9 +59,21 @@ with backward-compatible file formats.
 
 ## 🔭 Upcoming — after 1.0
 
+The north star after 1.0 is to make Financy an **all-in-one personal finance
+app** — budgeting, accounting, debts, *and* investments in one local-first,
+private file — so you can see your whole financial picture in one place.
+
 Candidate features under consideration, roughly in priority order. Feedback and
 👍 reactions on issues help decide what comes first.
 
+- **📈 Investment tracker** — turn the existing off-budget *Investments* accounts
+  into a true portfolio tracker. Record **holdings** (stocks, ETFs, funds, crypto)
+  as quantity + cost basis, log **buy / sell / dividend** transactions through the
+  double-entry journal (so net worth always ties out), and see **per-holding and
+  total market value, unrealized/realized gains, and allocation**. Prices can be
+  updated **manually** first (privacy-first, no network), with an *optional* quote
+  fetch later — and a dedicated **Investments** screen plus net-worth and
+  allocation charts in Analytics. This is the centerpiece of the all-in-one vision.
 - **Budget goals / targets** — per-category monthly or sinking-fund targets with
   progress indicators, so Ready to Assign can suggest how much to fund.
 - **Multi-currency** — hold accounts in different currencies within one document,
