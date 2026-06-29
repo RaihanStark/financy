@@ -617,7 +617,7 @@ func TransactionForm(id, prefillMoney string) {
 			return false
 		}
 		posts := postingsFor(kind.Selected, idOf(acctA.Selected), idOf(acctB.Selected), amt)
-		nt := Transaction{Date: serial, Payee: payee.Text, Memo: memo.Text, Posts: posts}
+		nt := Transaction{Date: serial, Payee: payee.Text(), Memo: memo.Text, Posts: posts}
 		if existing != nil {
 			return store.UpdateTransaction(existing.ID, nt)
 		}

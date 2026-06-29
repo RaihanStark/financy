@@ -166,7 +166,7 @@ func QuickAddForm() {
 			}
 			txns = append(txns, Transaction{
 				Date:  serial,
-				Payee: r.payee.Text,
+				Payee: r.payee.Text(),
 				Posts: postingsFor(kind, money, a.ID, amt),
 			})
 		}
@@ -179,7 +179,7 @@ func QuickAddForm() {
 			}
 			txns = append(txns, Transaction{
 				Date:  serial,
-				Payee: r.payee.Text,
+				Payee: r.payee.Text(),
 				Posts: postingsFor("Transfer", from, to, amt),
 			})
 		}

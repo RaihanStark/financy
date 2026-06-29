@@ -387,7 +387,7 @@ func RecurringForm(existing *Recurring) {
 		}
 		r := Recurring{
 			Kind: kind.Selected, AcctA: idOf(acctA.Selected), AcctB: idOf(acctB.Selected),
-			Amount: amt, Payee: payee.Text, Memo: memo.Text,
+			Amount: amt, Payee: payee.Text(), Memo: memo.Text,
 			Freq: freq.Selected, NextDue: due, Enabled: true,
 		}
 		if existing != nil {
