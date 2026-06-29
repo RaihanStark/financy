@@ -322,7 +322,7 @@ func RecurringForm(existing *Recurring) {
 	kind := widget.NewSelect([]string{"Expense", "Income", "Transfer"}, nil)
 	amount := newAmountEntry()
 	amount.Validator = amountValidator
-	payee := widget.NewEntry()
+	payee := widget.NewSelectEntry(store.Payees())
 	memo := widget.NewEntry()
 	freq := widget.NewSelect(frequencies(), nil)
 	next := newDateEntry(todaySerial)

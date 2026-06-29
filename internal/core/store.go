@@ -3,6 +3,7 @@ package core
 import (
 	"database/sql"
 	"sort"
+	"strings"
 	"time"
 )
 
@@ -306,6 +307,37 @@ func (s *Store) Transactions() []Transaction {
 			return out[i].Date > out[j].Date
 		}
 		return out[i].ID > out[j].ID
+	})
+	return out
+}
+
+// Payees returns the distinct, non-empty payee names seen across transactions
+// and recurring entries, sorted case-insensitively. It backs the payee
+// autocomplete dropdowns so a user can pick an existing payee while still being
+// free to type a new one.
+func (s *Store) Payees() []string {
+	seen := map[string]bool{}
+	var out []string
+	add := func(p string) {
+		p = strings.TrimSpace(p)
+		if p == "" {
+			return
+		}
+		key := strings.ToLower(p)
+		if seen[key] {
+			return
+		}
+		seen[key] = true
+		out = append(out, p)
+	}
+	for _, t := range s.txns {
+		add(t.Payee)
+	}
+	for _, r := range s.recurring {
+		add(r.Payee)
+	}
+	sort.Slice(out, func(i, j int) bool {
+		return strings.ToLower(out[i]) < strings.ToLower(out[j])
 	})
 	return out
 }
