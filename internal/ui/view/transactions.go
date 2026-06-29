@@ -10,6 +10,7 @@ import (
 	"fyne.io/fyne/v2/canvas"
 	"fyne.io/fyne/v2/container"
 	"fyne.io/fyne/v2/dialog"
+	"fyne.io/fyne/v2/layout"
 	"fyne.io/fyne/v2/theme"
 	"fyne.io/fyne/v2/widget"
 )
@@ -131,6 +132,7 @@ func ScreenTransactions() fyne.CanvasObject {
 		bar = appBar("Transactions", "Double-entry journal — every entry balances to zero",
 			secondaryButton("Select", theme.ListIcon(), func() { selecting = true; render() }),
 			secondaryButton("Import CSV", theme.DownloadIcon(), func() { ImportCSV() }),
+			secondaryButton("Quick Add", theme.ContentAddIcon(), func() { QuickAddForm() }),
 			primaryButton("Add Transaction", theme.ContentAddIcon(), func() { TransactionForm("", "") }),
 		)
 	}
@@ -456,7 +458,6 @@ func kindColor(k string) color.Color {
 	}
 }
 
-
 func distinctMonths() []string {
 	set := map[string]bool{}
 	for _, t := range store.Transactions() {
@@ -604,28 +605,72 @@ func TransactionForm(id, prefillMoney string) {
 		widget.NewFormItem("Memo", memo),
 	}
 
-	formDialog = dialog.NewForm(title, "Save", "Cancel", items, func(ok bool) {
-		if !ok {
-			return
-		}
+	// commit posts the current form as a transaction (add) or saves the edit,
+	// returning whether it succeeded so "Save & Add another" knows to reset.
+	commit := func() bool {
 		serial := parseDateSerial(date.Text)
 		amt := parseAmount(amount.Text)
 		if serial == 0 || amt <= 0 || acctA.Selected == "" || acctB.Selected == "" {
-			return
+			return false
 		}
 		if kind.Selected == "Transfer" && acctA.Selected == acctB.Selected {
-			return
+			return false
 		}
 		posts := postingsFor(kind.Selected, idOf(acctA.Selected), idOf(acctB.Selected), amt)
 		nt := Transaction{Date: serial, Payee: payee.Text, Memo: memo.Text, Posts: posts}
 		if existing != nil {
-			store.UpdateTransaction(existing.ID, nt)
-		} else {
-			store.AddTransaction(nt)
+			return store.UpdateTransaction(existing.ID, nt)
 		}
-	}, win)
-	formDialog.Resize(fyne.NewSize(460, 420))
-	formDialog.Show()
+		return store.AddTransaction(nt)
+	}
+
+	// Editing keeps the plain Save/Cancel form. Adding uses a custom footer with a
+	// "Save & Add another" action that keeps the dialog open for rapid entry.
+	if existing != nil {
+		formDialog = dialog.NewForm(title, "Save", "Cancel", items, func(ok bool) {
+			if ok {
+				commit()
+			}
+		}, win)
+		formDialog.Resize(fyne.NewSize(460, 420))
+		formDialog.Show()
+		return
+	}
+
+	formGrid := container.New(layout.NewFormLayout())
+	for _, it := range items {
+		formGrid.Add(widget.NewLabel(it.Text))
+		formGrid.Add(it.Widget)
+	}
+
+	// reset clears the per-entry fields but keeps type/date/money account so a run
+	// of similar entries (same account, same day) only needs amount + category.
+	reset := func() {
+		amount.SetText("")
+		payee.SetText("")
+		memo.SetText("")
+		acctB.ClearSelected()
+		win.Canvas().Focus(amount)
+	}
+
+	var d *dialog.CustomDialog
+	cancel := secondaryButton("Cancel", nil, func() { d.Hide() })
+	saveAnother := secondaryButton("Save & Add another", theme.ContentAddIcon(), func() {
+		if commit() {
+			reset()
+		}
+	})
+	save := primaryButton("Save", theme.ConfirmIcon(), func() {
+		if commit() {
+			d.Hide()
+		}
+	})
+	content := container.NewVBox(formGrid, spacerH(8),
+		container.NewHBox(layout.NewSpacer(), cancel, saveAnother, save))
+	d = dialog.NewCustomWithoutButtons(title, content, win)
+	formDialog = d
+	d.Resize(fyne.NewSize(480, 460))
+	d.Show()
 }
 
 // payInstallmentForm is the "Pay debt" path of the Add Transaction flow: pick a

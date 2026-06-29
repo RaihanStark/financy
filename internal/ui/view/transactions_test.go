@@ -159,6 +159,48 @@ func TestTransactionFormAdd(t *testing.T) {
 	}
 }
 
+// "Save & Add another" posts the entry but keeps the dialog open with a cleared
+// amount and a retained money account, ready for the next row.
+func TestTransactionFormSaveAndAddAnother(t *testing.T) {
+	resetTxnFilters(t)
+	s, w := newViewTest(t)
+	before := len(s.Transactions())
+
+	TransactionForm("", "")
+	d := dialogContent(w)
+	if d == nil {
+		t.Fatal("transaction form did not open")
+	}
+
+	selects := findSelects(d) // [kind, acctA(money), acctB(category)]
+	entries := findEntries(d) // [date, amount, payee, memo]
+	if len(selects) < 3 || len(entries) < 4 {
+		t.Fatalf("unexpected form shape: %d selects, %d entries", len(selects), len(entries))
+	}
+	selects[0].SetSelected("Expense")
+	selects[1].SetSelected("Checking")
+	selects[2].SetSelected("Groceries")
+	entries[1].SetText("50") // amount
+
+	if !tapButton(d, "Save & Add another") {
+		t.Fatal("no Save & Add another button")
+	}
+	if got := len(s.Transactions()); got != before+1 {
+		t.Fatalf("transactions = %d, want %d", got, before+1)
+	}
+	// Dialog stays open for the next entry.
+	if dialogContent(w) == nil {
+		t.Fatal("dialog closed after Save & Add another")
+	}
+	// Amount cleared, money account retained.
+	if entries[1].Text != "" {
+		t.Errorf("amount not cleared: %q", entries[1].Text)
+	}
+	if selects[1].Selected != "Checking" {
+		t.Errorf("money account not retained: %q", selects[1].Selected)
+	}
+}
+
 // Duplicating a transaction adds an identical copy.
 func TestDuplicateTxn(t *testing.T) {
 	s, _ := newViewTest(t)
