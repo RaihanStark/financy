@@ -48,6 +48,11 @@ func QuickAddForm() {
 		defaultMoney = moneyNames[0]
 	}
 
+	// Column weights: give the date its own wider column so the calendar-picker
+	// button reads clearly (as on the single transaction form) instead of being
+	// squeezed into an equal fifth of the row.
+	colWeights := []float32{1.4, 1, 1, 1, 1.1}
+
 	// ---- Income & Expenses table ----
 	var ieRows []*ieRow
 	ieList := container.NewVBox()
@@ -87,7 +92,7 @@ func QuickAddForm() {
 		r.cat.PlaceHolder = "Category…"
 		r.payee.SetPlaceHolder("Payee")
 		r.box = rowWithRemove(
-			container.NewGridWithColumns(5, r.date, r.money, r.amount, r.cat, r.payee),
+			container.New(&columnsLayout{Weights: colWeights, Gap: 6}, r.date, r.money, r.amount, r.cat, r.payee),
 			func() { removeIE(r) },
 		)
 		ieRows = append(ieRows, r)
@@ -130,7 +135,7 @@ func QuickAddForm() {
 		r.to.PlaceHolder = "To…"
 		r.payee.SetPlaceHolder("Payee")
 		r.box = rowWithRemove(
-			container.NewGridWithColumns(5, r.date, r.from, r.to, r.amount, r.payee),
+			container.New(&columnsLayout{Weights: colWeights, Gap: 6}, r.date, r.from, r.to, r.amount, r.payee),
 			func() { removeTR(r) },
 		)
 		trRows = append(trRows, r)
@@ -182,12 +187,12 @@ func QuickAddForm() {
 
 	body := container.NewVBox(
 		sectionTitle("Income & Expenses"),
-		columnHeader("Date", "Money", "Amount", "Category", "Payee"),
+		columnHeader(colWeights, "Date", "Money", "Amount", "Category", "Payee"),
 		ieList,
 		secondaryButton("＋ Add row", theme.ContentAddIcon(), func() { addIERow() }),
 		spacerH(14),
 		sectionTitle("Transfers"),
-		columnHeader("Date", "From", "To", "Amount", "Payee"),
+		columnHeader(colWeights, "Date", "From", "To", "Amount", "Payee"),
 		trList,
 		secondaryButton("＋ Add transfer", theme.ContentAddIcon(), func() { addTRRow() }),
 	)
@@ -221,13 +226,13 @@ func rowWithRemove(fields fyne.CanvasObject, onRemove func()) fyne.CanvasObject 
 	return container.NewBorder(nil, nil, nil, rm, fields)
 }
 
-// columnHeader renders dim labels above a table's columns, padded on the right to
-// line up with rows that carry a remove button.
-func columnHeader(labels ...string) fyne.CanvasObject {
+// columnHeader renders dim labels above a table's columns, using the same column
+// weights as the rows and padding on the right to line up with the remove button.
+func columnHeader(weights []float32, labels ...string) fyne.CanvasObject {
 	cols := make([]fyne.CanvasObject, len(labels))
 	for i, l := range labels {
 		cols[i] = txt(l, colTextDim, 10, true)
 	}
 	return container.NewBorder(nil, nil, nil, spacerW(40),
-		container.NewGridWithColumns(len(labels), cols...))
+		container.New(&columnsLayout{Weights: weights, Gap: 6}, cols...))
 }
