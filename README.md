@@ -196,6 +196,20 @@ them to the GitHub Release. See [RELEASING.md](RELEASING.md) for the full guide.
 
 ---
 
+## 🗺️ Roadmap
+
+Financy's core is feature-complete and the project is working toward a **stable
+v1.0** — locking down the `.financy` file format, shipping first-class installers
+for macOS and Windows alongside the Linux packages, and a docs/accessibility/
+hardening pass. After 1.0, candidate features include **budget goals/targets**,
+**multi-currency**, an **OFX/QFX-aware importer**, and an *opt-in, self-hosted*
+end-to-end-encrypted **sync** (never a Financy cloud account).
+
+See **[ROADMAP.md](ROADMAP.md)** for the full plan, and
+[CHANGELOG.md](CHANGELOG.md) for what's already shipped.
+
+---
+
 ## ❤️ Support the Project
 
 Financy is free and open-source, built and maintained in my spare time. If it helps you
