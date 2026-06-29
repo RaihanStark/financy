@@ -6,6 +6,8 @@ import (
 
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/container"
+	"fyne.io/fyne/v2/dialog"
+	"fyne.io/fyne/v2/layout"
 	"fyne.io/fyne/v2/theme"
 	"fyne.io/fyne/v2/widget"
 )
@@ -182,7 +184,7 @@ func installmentTableRow(d Debt, in Installment, idx int) fyne.CanvasObject {
 	if in.Paid {
 		action = secondaryButton("Undo", theme.ContentUndoIcon(), func() { store.UnpayInstallment(in.ID) })
 	} else {
-		action = primaryButton("Pay", theme.ConfirmIcon(), func() { store.PayInstallment(in.ID, todaySerial) })
+		action = primaryButton("Pay", theme.ConfirmIcon(), func() { payInstallmentDialog(d, in) })
 	}
 
 	seq := container.NewCenter(txt("#"+itoa(in.Seq), colTextDim, 12, true))
@@ -229,6 +231,54 @@ func installmentEditDialog(d Debt, in Installment) {
 		}
 		store.UpdateInstallment(in.ID, ds, a)
 	}).Show()
+}
+
+// payInstallmentDialog reviews how to record an installment payment — the same
+// treatment as posting a recurring transaction. You either post a new payment now,
+// or link the installment to a transaction already in your books (paid manually,
+// imported, or a slightly different amount). Linking re-points that transaction
+// onto the debt's liability so the outstanding balance stays correct rather than
+// double-posting. Either way no payment is posted twice.
+func payInstallmentDialog(d Debt, in Installment) {
+	if win == nil {
+		store.PayInstallment(in.ID, todaySerial)
+		return
+	}
+	cands, auto := store.RecurringCandidates(d.AcctMoney, in.Amount, todaySerial)
+	// Default to creating a new payment; pre-select a confident match so an
+	// already-recorded installment links in one click.
+	sel := candidateSelect(postNewTodayOption, cands, d.AcctMoney, auto)
+
+	body := container.NewVBox(
+		txt(orDash(d.Name)+" · installment "+itoa(in.Seq)+"   ·   "+fmtMoney(in.Amount), colText, 14, true),
+		txt("Post a new payment now, or link one already in your books.", colTextDim, 11.5, false),
+		spacerH(10),
+		txt("Record this payment as:", colTextDim, 11.5, false),
+		sel.widget,
+	)
+
+	var dlg *dialog.CustomDialog
+	cancel := secondaryButton("Cancel", nil, func() { dlg.Hide() })
+	confirm := primaryButton("Confirm", theme.ConfirmIcon(), func() {
+		postNew, picked := sel.isPostNew(), sel.picked()
+		dlg.Hide()
+		label := orDash(d.Name) + " · installment " + itoa(in.Seq)
+		if postNew || picked == nil {
+			if store.PayInstallment(in.ID, todaySerial) {
+				showInfo("Paid", label+" posted.")
+			}
+			return
+		}
+		if store.LinkInstallment(in.ID, picked.ID) {
+			showInfo("Linked", label+" linked to an existing transaction.")
+		}
+	})
+
+	content := container.NewVBox(body, spacerH(16),
+		container.NewHBox(layout.NewSpacer(), cancel, confirm))
+	dlg = dialog.NewCustomWithoutButtons("Pay installment", content, win)
+	dlg.Resize(fyne.NewSize(520, 300))
+	dlg.Show()
 }
 
 // DebtForm is the add/edit dialog. On add it captures the full plan (total,

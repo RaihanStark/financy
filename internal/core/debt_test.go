@@ -109,6 +109,141 @@ func TestPayInstallmentPostsTransaction(t *testing.T) {
 	}
 }
 
+func TestLinkInstallmentReconcilesLiability(t *testing.T) {
+	s := debtStore()
+	first := serialOf(2026, 1, 1)
+	s.AddDebt(Debt{Name: "Phone", Type: DebtBNPL, Lender: "PayLater", AcctMoney: "checking"},
+		GenerateInstallments(12000, 12, first, "Monthly"))
+	id := s.Debts()[0].ID
+	liab := s.Debts()[0].AcctLiability
+	insts := s.Installments(id)
+
+	// The user already recorded this payment manually, booked against a category —
+	// money left checking, but the liability wasn't drawn down and the cost is now
+	// double-counted (it was already recognised at origination).
+	extID := s.genID()
+	if !s.AddTransaction(Transaction{
+		ID: extID, Date: first, Payee: "PayLater",
+		Posts: PostingsFor(KindExpense, "checking", "shopping", 1000),
+	}) {
+		t.Fatal("seed transaction not added")
+	}
+	if bal := s.Balance("shopping"); bal != 1000 {
+		t.Fatalf("shopping balance before link = %d, want 1000", bal)
+	}
+	if out := s.DisplayBalance(*s.AccountByID(liab)); out != 12000 {
+		t.Fatalf("liability before link = %d, want 12000 (not drawn down yet)", out)
+	}
+
+	// Linking re-points the existing transaction onto the liability: no new row is
+	// posted, the category is no longer charged, and the liability draws down.
+	if !s.LinkInstallment(insts[0].ID, extID) {
+		t.Fatal("LinkInstallment returned false")
+	}
+	if got := len(s.Transactions()); got != 2 { // purchase + the linked one, nothing new
+		t.Fatalf("got %d transactions after link, want 2 (no new post)", got)
+	}
+	got := s.Installments(id)[0]
+	if !got.Paid || !got.Linked || got.TxnID != extID {
+		t.Errorf("installment after link = %+v, want Paid && Linked && TxnID=%s", got, extID)
+	}
+	if bal := s.Balance("shopping"); bal != 0 {
+		t.Errorf("shopping balance after link = %d, want 0 (re-pointed off the category)", bal)
+	}
+	if bal := s.Balance("checking"); bal != -1000 {
+		t.Errorf("checking after link = %d, want -1000 (money still spent once)", bal)
+	}
+	if out := s.DisplayBalance(*s.AccountByID(liab)); out != 11000 {
+		t.Errorf("liability after link = %d, want 11000", out)
+	}
+
+	// Undo restores the user's original transaction instead of deleting it.
+	if !s.UnpayInstallment(s.Installments(id)[0].ID) {
+		t.Fatal("UnpayInstallment returned false")
+	}
+	if got := len(s.Transactions()); got != 2 {
+		t.Fatalf("got %d transactions after undo, want 2 (linked row restored, not deleted)", got)
+	}
+	got = s.Installments(id)[0]
+	if got.Paid || got.Linked || got.TxnID != "" {
+		t.Errorf("installment after undo = %+v, want unpaid/unlinked", got)
+	}
+	if bal := s.Balance("shopping"); bal != 1000 {
+		t.Errorf("shopping after undo = %d, want 1000 (original posting restored)", bal)
+	}
+	if out := s.DisplayBalance(*s.AccountByID(liab)); out != 12000 {
+		t.Errorf("liability after undo = %d, want 12000", out)
+	}
+}
+
+func TestLinkInstallmentAmountMismatch(t *testing.T) {
+	s := debtStore()
+	first := serialOf(2026, 1, 1)
+	s.AddDebt(Debt{Name: "Sofa", Type: DebtBNPL, AcctMoney: "checking"},
+		GenerateInstallments(12000, 12, first, "Monthly"))
+	id := s.Debts()[0].ID
+	liab := s.Debts()[0].AcctLiability
+	insts := s.Installments(id)
+
+	// The actual payment was 950, not the scheduled 1000 — link should draw the
+	// liability down by what really left the account.
+	extID := s.genID()
+	s.AddTransaction(Transaction{
+		ID: extID, Date: first, Payee: "Sofa",
+		Posts: PostingsFor(KindExpense, "checking", "shopping", 950),
+	})
+	if !s.LinkInstallment(insts[0].ID, extID) {
+		t.Fatal("LinkInstallment returned false")
+	}
+	if bal := s.Balance("checking"); bal != -950 {
+		t.Errorf("checking after link = %d, want -950 (actual amount)", bal)
+	}
+	if out := s.DisplayBalance(*s.AccountByID(liab)); out != 11050 {
+		t.Errorf("liability after link = %d, want 11050 (drawn down by actual 950)", out)
+	}
+}
+
+func TestLinkInstallmentPersistRoundTrip(t *testing.T) {
+	dir := t.TempDir()
+	path := dir + "/debtlink.financy"
+	s, err := NewDocument(path)
+	if err != nil {
+		t.Fatal(err)
+	}
+	s.AddAccount(Account{ID: "checking", Name: "Checking", Type: Asset})
+	first := TimeToSerial(time.Date(2026, 5, 1, 0, 0, 0, 0, time.UTC))
+	s.AddDebt(Debt{Name: "TV", Type: DebtBNPL, AcctMoney: "checking"},
+		GenerateInstallments(9000, 9, first, "Monthly"))
+	id := s.Debts()[0].ID
+	extID := s.genID()
+	s.AddTransaction(Transaction{
+		ID: extID, Date: first, Payee: "TV",
+		Posts: PostingsFor(KindExpense, "checking", "shopping", 1000),
+	})
+	s.LinkInstallment(s.Installments(id)[0].ID, extID)
+	_ = s.Close()
+
+	s2, err := OpenStore(path)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer func() { _ = s2.Close() }()
+	in := s2.Installments(s2.Debts()[0].ID)[0]
+	if !in.Paid || !in.Linked || in.TxnID != extID {
+		t.Errorf("linked installment didn't persist: %+v", in)
+	}
+	if len(in.OrigPosts) == 0 {
+		t.Errorf("OrigPosts snapshot didn't persist: %+v", in)
+	}
+	// Undo after reopen restores the original posting from the persisted snapshot.
+	if !s2.UnpayInstallment(in.ID) {
+		t.Fatal("UnpayInstallment after reopen returned false")
+	}
+	if bal := s2.Balance("shopping"); bal != 1000 {
+		t.Errorf("shopping after reopen+undo = %d, want 1000 (restored from snapshot)", bal)
+	}
+}
+
 func TestUpdateInstallment(t *testing.T) {
 	s := debtStore()
 	first := serialOf(2026, 1, 1)

@@ -13,6 +13,13 @@ See `RELEASING.md`.
 
 ## [Unreleased]
 
+### Added
+- **Match debt payments** — paying an installment now opens the same review dialog
+  as recurring transactions: post a new payment, or link an installment to an
+  existing transaction that already paid it (re-pointed onto the debt's liability so
+  the balance stays correct), instead of always posting a fresh one. Handles
+  installments already paid manually/imported and amounts that aren't exact.
+
 ## [0.7.0] - 2026-06-29
 
 ### Added
