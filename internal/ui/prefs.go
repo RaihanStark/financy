@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"os"
 	"path/filepath"
+	"time"
 )
 
 // appPrefs is small app-level config (NOT document data): which file to reopen
@@ -12,6 +13,12 @@ type appPrefs struct {
 	LastPath string   `json:"last_path"`
 	Recent   []string `json:"recent"`
 	Dark     bool     `json:"dark"`
+
+	// Update-check state. The automatic check is on by default; the zero value
+	// of DisableUpdateCheck (false) keeps it enabled.
+	DisableUpdateCheck bool   `json:"disable_update_check,omitempty"`
+	SkipVersion        string `json:"skip_version,omitempty"`
+	LastUpdateCheck    string `json:"last_update_check,omitempty"` // RFC3339 UTC
 }
 
 const maxRecent = 8
@@ -46,6 +53,20 @@ func (p *appPrefs) save() {
 	}
 }
 
+// dueForUpdateCheck reports whether the automatic update check should run: it's
+// due when never run before, when the stored timestamp is unparseable, or when
+// the throttle interval has elapsed.
+func (p *appPrefs) dueForUpdateCheck(now time.Time) bool {
+	if p.LastUpdateCheck == "" {
+		return true
+	}
+	last, err := time.Parse(time.RFC3339, p.LastUpdateCheck)
+	if err != nil {
+		return true
+	}
+	return now.Sub(last) >= updateCheckInterval
+}
+
 // remember records path as the current/most-recent file (deduped, capped).
 func (p *appPrefs) remember(path string) {
 	p.LastPath = path
@@ -58,4 +79,3 @@ func (p *appPrefs) remember(path string) {
 	p.Recent = out
 	p.save()
 }
-

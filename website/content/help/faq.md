@@ -39,6 +39,15 @@ Not simultaneously — it's a single-writer SQLite file. Use one machine at a ti
 
 Open an issue on [GitHub](https://github.com/raihanstark/financy/issues).
 
+## Does Financy update itself?
+
+No — Financy **checks** GitHub Releases for a newer version (once a day on launch,
+or via **File → Check for Updates…**) and shows a popup with a **Download** link.
+It never downloads or replaces the binary on its own, so you decide when and how to
+install. The check is an anonymous request to GitHub and sends none of your data.
+Use **Skip This Version** in the popup to silence the prompt for a release you're
+not ready for.
+
 ## Where's the changelog?
 
 See [Releases](https://github.com/raihanstark/financy/releases) and
