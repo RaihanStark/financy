@@ -67,7 +67,9 @@ build:
 # Regenerate every UI screenshot from the current code and copy them into the two
 # doc locations (README uses docs/screenshots, the Hugo site uses website/static/img,
 # which renames a few). Run this whenever the UI changes so the docs stay current.
-shot:
+# Mobile shots are captured from the REAL GL renderer (device-accurate), one
+# process per screen, so this part needs a display (not headless CI).
+shot: build
 	go run . shot $(SHOTDIR)
 	@echo "Copying screenshots into docs/screenshots and website/static/img…"
 	@for n in accounts analytics categories data-summary recurring reports setup transactions; do \
@@ -80,6 +82,12 @@ shot:
 	@cp "$(SHOTDIR)/reconcile-dialog.png" website/static/img/reconcile-dialog.png
 	@cp "$(SHOTDIR)/reconcile-result.png" website/static/img/reconcile-result.png
 	@cp "$(SHOTDIR)/recurring-due.png"    website/static/img/recurring-due.png
+	@echo "Capturing mobile screenshots (real GL renderer, one process per screen)…"
+	@mkdir -p $(SHOTDIR)/mobile
+	@for n in home transactions budget debts debt account; do \
+		FINANCY_MOBILE=1 ./$(APP) shot $(SHOTDIR)/mobile $$n >/dev/null 2>&1; \
+		cp "$(SHOTDIR)/mobile/m-$$n.png" "docs/screenshots/mobile/$$n.png"; \
+	done
 	@echo "Screenshots updated."
 
 # Serve the docs site locally with live reload at http://localhost:1313/ .
