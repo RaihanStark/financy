@@ -34,18 +34,41 @@ func (m *mobileApp) budgetScreen() fyne.CanvasObject {
 		col.Add(gap(10))
 		col.Add(mutedCard("No budget categories yet"))
 	} else {
-		col.Add(gap(14))
-		col.Add(sectionHeader("Categories", "Auto-assign", func() { m.autoAssign(month) }))
-		col.Add(gap(2))
-		rows := make([]fyne.CanvasObject, 0, len(bm.Categories)*2)
-		for i, c := range bm.Categories {
-			c := c
-			if i > 0 {
-				rows = append(rows, rowDivider())
+		// Split spending categories (Expense accounts) from debt-payment envelopes
+		// (Liability accounts) into their own sections.
+		var spending, debts []core.BudgetCategory
+		for _, c := range bm.Categories {
+			if c.IsDebt {
+				debts = append(debts, c)
+			} else {
+				spending = append(spending, c)
 			}
-			rows = append(rows, newTappableCard(budgetRow(c), func() { m.assignCategory(month, c) }))
 		}
-		col.Add(listCard(rows...))
+
+		catCard := func(cats []core.BudgetCategory) fyne.CanvasObject {
+			rows := make([]fyne.CanvasObject, 0, len(cats)*2)
+			for i, c := range cats {
+				c := c
+				if i > 0 {
+					rows = append(rows, rowDivider())
+				}
+				rows = append(rows, newTappableCard(budgetRow(c), func() { m.assignCategory(month, c) }))
+			}
+			return listCard(rows...)
+		}
+
+		if len(spending) > 0 {
+			col.Add(gap(14))
+			col.Add(sectionHeader("Spending", "Auto-assign", func() { m.autoAssign(month) }))
+			col.Add(gap(2))
+			col.Add(catCard(spending))
+		}
+		if len(debts) > 0 {
+			col.Add(gap(16))
+			col.Add(sectionHeader("Debt payments", "", nil))
+			col.Add(gap(2))
+			col.Add(catCard(debts))
+		}
 	}
 	col.Add(gap(120))
 	return container.NewBorder(header, nil, nil, nil, container.NewVScroll(insets(col, 0, 0, 16, 16)))

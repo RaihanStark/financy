@@ -23,6 +23,9 @@ See `RELEASING.md`.
 - **Live amount formatting on mobile** — every money field (add/edit and bulk
   transaction, assign, reconcile, add debt) now formats with thousands grouping
   as you type, following the document's number format.
+- **Mobile budget groups spending and debts** — the Budget tab now splits
+  Spending categories and Debt payment envelopes into their own sections,
+  matching the desktop.
 
 ### Fixed
 - **Mobile forms scroll over their fields** — dragging on a text field or select
