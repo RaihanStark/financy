@@ -1,6 +1,8 @@
 package mobileui
 
 import (
+	"image/color"
+	"strconv"
 	"strings"
 
 	"fyne.io/fyne/v2"
@@ -20,9 +22,7 @@ func (m *mobileApp) homeScreen() fyne.CanvasObject {
 		gap(6),
 		m.heroCard(),
 		gap(16),
-		sectionHeader("Accounts", "", nil),
-		gap(4),
-		m.accountsCard(),
+		m.accountsSection(),
 		gap(16),
 		sectionHeader("Recent activity", "See all", func() { m.selectTab(1) }),
 		gap(4),
@@ -54,13 +54,47 @@ func (m *mobileApp) heroCard() fyne.CanvasObject {
 	return container.NewStack(rounded(colHero, 20), insets(inner, 16, 16, 18, 18))
 }
 
-// accountsCard is a single rounded card listing every money account as a row —
-// compact and guaranteed to fit the width.
-func (m *mobileApp) accountsCard() fyne.CanvasObject {
-	accts := m.store.MoneyAccounts()
-	if len(accts) == 0 {
-		return mutedCard("No accounts yet")
+// accountsSection lists money accounts split into Assets and Liabilities, each
+// under its own subheader with a running subtotal, so the two kinds never blur
+// together in one flat list (mirrors the desktop Accounts screen).
+func (m *mobileApp) accountsSection() fyne.CanvasObject {
+	assets := m.store.AssetAccounts()
+	liabs := m.store.LiabilityAccounts()
+
+	col := container.NewVBox()
+	if len(assets) == 0 && len(liabs) == 0 {
+		col.Add(sectionHeader("Accounts", "", nil))
+		col.Add(gap(4))
+		col.Add(mutedCard("No accounts yet"))
+		return col
 	}
+
+	if len(assets) > 0 {
+		col.Add(accountGroupHeader("Assets", len(assets), m.store.TotalAssets(), colPos))
+		col.Add(gap(4))
+		col.Add(m.accountList(assets))
+	}
+	if len(liabs) > 0 {
+		if len(assets) > 0 {
+			col.Add(gap(14))
+		}
+		col.Add(accountGroupHeader("Liabilities", len(liabs), m.store.TotalLiabilities(), colNeg))
+		col.Add(gap(4))
+		col.Add(m.accountList(liabs))
+	}
+	return col
+}
+
+// accountGroupHeader is a section title with a right-aligned count and subtotal.
+func accountGroupHeader(title string, n, subtotal int, valCol color.Color) fyne.CanvasObject {
+	t := newText(title, colInk, 16, true)
+	count := newText(strconv.Itoa(n)+" accounts  ", colInkFaint, 11, false)
+	amt := newText(core.FmtMoney(subtotal), valCol, 15, true)
+	return container.NewBorder(nil, nil, t, container.NewHBox(count, amt))
+}
+
+// accountList renders a group of accounts as a single rounded card.
+func (m *mobileApp) accountList(accts []core.Account) fyne.CanvasObject {
 	rows := make([]fyne.CanvasObject, 0, len(accts)*2)
 	for i, a := range accts {
 		if i > 0 {

@@ -22,6 +22,10 @@ See `RELEASING.md`.
   months, not just the current one, so past months show a real funded budget
   (with sinking funds visibly accumulating month over month) instead of reading
   "Assigned 0" against real spending.
+- **Mobile accounts split by type** — the mobile Home now lists Assets and
+  Liabilities as separate groups, each with its own count and color-coded
+  subtotal, instead of one flat mixed list (matching the desktop Accounts
+  screen).
 
 ## [0.9.0] - 2026-07-01
 
