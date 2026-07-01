@@ -18,6 +18,11 @@ financy-upx
 *.aab
 fyne-cross/
 
+# Android signing keystore — NEVER commit. Keep the master copy in a password
+# manager / encrypted backup, and put it in GitHub Actions secrets for CI.
+*.jks
+*.keystore
+
 # Linux package output (nfpm: deb/rpm) + staged release artifacts
 /dist/
 *.deb
