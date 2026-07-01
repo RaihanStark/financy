@@ -115,10 +115,7 @@ func (m *mobileApp) installmentRow(d core.Debt, in core.Installment) fyne.Canvas
 			m.rebuildDebt(d.ID)
 		})
 	} else {
-		action = widget.NewButton("Pay", func() {
-			m.store.PayInstallment(in.ID, core.TodaySerial)
-			m.rebuildDebt(d.ID)
-		})
+		action = widget.NewButton("Pay", func() { m.payInstallment(d, in) })
 		action.Importance = widget.HighImportance
 	}
 

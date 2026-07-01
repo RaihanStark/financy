@@ -13,6 +13,18 @@ See `RELEASING.md`.
 
 ## [Unreleased]
 
+### Added
+- **Link an existing transaction when paying a debt on mobile** — the Pay
+  installment flow now matches the desktop: a "record this payment as" dropdown
+  lets you post a new payment or link a transaction already in your books
+  (with a confident match pre-selected and a searchable Browse-all picker),
+  instead of always posting a new one.
+
+### Fixed
+- **Android Back dismisses an open popup first** — with a dropdown, dialog, or
+  the calendar picker open, the Back button now closes just that popup instead of
+  navigating the page away.
+
 ## [0.11.0] - 2026-07-01
 
 ### Added

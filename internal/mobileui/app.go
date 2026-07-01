@@ -67,9 +67,17 @@ func Run(icon fyne.Resource) {
 	// canvas's typed-key handler when nothing is focused; without this it would
 	// finish the activity (close the app) even on a drill-down page.
 	w.Canvas().SetOnTypedKey(func(ev *fyne.KeyEvent) {
-		if ev.Name == mobiledriver.KeyBack {
-			ctl.back()
+		if ev.Name != mobiledriver.KeyBack {
+			return
 		}
+		// If a popup is open (a Select dropdown, a dialog, the calendar picker),
+		// Back should dismiss it — not navigate the page — matching Android's
+		// expectation. Overlays sit on the canvas's overlay stack.
+		if ov := w.Canvas().Overlays().Top(); ov != nil {
+			w.Canvas().Overlays().Remove(ov)
+			return
+		}
+		ctl.back()
 	})
 
 	ctl.startup()
