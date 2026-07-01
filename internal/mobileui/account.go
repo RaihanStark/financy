@@ -135,7 +135,7 @@ func (r *regRowWidget) CreateRenderer() fyne.WidgetRenderer {
 	r.circle = canvas.NewCircle(color.Transparent)
 	r.letter = newText("", colInk, 14, true)
 	av := container.NewGridWrap(fyne.NewSize(36, 36),
-		container.NewStack(r.circle, container.NewCenter(r.letter)))
+		container.NewStack(r.circle, centerInitial(r.letter, 36)))
 
 	r.title = newText("", colInk, 14, true)
 	r.sub = newText("", colInkDim, 11, false)

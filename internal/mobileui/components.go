@@ -71,12 +71,25 @@ func heroStat(label, val string) fyne.CanvasObject {
 	)
 }
 
+// centerInitial centers a single-character badge glyph. canvas.Text renders a
+// lone glyph a few pixels right of its box centre (a constant, glyph-independent
+// offset), so we pad the right to bring the ink back onto the geometric centre.
+func centerInitial(glyph fyne.CanvasObject, size float32) fyne.CanvasObject {
+	return container.NewCenter(insets(glyph, 0, 0, 0, size*0.22))
+}
+
 // initialCircle is a round, color-tinted badge showing a single initial.
 func initialCircle(letter string, c color.NRGBA, size float32) fyne.CanvasObject {
 	circle := canvas.NewCircle(withAlpha(c, 0x22))
 	txt := newText(letter, c, size*0.4, true)
+	// Only lone glyphs need re-centering; multi-character badges like "#12" are
+	// wide enough that the constant offset is negligible.
+	var glyph fyne.CanvasObject = container.NewCenter(txt)
+	if len([]rune(letter)) == 1 {
+		glyph = centerInitial(txt, size)
+	}
 	return container.NewGridWrap(fyne.NewSize(size, size),
-		container.NewStack(circle, container.NewCenter(txt)))
+		container.NewStack(circle, glyph))
 }
 
 // avatar is the badge shown at the start of a transaction row.

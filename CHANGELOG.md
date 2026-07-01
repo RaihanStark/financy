@@ -13,6 +13,11 @@ See `RELEASING.md`.
 
 ## [Unreleased]
 
+### Fixed
+- **Mobile avatar initials are centered** — the single-letter badges (account,
+  transaction, and category avatars) were sitting slightly right of centre; the
+  glyph is now padded onto the circle's geometric centre.
+
 ## [0.12.0] - 2026-07-01
 
 ### Added
