@@ -3,6 +3,11 @@ PKG     := github.com/raihanstark/financy
 # Current version is read from FyneApp.toml unless overridden: make build VERSION=0.2.0
 VERSION ?= $(shell sed -n 's/^Version = "\(.*\)"/\1/p' FyneApp.toml)
 LDFLAGS := -X $(PKG)/internal/core.Version=$(VERSION)
+# Android application ID, read from FyneApp.toml (used by `make apk`).
+APPID   := $(shell sed -n 's/^ID = "\(.*\)"/\1/p' FyneApp.toml)
+# Which Android ABI(s) to build. Override for a smaller single-arch build:
+#   make apk ANDROID_ARCH=android/arm64
+ANDROID_ARCH ?= android
 
 # Hugo for the docs site: use it from PATH, else fall back to the go-installed
 # binary in GOPATH/bin (where `go install ... hugo` puts it).
@@ -11,7 +16,7 @@ HUGO := $(shell command -v hugo 2>/dev/null || echo $(shell go env GOPATH)/bin/h
 # Where the screenshot harness writes its PNGs before they're copied into the docs.
 SHOTDIR := /tmp/financy-shots
 
-.PHONY: help run run-dev test vet check build shot set-version package nfpm print-version release clean docs docs-build
+.PHONY: help run run-dev test vet check build shot set-version package apk nfpm print-version release clean docs docs-build
 
 help:
 	@echo "Financy — make targets:"
@@ -25,6 +30,7 @@ help:
 	@echo "  make docs-build               build the docs to website/public"
 	@echo "  make set-version VERSION=x.y.z  stamp version into code + FyneApp.toml"
 	@echo "  make package                  package for THIS OS (needs the fyne CLI)"
+	@echo "  make apk                      build an Android APK (needs fyne CLI + Android SDK/NDK)"
 	@echo "  make nfpm                     build the Linux .deb and .rpm into dist/ (needs the nfpm CLI)"
 	@echo "  make release VERSION=x.y.z    stamp, verify, build — then commit & tag"
 
@@ -96,6 +102,23 @@ set-version:
 
 package: build
 	fyne package
+
+# Build a debug-signed Android APK from the mobile shell. Requires the fyne CLI
+# and the Android SDK + NDK: set ANDROID_HOME and ANDROID_NDK_HOME first, e.g.
+#   export ANDROID_HOME=$$HOME/Android/Sdk
+#   export ANDROID_NDK_HOME=$$ANDROID_HOME/ndk/27.2.12479018
+# The resulting APK auto-launches the touch layout (fyne.CurrentDevice().IsMobile()).
+# Debug-signed only — use `fyne release` with a keystore for the Play Store.
+#
+# CGO_LDFLAGS forces 16 KB-aligned ELF load segments in libFinancy.so. Android 15+
+# and Google Play (Nov 2025) require this; NDK r27 still defaults to 4 KB, so we
+# pass it explicitly (harmless once on NDK r28+, which defaults to 16 KB).
+apk: export CGO_LDFLAGS = -Wl,-z,max-page-size=16384,-z,common-page-size=16384
+apk:
+	@command -v fyne >/dev/null 2>&1 || { echo "fyne CLI not found. Install: go install fyne.io/tools/cmd/fyne@latest (and add $$(go env GOPATH)/bin to PATH)"; exit 1; }
+	@test -n "$(ANDROID_NDK_HOME)" || { echo "ANDROID_NDK_HOME is not set, e.g. export ANDROID_NDK_HOME=$$HOME/Android/Sdk/ndk/27.2.12479018"; exit 1; }
+	fyne package -os $(ANDROID_ARCH) -app-id $(APPID) -icon Icon.png
+	@echo "Built Android APK (app-id $(APPID)), 16 KB-aligned."
 
 # Print the version the build is stamped with (used by CI/nfpm). Handy on its own.
 print-version:

@@ -59,6 +59,18 @@ unreadable without your passphrase.
 | :-: | :-: |
 | <img src="docs/screenshots/transactions.png" width="420"> | <img src="docs/screenshots/setup.png" width="420"> |
 
+### 📱 Mobile (Android — beta)
+
+A touch-first UI built from the same codebase (see [MOBILE.md](MOBILE.md) for status and what's not ported yet).
+
+| Home | Transactions | Budget |
+| :-: | :-: | :-: |
+| <img src="docs/screenshots/mobile/home.png" width="240"> | <img src="docs/screenshots/mobile/transactions.png" width="240"> | <img src="docs/screenshots/mobile/budget.png" width="240"> |
+
+| Account detail | Debts | Debt detail |
+| :-: | :-: | :-: |
+| <img src="docs/screenshots/mobile/account.png" width="240"> | <img src="docs/screenshots/mobile/debts.png" width="240"> | <img src="docs/screenshots/mobile/debt.png" width="240"> |
+
 ---
 
 ## 🚀 Getting Started

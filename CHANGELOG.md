@@ -13,6 +13,35 @@ See `RELEASING.md`.
 
 ## [Unreleased]
 
+### Added
+- **Android APK release** — the release workflow now builds a 16 KB-aligned arm64
+  APK on every version tag and attaches it to the GitHub Release. It release-signs
+  the APK when signing secrets are configured (upgradeable in place), otherwise
+  produces a debug-signed APK for sideloading.
+- **MOBILE.md** — documents the Android app's current state: which features work
+  today and which desktop features aren't on mobile yet, plus build/install and
+  cross-platform-file notes.
+- **Mobile Budget & Debts interactivity** — the mobile Budget tab now navigates
+  months (◀ ▶), tap a category to assign money (with last-month / spent / average
+  quick-fills), and Auto-assign last month's amounts. The Debts tab can add a debt
+  (full schedule), and tapping a debt opens a detail page to pay/undo each
+  installment, edit, or delete it — matching the desktop features.
+- **Mobile transaction detail** — tapping a transaction (Transactions list, Home
+  recent, or an account register) opens a full-screen detail page: a kind-tinted
+  amount hero, a labelled breakdown (type, accounts/category, date, memo), and
+  Edit / Delete actions. Edit reuses the add form pre-filled.
+- **Mobile account detail** — tapping an account on the mobile Home now opens a
+  full-screen detail page: a role-tinted balance hero, a recycling register with
+  running balances and signed changes, and quick actions to add a prefilled
+  transaction, reconcile, edit, or delete the account.
+- **Mobile shell (prototype)** — the same binary now adapts to phones: on a mobile
+  device (or with `FINANCY_MOBILE=1` to preview on desktop) Financy renders a
+  touch-first layout with a compact header, a bottom navigation bar, and a header
+  overflow menu instead of the desktop toolbar/menu bar. It uses a single
+  auto-saved document in the app sandbox rather than the file-open model. The core
+  logic and all screens are reused unchanged; wide screens still need responsive
+  layout work.
+
 ## [0.8.0] - 2026-06-29
 
 ### Added

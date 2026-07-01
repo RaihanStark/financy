@@ -4,13 +4,13 @@ import (
 	_ "embed"
 
 	"fyne.io/fyne/v2"
-
-	"github.com/raihanstark/financy/internal/ui"
 )
 
 //go:embed Icon.png
 var iconPNG []byte
 
 func main() {
-	ui.Run(fyne.NewStaticResource("Icon.png", iconPNG))
+	// run() is selected by build tags: the desktop shell (internal/ui) on
+	// desktop, the touch UI (internal/mobileui) on Android/iOS.
+	run(fyne.NewStaticResource("Icon.png", iconPNG))
 }

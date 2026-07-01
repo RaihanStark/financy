@@ -2,6 +2,20 @@ name: Release
 
 # Triggered by pushing a version tag (e.g. v0.2.0). The tagged commit must
 # already carry the matching version (see `make release VERSION=x.y.z`).
+#
+# The `android` job builds and attaches an Android APK. To ship an upgradeable,
+# release-signed APK (so users can update in place), add these repository
+# secrets (Settings → Secrets and variables → Actions):
+#   ANDROID_KEYSTORE_BASE64   base64 of your release keystore (.jks)
+#   ANDROID_KEYSTORE_PASSWORD keystore password
+#   ANDROID_KEY_ALIAS         key alias
+#   ANDROID_KEY_PASSWORD      key password
+# Create a keystore once with:
+#   keytool -genkey -v -keystore financy.jks -alias financy \
+#           -keyalg RSA -keysize 2048 -validity 10000
+#   base64 -w0 financy.jks    # value for ANDROID_KEYSTORE_BASE64
+# Without the secrets the job still runs, producing a DEBUG-signed APK (fine for
+# sideloading/testing, but not upgradeable across releases).
 on:
   push:
     tags: ["v*"]
@@ -78,3 +92,55 @@ jobs:
           name: Financy ${{ github.ref_name }}
           body_path: docs/release-notes-${{ github.ref_name }}.md
           files: dist/*
+
+  android:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - name: Set up the Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Install NDK, platform and build-tools
+        run: sdkmanager "platform-tools" "platforms;android-34" "build-tools;34.0.0" "ndk;27.2.12479018"
+
+      - name: Install the fyne CLI
+        run: go install fyne.io/tools/cmd/fyne@latest
+
+      - name: Build the APK (release-signed when secrets are set)
+        shell: bash
+        env:
+          KEYSTORE_B64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+          KS_PASS: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          KEY_PASS: ${{ secrets.ANDROID_KEY_PASSWORD }}
+        run: |
+          export PATH="$PATH:$(go env GOPATH)/bin"
+          export ANDROID_NDK_HOME="$ANDROID_HOME/ndk/27.2.12479018"
+          # 16 KB-aligned load segments (Android 15+ / Play requirement).
+          export CGO_LDFLAGS="-Wl,-z,max-page-size=16384,-z,common-page-size=16384"
+          if [ -n "$KEYSTORE_B64" ]; then
+            echo "$KEYSTORE_B64" | base64 -d > release.jks
+            fyne release -os android/arm64 -app-id app.financy -icon Icon.png \
+              -keyStore release.jks -keyStorePass "$KS_PASS" \
+              -keyName "$KEY_ALIAS" -keyPass "$KEY_PASS"
+          else
+            echo "::warning::No ANDROID_KEYSTORE_BASE64 secret — building a DEBUG-signed APK. Fine for sideloading, but each build uses a different key so users can't upgrade in place. Add the signing secrets for a proper release."
+            fyne package -os android/arm64 -app-id app.financy -icon Icon.png
+          fi
+          mkdir -p dist
+          mv "$(ls *.apk | head -1)" "dist/Financy-${GITHUB_REF_NAME}-android-arm64.apk"
+
+      - name: Attach APK to the GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: dist/*.apk
