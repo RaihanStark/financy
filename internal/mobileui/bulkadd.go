@@ -17,14 +17,14 @@ import (
 // of controls (type, amount, money account, category/to-account, date, payee,
 // memo).
 type bulkRow struct {
-	kind     *widget.Select
-	amount   *widget.Entry
-	account  *widget.Select
-	other    *widget.Select
+	kind     *scrollSelect
+	amount   *scrollEntry
+	account  *scrollSelect
+	other    *scrollSelect
 	otherCap *canvas.Text
 	dateOf   func() int
-	payee    *widget.Entry
-	memo     *widget.Entry
+	payee    *scrollEntry
+	memo     *scrollEntry
 	box      fyne.CanvasObject
 }
 
@@ -71,12 +71,12 @@ func (m *mobileApp) openBulkAdd() {
 
 	addRow := func() {
 		r := &bulkRow{
-			kind:    widget.NewSelect([]string{"Expense", "Income", "Transfer"}, nil),
+			kind:    newSelect([]string{"Expense", "Income", "Transfer"}, nil),
 			amount:  newAmountEntry(),
-			account: widget.NewSelect(moneyNames, nil),
-			other:   widget.NewSelect(nil, nil),
-			payee:   widget.NewEntry(),
-			memo:    widget.NewEntry(),
+			account: newSelect(moneyNames, nil),
+			other:   newSelect(nil, nil),
+			payee:   newEntry(),
+			memo:    newEntry(),
 		}
 		r.payee.SetPlaceHolder("Payee (optional)")
 		r.memo.SetPlaceHolder("Memo (optional)")
@@ -116,14 +116,17 @@ func (m *mobileApp) openBulkAdd() {
 		head := container.NewBorder(nil, nil,
 			newText("Entry", colInkFaint, 11, true),
 			iconButton(theme.DeleteIcon(), func() { remove(r) }))
+		amountF := field("Amount", r.amount)
+		payeeF := field("Payee", r.payee)
+		memoF := field("Memo", r.memo)
 		inner := container.NewVBox(
 			head,
-			container.NewGridWithColumns(2, field("Type", r.kind), field("Amount", r.amount)),
+			container.NewGridWithColumns(2, field("Type", r.kind), amountF),
 			field("Account", r.account),
 			container.NewVBox(r.otherCap, r.other, gap(8)),
 			dateCtl,
-			field("Payee", r.payee),
-			field("Memo", r.memo),
+			payeeF,
+			memoF,
 		)
 		r.box = container.NewStack(rounded(colCard, 16), insets(inner, 10, 10, 12, 12))
 		rows = append(rows, r)
@@ -176,5 +179,5 @@ func (m *mobileApp) openBulkAdd() {
 		addBtn,
 		gap(24),
 	)
-	m.pushView(m.formPage("Bulk add", "Save all", body, nil, commit, m.back))
+	m.pushView(m.formPage("Bulk add", "Save all", body, commit, m.back))
 }

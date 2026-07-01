@@ -5,10 +5,8 @@ import (
 	"strconv"
 	"strings"
 
-	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/container"
 	"fyne.io/fyne/v2/dialog"
-	"fyne.io/fyne/v2/widget"
 
 	"github.com/raihanstark/financy/internal/core"
 )
@@ -26,17 +24,17 @@ func (m *mobileApp) debtForm(existing *core.Debt) {
 	s := m.store
 	money := accountNames(s.MoneyAccounts())
 
-	kind := widget.NewSelect(core.DebtTypes(), nil)
+	kind := newSelect(core.DebtTypes(), nil)
 	kind.SetSelected(core.DebtTypes()[0])
-	name := widget.NewEntry()
+	name := newEntry()
 	name.SetPlaceHolder("e.g. iPhone 15")
-	lender := widget.NewEntry()
+	lender := newEntry()
 	lender.SetPlaceHolder("e.g. Shopee PayLater")
-	acct := widget.NewSelect(money, nil)
+	acct := newSelect(money, nil)
 	if len(money) > 0 {
 		acct.SetSelected(money[0])
 	}
-	note := widget.NewEntry()
+	note := newEntry()
 	note.SetPlaceHolder("Optional")
 
 	nameF, lenderF, noteF := field("Name", name), field("Lender", lender), field("Note", note)
@@ -53,7 +51,6 @@ func (m *mobileApp) debtForm(existing *core.Debt) {
 		fields := container.NewVBox(
 			field("Type", kind), nameF, lenderF, field("Pay from", acct), noteF,
 		)
-		targets := map[fyne.Focusable]fyne.CanvasObject{name: nameF, lender: lenderF, note: noteF}
 		save := func() {
 			if name.Text == "" || acct.Selected == "" {
 				dialog.ShowError(errors.New("enter a name and a pay-from account"), m.win)
@@ -66,17 +63,17 @@ func (m *mobileApp) debtForm(existing *core.Debt) {
 			m.back()
 			m.rebuildDebt(existing.ID)
 		}
-		m.pushView(m.formPage("Edit debt", "Save", fields, targets, save, m.back))
+		m.pushView(m.formPage("Edit debt", "Save", fields, save, m.back))
 		return
 	}
 
 	// Add: full schedule.
 	total := newAmountEntry()
-	count := widget.NewEntry()
+	count := newEntry()
 	count.SetPlaceHolder("e.g. 12")
 	purchaseF, purchaseSerial := m.dateField("Purchase date", core.TodaySerial)
 	firstF, firstSerial := m.dateField("First due", core.TodaySerial)
-	freq := widget.NewSelect(core.Frequencies(), nil)
+	freq := newSelect(core.Frequencies(), nil)
 	freq.SetSelected("Monthly")
 
 	totalF := field("Total amount", total)
@@ -86,10 +83,6 @@ func (m *mobileApp) debtForm(existing *core.Debt) {
 		field("Type", kind), nameF, lenderF, field("Pay from", acct),
 		totalF, countF, purchaseF, firstF, field("Frequency", freq), noteF,
 	)
-	targets := map[fyne.Focusable]fyne.CanvasObject{
-		name: nameF, lender: lenderF, total: totalF, count: countF,
-		note: noteF,
-	}
 	save := func() {
 		amt := core.ParseAmount(total.Text)
 		n, _ := strconv.Atoi(strings.TrimSpace(count.Text))
@@ -109,5 +102,5 @@ func (m *mobileApp) debtForm(existing *core.Debt) {
 		s.AddDebt(d, core.GenerateInstallments(amt, n, due, freq.Selected))
 		m.back() // back to the Debts tab; the store change refreshes it
 	}
-	m.pushView(m.formPage("Add debt", "Add", fields, targets, save, m.back))
+	m.pushView(m.formPage("Add debt", "Add", fields, save, m.back))
 }

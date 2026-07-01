@@ -34,7 +34,7 @@ func (m *mobileApp) openSettings() {
 			gap(16),
 			container.NewCenter(newText("Financy v"+core.Version, colInkFaint, 11, false)),
 		)
-		return m.formPage("Settings", "", body, nil, nil, close)
+		return m.formPage("Settings", "", body, nil, close)
 	})
 }
 
@@ -96,7 +96,7 @@ func (m *mobileApp) settingsDocument() {
 			box.Add(unlink)
 		}
 
-		return m.formPage("Document", "", box, nil, nil, close)
+		return m.formPage("Document", "", box, nil, close)
 	})
 }
 
@@ -106,11 +106,11 @@ func (m *mobileApp) settingsDocument() {
 // Configuration tab).
 func (m *mobileApp) settingsConfiguration() {
 	m.pushPage(func(close func()) fyne.CanvasObject {
-		currency := widget.NewSelect([]string{"Rp", "$", "€", "£"}, nil)
+		currency := newSelect([]string{"Rp", "$", "€", "£"}, nil)
 		currency.SetSelected(m.store.Currency())
 
 		const fmtDefault = "Currency default"
-		numFmt := widget.NewSelect(append([]string{fmtDefault}, core.NumberFormatStyles()...), nil)
+		numFmt := newSelect(append([]string{fmtDefault}, core.NumberFormatStyles()...), nil)
 		if m.store.NumberFormat() == "" {
 			numFmt.SetSelected(fmtDefault)
 		} else {
@@ -135,7 +135,7 @@ func (m *mobileApp) settingsConfiguration() {
 			wrapText("The currency sets the symbol and decimals; the number format controls "+
 				"the thousands and decimal separators (e.g. 1,234.56 vs 1.234,56)."),
 		)
-		return m.formPage("Configuration", "Save", body, nil, save, close)
+		return m.formPage("Configuration", "Save", body, save, close)
 	})
 }
 
@@ -171,7 +171,7 @@ func (m *mobileApp) categoriesContent() fyne.CanvasObject {
 		section("EXPENSES", m.store.ExpenseAccounts()),
 		gap(20),
 	)
-	return m.formPage("Categories", "Add", body, nil,
+	return m.formPage("Categories", "Add", body,
 		func() { m.categoryForm(nil, rebuild) }, m.back)
 }
 
@@ -190,10 +190,10 @@ func (m *mobileApp) categoryRow(a core.Account, done func()) fyne.CanvasObject {
 
 // categoryForm adds or edits an income/expense category. existing == nil adds.
 func (m *mobileApp) categoryForm(existing *core.Account, onDone func()) {
-	name := widget.NewEntry()
+	name := newEntry()
 	name.SetPlaceHolder("e.g. Groceries, Salary")
-	typ := widget.NewSelect([]string{"Expense", "Income"}, nil)
-	notes := widget.NewEntry()
+	typ := newSelect([]string{"Expense", "Income"}, nil)
+	notes := newEntry()
 	notes.SetPlaceHolder("Optional")
 
 	title := "Add category"
@@ -225,8 +225,7 @@ func (m *mobileApp) categoryForm(existing *core.Account, onDone func()) {
 		}
 	}
 	body := container.NewVBox(nameF, field("Type", typ), notesF)
-	targets := map[fyne.Focusable]fyne.CanvasObject{name: nameF, notes: notesF}
-	m.pushView(m.formPage(title, "Save", body, targets, commit, m.back))
+	m.pushView(m.formPage(title, "Save", body, commit, m.back))
 }
 
 func (m *mobileApp) deleteCategory(a core.Account, done func()) {
@@ -249,7 +248,7 @@ func (m *mobileApp) deleteCategory(a core.Account, done func()) {
 			wrapText("Delete “"+a.Name+"”? This can't be undone."),
 			gap(18), del, gap(6), cancel,
 		)
-		return m.formPage("Delete category?", "", body, nil, nil, close)
+		return m.formPage("Delete category?", "", body, nil, close)
 	})
 }
 
@@ -287,7 +286,7 @@ func (m *mobileApp) settingsDataSummary() {
 			gap(16),
 			newText("Totals", colInkFaint, 11, true), gap(4), totals,
 		)
-		return m.formPage("Data summary", "", body, nil, nil, close)
+		return m.formPage("Data summary", "", body, nil, close)
 	})
 }
 
@@ -303,7 +302,7 @@ func (m *mobileApp) settingsAbout() {
 			wrapText("Financy is a private, offline, double-entry budgeting app. Your data "+
 				"lives in a single .financy file on your device and is never uploaded."),
 		)
-		return m.formPage("About", "", body, nil, nil, close)
+		return m.formPage("About", "", body, nil, close)
 	})
 }
 
@@ -322,6 +321,6 @@ func (m *mobileApp) confirmReplace(msg string, demo bool) {
 			gap(6),
 			cancel,
 		)
-		return m.formPage("Are you sure?", "", body, nil, nil, close)
+		return m.formPage("Are you sure?", "", body, nil, close)
 	})
 }

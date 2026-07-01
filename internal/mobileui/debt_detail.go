@@ -142,6 +142,6 @@ func (m *mobileApp) confirmDeleteDebt(d core.Debt) {
 			gap(6),
 			cancel,
 		)
-		return m.formPage("Delete debt?", "", body, nil, nil, close)
+		return m.formPage("Delete debt?", "", body, nil, close)
 	})
 }

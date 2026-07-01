@@ -13,14 +13,14 @@ import (
 
 // kbAdjust wraps the scrolling field area of a form. When the on-screen keyboard
 // appears, Fyne shrinks the content but does not scroll to the focused field, so
-// we do: whenever our height shrinks, scroll the currently focused field to the
-// top (always above the keyboard). Driving this off the resize — not taps or
-// focus events — makes it fire reliably however the field was focused.
+// we do: whenever our height shrinks, scroll the currently focused widget above
+// the keyboard. Driving this off the resize — not taps or focus events — makes it
+// fire reliably however the field was focused, and it works for ANY focused entry
+// on the page (no per-field registration needed).
 type kbAdjust struct {
-	win     fyne.Window
-	scroll  *container.Scroll
-	targets map[fyne.Focusable]fyne.CanvasObject // entry -> its field container
-	prevH   float32
+	win    fyne.Window
+	scroll *container.Scroll
+	prevH  float32
 }
 
 func (k *kbAdjust) MinSize(objs []fyne.CanvasObject) fyne.Size {
@@ -39,8 +39,16 @@ func (k *kbAdjust) Layout(objs []fyne.CanvasObject, size fyne.Size) {
 
 	if size.Height+1 < k.prevH { // shrank → keyboard appeared
 		if f := k.win.Canvas().Focused(); f != nil {
-			if target, ok := k.targets[f]; ok {
-				y := maxF(0, target.Position().Y)
+			if obj, ok := f.(fyne.CanvasObject); ok {
+				// The focused field's offset within the scrolled content = its
+				// absolute Y minus the scroll's absolute Y, plus however far we're
+				// already scrolled. Using absolute positions keeps this correct
+				// however deeply the field is nested (e.g. inside a bulk-add row
+				// card). The -24 leaves a little room so the field's caption stays
+				// visible above it.
+				drv := fyne.CurrentApp().Driver()
+				y := maxF(0, drv.AbsolutePositionForObject(obj).Y-
+					drv.AbsolutePositionForObject(k.scroll).Y+k.scroll.Offset.Y-24)
 				fyne.Do(func() { // defer off the layout pass to avoid re-entrant refresh
 					k.scroll.Offset = fyne.NewPos(0, y)
 					k.scroll.Refresh()
@@ -54,14 +62,12 @@ func (k *kbAdjust) Layout(objs []fyne.CanvasObject, size fyne.Size) {
 // formPage is the shared full-screen page template used for every mobile
 // "modal" (add transaction, unlock, settings, confirmations). It frames a
 // scrollable body with a fixed top bar: a leading ✕ (onClose), a centered
-// title, and an optional trailing action button (action=="" hides it). When
-// targets is non-empty, focused entries in the body scroll above the keyboard.
-func (m *mobileApp) formPage(title, action string, body fyne.CanvasObject, targets map[fyne.Focusable]fyne.CanvasObject, onAction, onClose func()) fyne.CanvasObject {
+// title, and an optional trailing action button (action=="" hides it). Any
+// focused text field in the body automatically scrolls above the keyboard.
+func (m *mobileApp) formPage(title, action string, body fyne.CanvasObject, onAction, onClose func()) fyne.CanvasObject {
 	scroll := container.NewVScroll(insets(body, 14, 14, 18, 18))
-	var middleObj fyne.CanvasObject = scroll
-	if len(targets) > 0 {
-		middleObj = container.New(&kbAdjust{win: m.win, scroll: scroll, targets: targets}, scroll)
-	}
+	wireScroll(body, scroll) // let fields forward scroll-drags to this scroll
+	middleObj := container.New(&kbAdjust{win: m.win, scroll: scroll}, scroll)
 
 	closeBtn := iconButton(theme.CancelIcon(), onClose)
 	var trailing fyne.CanvasObject
@@ -105,7 +111,7 @@ func (m *mobileApp) drilldownBar(title string) fyne.CanvasObject {
 // entered passphrase and returns the store; a wrong passphrase shows an error and
 // keeps the page. onCancel runs if the user backs out.
 func (m *mobileApp) showUnlockPage(title, subtitle string, open func(pass string) (*core.Store, error), onCancel func()) {
-	pw := widget.NewPasswordEntry()
+	pw := newPasswordEntry()
 	pw.SetPlaceHolder("Passphrase")
 	pwField := field("Passphrase", pw)
 
@@ -114,7 +120,6 @@ func (m *mobileApp) showUnlockPage(title, subtitle string, open func(pass string
 		gap(12),
 		pwField,
 	)
-	targets := map[fyne.Focusable]fyne.CanvasObject{pw: pwField}
 
 	action := func() {
 		s, err := open(pw.Text)
@@ -130,5 +135,5 @@ func (m *mobileApp) showUnlockPage(title, subtitle string, open func(pass string
 			onCancel()
 		}
 	}
-	m.pushView(m.formPage(title, "Open", body, targets, action, cancel))
+	m.pushView(m.formPage(title, "Open", body, action, cancel))
 }

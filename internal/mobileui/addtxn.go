@@ -3,10 +3,8 @@ package mobileui
 import (
 	"errors"
 
-	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/container"
 	"fyne.io/fyne/v2/dialog"
-	"fyne.io/fyne/v2/widget"
 
 	"github.com/raihanstark/financy/internal/core"
 )
@@ -37,24 +35,24 @@ func (m *mobileApp) txnForm(title, action string, prefill *core.Account, existin
 	}
 	s := m.store
 
-	kind := widget.NewSelect([]string{"Expense", "Income", "Transfer"}, nil)
+	kind := newSelect([]string{"Expense", "Income", "Transfer"}, nil)
 	amount := newAmountEntry()
-	account := widget.NewSelect(accountNames(s.MoneyAccounts()), nil)
+	account := newSelect(accountNames(s.MoneyAccounts()), nil)
 	if prefill != nil {
 		account.SetSelected(prefill.Name)
 		account.Disable()
 	} else if a := s.MoneyAccounts(); len(a) > 0 {
 		account.SetSelected(a[0].Name)
 	}
-	other := widget.NewSelect(nil, nil)
-	payee := widget.NewEntry()
+	other := newSelect(nil, nil)
+	payee := newEntry()
 	payee.SetPlaceHolder("Optional")
 	initialDate := core.TodaySerial
 	if existing != nil {
 		initialDate = existing.Date
 	}
 	dateF, dateSerial := m.dateField("Date", initialDate)
-	memo := widget.NewEntry()
+	memo := newEntry()
 	memo.SetPlaceHolder("Optional")
 
 	otherLabel := newText("Category", colInkDim, 12, false)
@@ -131,12 +129,7 @@ func (m *mobileApp) txnForm(title, action string, prefill *core.Account, existin
 	memoF := field("Memo", memo)
 
 	fields := container.NewVBox(typeF, amountF, accountF, otherF, payeeF, dateF, memoF)
-	targets := map[fyne.Focusable]fyne.CanvasObject{
-		amount: amountF,
-		payee:  payeeF,
-		memo:   memoF,
-	}
-	m.pushView(m.formPage(title, action, fields, targets, commit, m.back))
+	m.pushView(m.formPage(title, action, fields, commit, m.back))
 }
 
 func accountNames(accts []core.Account) []string {

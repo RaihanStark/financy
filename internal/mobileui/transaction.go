@@ -129,7 +129,7 @@ func (m *mobileApp) confirmDeleteTxn(t core.Transaction) {
 			gap(6),
 			cancel,
 		)
-		return m.formPage("Delete transaction?", "", body, nil, nil, close)
+		return m.formPage("Delete transaction?", "", body, nil, close)
 	})
 }
 

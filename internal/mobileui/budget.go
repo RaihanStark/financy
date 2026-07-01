@@ -108,7 +108,7 @@ func (m *mobileApp) autoAssign(month string) {
 			gap(6),
 			cancel,
 		)
-		return m.formPage("Auto-assign", "", body, nil, nil, close)
+		return m.formPage("Auto-assign", "", body, nil, close)
 	})
 }
 
@@ -118,14 +118,13 @@ func (m *mobileApp) addCategory() {
 	if m.store == nil {
 		return
 	}
-	name := widget.NewEntry()
+	name := newEntry()
 	name.SetPlaceHolder("e.g. Groceries")
 	nameF := field("Category name", name)
 	body := container.NewVBox(
 		nameF,
 		wrapText("Categories are your Expense categories. After adding one, tap it on the Budget tab to assign money."),
 	)
-	targets := map[fyne.Focusable]fyne.CanvasObject{name: nameF}
 
 	commit := func() {
 		if strings.TrimSpace(name.Text) == "" {
@@ -135,7 +134,7 @@ func (m *mobileApp) addCategory() {
 		m.store.AddAccount(core.Account{Name: name.Text, Type: core.Expense})
 		m.back()
 	}
-	m.pushView(m.formPage("Add category", "Add", body, targets, commit, m.back))
+	m.pushView(m.formPage("Add category", "Add", body, commit, m.back))
 }
 
 // assignCategory is the full-screen assign page: an amount field plus one-tap
@@ -175,7 +174,6 @@ func (m *mobileApp) assignCategory(month string, c core.BudgetCategory) {
 		gap(6),
 		quick,
 	)
-	targets := map[fyne.Focusable]fyne.CanvasObject{amount: amountF}
 
 	m.pushPage(func(close func()) fyne.CanvasObject {
 		save := func() {
@@ -183,7 +181,7 @@ func (m *mobileApp) assignCategory(month string, c core.BudgetCategory) {
 			close()
 			m.render() // refresh the budget tab behind the page
 		}
-		return m.formPage("Assign — "+c.Name, "Save", body, targets, save, close)
+		return m.formPage("Assign — "+c.Name, "Save", body, save, close)
 	})
 }
 

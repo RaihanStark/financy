@@ -24,6 +24,14 @@ See `RELEASING.md`.
   transaction, assign, reconcile, add debt) now formats with thousands grouping
   as you type, following the document's number format.
 
+### Fixed
+- **Mobile forms scroll over their fields** — dragging on a text field or select
+  now scrolls the form instead of selecting text / opening the dropdown, so long
+  forms (e.g. bulk add) no longer misfire an edit when you meant to scroll.
+- **Focused field scrolls above the keyboard on every mobile form** — the
+  keyboard-avoidance now works for any focused field on any form (previously only
+  forms that opted in), so fields no longer stay hidden behind the keyboard.
+
 ## [0.10.0] - 2026-07-01
 
 ### Added

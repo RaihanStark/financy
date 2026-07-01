@@ -231,7 +231,6 @@ func (m *mobileApp) reconcileAccount(a core.Account) {
 	currentF := field("Financy "+noun, currentControl)
 	actualF := field("Actual "+noun, actual)
 	body := container.NewVBox(currentF, actualF, dateF)
-	targets := map[fyne.Focusable]fyne.CanvasObject{actual: actualF}
 
 	commit := func() {
 		target := core.ParseAmount(actual.Text)
@@ -256,19 +255,19 @@ func (m *mobileApp) reconcileAccount(a core.Account) {
 		}
 	}
 
-	m.pushView(m.formPage("Reconcile "+a.Name, "Reconcile", body, targets, commit, m.back))
+	m.pushView(m.formPage("Reconcile "+a.Name, "Reconcile", body, commit, m.back))
 }
 
 // editAccount edits Name/Institution/Type/Notes/Budget via core.UpdateAccount,
 // then rebuilds the detail page (title may change).
 func (m *mobileApp) editAccount(a core.Account) {
-	name := widget.NewEntry()
+	name := newEntry()
 	name.SetText(a.Name)
-	inst := widget.NewEntry()
+	inst := newEntry()
 	inst.SetText(a.Institution)
-	typeSel := widget.NewSelect([]string{"Asset", "Liability"}, nil)
+	typeSel := newSelect([]string{"Asset", "Liability"}, nil)
 	typeSel.SetSelected(string(a.Type))
-	notes := widget.NewEntry()
+	notes := newEntry()
 	notes.SetText(a.Notes)
 	chk := widget.NewCheck("Include this account's balance in the budget", nil)
 	chk.SetChecked(!a.OffBudget)
@@ -279,7 +278,6 @@ func (m *mobileApp) editAccount(a core.Account) {
 	notesF := field("Notes", notes)
 	budgetF := container.NewVBox(chk, gap(8))
 	body := container.NewVBox(nameF, instF, typeF, notesF, budgetF)
-	targets := map[fyne.Focusable]fyne.CanvasObject{name: nameF, inst: instF, notes: notesF}
 
 	commit := func() {
 		if strings.TrimSpace(name.Text) == "" || typeSel.Selected == "" {
@@ -299,7 +297,7 @@ func (m *mobileApp) editAccount(a core.Account) {
 		}
 	}
 
-	m.pushView(m.formPage("Edit account", "Save", body, targets, commit, m.back))
+	m.pushView(m.formPage("Edit account", "Save", body, commit, m.back))
 }
 
 // addAccount opens a full-screen form to create a new account (used by the Home
@@ -308,13 +306,13 @@ func (m *mobileApp) addAccount() {
 	if m.store == nil {
 		return
 	}
-	name := widget.NewEntry()
+	name := newEntry()
 	name.SetPlaceHolder("e.g. Checking")
-	inst := widget.NewEntry()
+	inst := newEntry()
 	inst.SetPlaceHolder("e.g. Demo Bank")
-	typeSel := widget.NewSelect([]string{"Asset", "Liability"}, nil)
+	typeSel := newSelect([]string{"Asset", "Liability"}, nil)
 	typeSel.SetSelected("Asset")
-	notes := widget.NewEntry()
+	notes := newEntry()
 	notes.SetPlaceHolder("Optional")
 	chk := widget.NewCheck("Include this account's balance in the budget", nil)
 	chk.SetChecked(true)
@@ -323,7 +321,6 @@ func (m *mobileApp) addAccount() {
 	instF := field("Institution", inst)
 	notesF := field("Notes", notes)
 	body := container.NewVBox(nameF, instF, field("Type", typeSel), notesF, container.NewVBox(chk, gap(8)))
-	targets := map[fyne.Focusable]fyne.CanvasObject{name: nameF, inst: instF, notes: notesF}
 
 	commit := func() {
 		if strings.TrimSpace(name.Text) == "" || typeSel.Selected == "" {
@@ -340,7 +337,7 @@ func (m *mobileApp) addAccount() {
 		m.back()
 	}
 
-	m.pushView(m.formPage("Add account", "Add", body, targets, commit, m.back))
+	m.pushView(m.formPage("Add account", "Add", body, commit, m.back))
 }
 
 // deleteAccount blocks deletion when the account has transactions; otherwise it
@@ -364,6 +361,6 @@ func (m *mobileApp) deleteAccount(a core.Account) {
 			wrapText("Delete "+a.Name+"? This can't be undone."),
 			gap(18), del, gap(6), cancel,
 		)
-		return m.formPage("Delete account?", "", body, nil, nil, closeConfirm)
+		return m.formPage("Delete account?", "", body, nil, closeConfirm)
 	})
 }
