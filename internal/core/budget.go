@@ -365,8 +365,41 @@ func (s *Store) AverageSpent(month, catID string, n int) int {
 	return (total + n/2) / n
 }
 
+// AutoAssignChange is one category's proposed adjustment from Auto-Assign
+// (copying last month's assignment into `month`). From is what is currently
+// assigned this month; To is what it would become.
+type AutoAssignChange struct {
+	CatID string
+	Name  string
+	From  int
+	To    int
+}
+
+// PreviewAutoAssign reports the changes AssignLastMonthsAmounts would make,
+// without applying them. Only categories whose assignment would actually
+// change are included; order matches ExpenseAccounts. This lets the UI show
+// the user exactly what will be assigned/adjusted before they confirm.
+func (s *Store) PreviewAutoAssign(month string) []AutoAssignChange {
+	prev := ShiftMonth(month, -1)
+	var out []AutoAssignChange
+	for _, c := range s.ExpenseAccounts() {
+		to := s.Assigned(prev, c.ID)
+		if to == 0 {
+			continue
+		}
+		from := s.Assigned(month, c.ID)
+		if from == to {
+			continue
+		}
+		out = append(out, AutoAssignChange{CatID: c.ID, Name: c.Name, From: from, To: to})
+	}
+	return out
+}
+
 // AssignLastMonthsAmounts copies every category's previous-month assignment into
-// `month`, in a single notification. Returns how many categories were set.
+// `month`, in a single notification. Returns how many categories were set. The
+// change set matches PreviewAutoAssign; callers should preview and confirm with
+// the user before calling this, since it overwrites existing assignments.
 func (s *Store) AssignLastMonthsAmounts(month string) int {
 	prev := ShiftMonth(month, -1)
 	n := 0

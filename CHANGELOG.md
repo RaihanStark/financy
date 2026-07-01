@@ -13,6 +13,16 @@ See `RELEASING.md`.
 
 ## [Unreleased]
 
+### Changed
+- **Auto-Assign now previews before overwriting** — running Auto-Assign (desktop
+  and mobile) first shows a confirmation popup listing every category that will
+  change, with its current amount → new amount, so existing assignments are no
+  longer silently overwritten. Nothing is applied until you confirm.
+- **Demo data now funds every month** — the seeded demo budgets all of its
+  months, not just the current one, so past months show a real funded budget
+  (with sinking funds visibly accumulating month over month) instead of reading
+  "Assigned 0" against real spending.
+
 ## [0.9.0] - 2026-07-01
 
 ### Added

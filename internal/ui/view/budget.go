@@ -328,17 +328,47 @@ func AddBudgetCategory() {
 	})
 }
 
-// autoAssignLastMonth copies the previous month's assignments into this month.
+// autoAssignLastMonth copies the previous month's assignments into this month,
+// but first shows a preview of exactly what will be assigned/adjusted so the
+// user can confirm before any current values are overwritten.
 func autoAssignLastMonth() {
 	if budgetLocked() {
 		return // locked past month — not editable
 	}
-	n := store.AssignLastMonthsAmounts(budgetMonth)
-	if n == 0 {
+	changes := store.PreviewAutoAssign(budgetMonth)
+	if len(changes) == 0 {
 		showInfo("Auto-Assign", "Nothing to copy — last month has no assignments.")
 		return
 	}
-	showInfo("Auto-Assign", itoa(n)+" categories assigned from "+fmtMonthLong(shiftMonth(budgetMonth, -1))+".")
+
+	header := widget.NewLabelWithStyle(
+		"Copy assignments from "+fmtMonthLong(shiftMonth(budgetMonth, -1))+
+			" into "+fmtMonthLong(budgetMonth)+"?",
+		fyne.TextAlignLeading, fyne.TextStyle{Bold: true})
+
+	rows := container.NewVBox()
+	for _, ch := range changes {
+		name := widget.NewLabel(ch.Name)
+		var change string
+		if ch.From == 0 {
+			change = "— → " + fmtMoney(ch.To) // newly assigned
+		} else {
+			change = fmtMoney(ch.From) + " → " + fmtMoney(ch.To) // overwritten
+		}
+		val := widget.NewLabelWithStyle(change, fyne.TextAlignTrailing, fyne.TextStyle{})
+		rows.Add(container.NewBorder(nil, nil, name, val))
+	}
+
+	note := widget.NewLabel(itoa(len(changes)) + " categor" + plural(len(changes), "y", "ies") +
+		" will change. Current values shown on the left will be overwritten.")
+	note.Wrapping = fyne.TextWrapWord
+
+	content := container.NewBorder(header, note, nil, nil,
+		container.NewVScroll(rows))
+
+	showActionConfirm("Auto-Assign", "Assign", content, func() {
+		store.AssignLastMonthsAmounts(budgetMonth)
+	})
 }
 
 func assignedColor(v int) color.Color {

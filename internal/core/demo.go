@@ -120,13 +120,18 @@ func SeedDemo(s *Store, currency string) {
 
 	// ---- Budget plan ----
 	//
-	// Budget the current month, zero-based: give every category a job and assign
-	// the rest so Ready to Assign reaches 0. Assignments don't move money — they
-	// give the cash you already hold a purpose — so this connects the Budget
-	// screen to the journal: bills are funded, sinking funds (insurance, vacation,
+	// Budget zero-based: give every category a job so the Budget screen mirrors
+	// the journal. Assignments don't move money — they give the cash you already
+	// hold a purpose — so bills are funded, sinking funds (insurance, vacation,
 	// emergency) hold money aside, and a couple of categories are left tight so
-	// overspending can show. We only assign the current month — past months aren't
-	// rewritten — matching how you'd budget going forward.
+	// overspending can show.
+	//
+	// We assign this SAME plan to every month that has activity, not just the
+	// current one: a demo whose past months read "Assigned 0" against real
+	// spending looks broken (every envelope red), so instead each month is funded
+	// and the sinking funds visibly accumulate month over month. The tight
+	// categories still overspend on their heavier months, so the red-envelope
+	// state is still demonstrated.
 	plan := []struct {
 		cat string
 		amt int
@@ -146,8 +151,13 @@ func SeedDemo(s *Store, currency string) {
 		{"misc", 5000},        // small buffer
 	}
 	month := CurrentMonthKey()
-	for _, pl := range plan {
-		s.SetAssigned(month, pl.cat, pl.amt)
+	for _, mo := range s.BudgetMonthsWithData() {
+		if mo > month {
+			continue // never pre-fund a future month
+		}
+		for _, pl := range plan {
+			s.SetAssigned(mo, pl.cat, pl.amt)
+		}
 	}
 	// The zero-based finish (topping up Emergency so Ready to Assign lands on 0)
 	// happens AFTER the debts below, since funding their payment envelopes also

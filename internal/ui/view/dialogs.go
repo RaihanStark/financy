@@ -50,6 +50,21 @@ func showContextMenu(pos fyne.Position, items ...*fyne.MenuItem) {
 	widget.ShowPopUpMenuAtPosition(fyne.NewMenu("", items...), win.Canvas(), pos)
 }
 
+// showActionConfirm presents arbitrary content with a custom confirm/cancel
+// action; onConfirm runs only when the user confirms.
+func showActionConfirm(title, confirmLabel string, content fyne.CanvasObject, onConfirm func()) {
+	if win == nil {
+		return
+	}
+	d := dialog.NewCustomConfirm(title, confirmLabel, "Cancel", content, func(ok bool) {
+		if ok {
+			onConfirm()
+		}
+	}, win)
+	d.Resize(fyne.NewSize(460, 460))
+	d.Show()
+}
+
 func showInfo(title, msg string) {
 	if win == nil {
 		return

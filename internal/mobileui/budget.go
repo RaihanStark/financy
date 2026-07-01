@@ -66,9 +66,50 @@ func (m *mobileApp) budgetMonthNav(month string) fyne.CanvasObject {
 	return container.NewBorder(nil, nil, prev, next, container.NewCenter(label))
 }
 
+// autoAssign previews the changes copying last month's assignments would make,
+// then asks the user to confirm before overwriting any current values.
 func (m *mobileApp) autoAssign(month string) {
-	m.store.AssignLastMonthsAmounts(month)
-	m.render()
+	changes := m.store.PreviewAutoAssign(month)
+	if len(changes) == 0 {
+		dialog.ShowInformation("Auto-assign",
+			"Nothing to copy — "+core.FmtMonthLong(shiftMonth(month, -1))+" has no assignments.", m.win)
+		return
+	}
+
+	m.pushPage(func(close func()) fyne.CanvasObject {
+		rows := make([]fyne.CanvasObject, 0, len(changes)*2)
+		for i, ch := range changes {
+			if i > 0 {
+				rows = append(rows, thinLine())
+			}
+			change := core.FmtMoney(ch.From) + "  →  " + core.FmtMoney(ch.To)
+			if ch.From == 0 {
+				change = "—  →  " + core.FmtMoney(ch.To) // newly assigned
+			}
+			rows = append(rows, detailRow(ch.Name, change))
+		}
+		list := container.NewStack(rounded(colCard, 16), insets(container.NewVBox(rows...), 4, 4, 6, 6))
+
+		assign := widget.NewButton("Assign", func() {
+			close()
+			m.store.AssignLastMonthsAmounts(month)
+			m.render()
+		})
+		assign.Importance = widget.HighImportance
+		cancel := widget.NewButton("Cancel", close)
+
+		body := container.NewVBox(
+			wrapText("Copy assignments from "+core.FmtMonthLong(shiftMonth(month, -1))+
+				" into "+core.FmtMonthLong(month)+"? Current values on the left will be overwritten."),
+			gap(12),
+			list,
+			gap(18),
+			assign,
+			gap(6),
+			cancel,
+		)
+		return m.formPage("Auto-assign", "", body, nil, nil, close)
+	})
 }
 
 // addCategory creates a new budget category (an Expense account) — the Budget

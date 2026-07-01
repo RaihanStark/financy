@@ -88,6 +88,45 @@ func TestAssignedRoundTripAndClear(t *testing.T) {
 	}
 }
 
+func TestPreviewAutoAssign(t *testing.T) {
+	s := budgetStore()
+	// Last month (June): groceries and housing assigned.
+	s.SetAssigned("2026-06", "groceries", 450)
+	s.SetAssigned("2026-06", "housing", 1200)
+	// This month (July): groceries already matches, housing differs, and a
+	// third category is assigned that had nothing last month.
+	s.SetAssigned("2026-07", "groceries", 450)
+	s.SetAssigned("2026-07", "housing", 900)
+	s.SetAssigned("2026-07", "dining", 60)
+
+	changes := s.PreviewAutoAssign("2026-07")
+
+	// groceries: unchanged (450 -> 450) → excluded.
+	// housing: 900 -> 1200 → included as an overwrite.
+	// dining: had 0 last month → excluded (auto-assign never clears).
+	if len(changes) != 1 {
+		t.Fatalf("PreviewAutoAssign returned %d changes, want 1: %+v", len(changes), changes)
+	}
+	c := changes[0]
+	if c.CatID != "housing" || c.From != 900 || c.To != 1200 {
+		t.Fatalf("change = %+v, want housing 900 -> 1200", c)
+	}
+
+	// Preview must not mutate anything.
+	if got := s.Assigned("2026-07", "housing"); got != 900 {
+		t.Fatalf("preview mutated housing to %d, want 900", got)
+	}
+
+	// Applying then previewing again yields no further changes.
+	s.AssignLastMonthsAmounts("2026-07")
+	if got := s.Assigned("2026-07", "housing"); got != 1200 {
+		t.Fatalf("after apply housing = %d, want 1200", got)
+	}
+	if again := s.PreviewAutoAssign("2026-07"); len(again) != 0 {
+		t.Fatalf("preview after apply returned %d changes, want 0: %+v", len(again), again)
+	}
+}
+
 func TestAvailableRollsForward(t *testing.T) {
 	s := budgetStore()
 	// May: assign 100, spend 30.
