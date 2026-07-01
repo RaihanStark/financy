@@ -13,6 +13,13 @@ See `RELEASING.md`.
 
 ## [Unreleased]
 
+### Added
+- **Mobile bulk transaction entry** — a new Bulk add screen lets you enter many
+  transactions at once as a scrollable list of editable rows (each its own type,
+  amount, account, category/transfer, date, payee and memo) and commit them in a
+  single batch. It's reached from a Material-style speed-dial that expands from
+  the Transactions ＋ button (Add / Bulk add).
+
 ### Changed
 - **Auto-Assign now previews before overwriting** — running Auto-Assign (desktop
   and mobile) first shows a confirmation popup listing every category that will

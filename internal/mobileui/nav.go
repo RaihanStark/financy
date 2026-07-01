@@ -104,11 +104,21 @@ func (nb *navBar) setActive(i int) {
 
 type fabButton struct {
 	widget.BaseWidget
-	tap func()
+	tap  func()
+	icon fyne.Resource
+	fill color.NRGBA
+	size float32
 }
 
+// newFab is the standard 58px primary add button.
 func newFab(tap func()) *fabButton {
-	f := &fabButton{tap: tap}
+	return newFabWith(theme.ContentAddIcon(), colPrimary, 58, tap)
+}
+
+// newFabWith builds a circular action button of a given icon, colour and size —
+// used both for the main FAB and the smaller speed-dial actions.
+func newFabWith(icon fyne.Resource, fill color.NRGBA, size float32, tap func()) *fabButton {
+	f := &fabButton{tap: tap, icon: icon, fill: fill, size: size}
 	f.ExtendBaseWidget(f)
 	return f
 }
@@ -120,9 +130,21 @@ func (f *fabButton) Tapped(_ *fyne.PointEvent) {
 }
 
 func (f *fabButton) CreateRenderer() fyne.WidgetRenderer {
-	circle := canvas.NewCircle(colPrimary)
-	plus := widget.NewIcon(theme.NewInvertedThemedResource(theme.ContentAddIcon()))
-	content := container.NewGridWrap(fyne.NewSize(58, 58),
-		container.NewStack(circle, container.NewCenter(plus)))
+	circle := canvas.NewCircle(f.fill)
+	icon := widget.NewIcon(theme.NewInvertedThemedResource(f.icon))
+	content := container.NewGridWrap(fyne.NewSize(f.size, f.size),
+		container.NewStack(circle, container.NewCenter(icon)))
 	return widget.NewSimpleRenderer(content)
+}
+
+// speedDialItem is one row of the expanded FAB: a tappable text pill next to a
+// circular action button, right-aligned so it stacks above the main FAB.
+func speedDialItem(label string, icon fyne.Resource, size float32, tap func()) fyne.CanvasObject {
+	pill := newTappableCard(
+		container.NewStack(rounded(colCard, 10),
+			insets(newText(label, colInk, 12, true), 8, 8, 12, 12)),
+		tap)
+	fab := newFabWith(icon, colPrimary, size, tap)
+	row := container.NewHBox(container.NewCenter(pill), container.NewCenter(fab))
+	return container.NewBorder(nil, nil, nil, row)
 }

@@ -15,6 +15,7 @@ import (
 	"fyne.io/fyne/v2/container"
 	mobiledriver "fyne.io/fyne/v2/driver/mobile"
 	"fyne.io/fyne/v2/layout"
+	"fyne.io/fyne/v2/theme"
 
 	"github.com/raihanstark/financy/internal/core"
 )
@@ -26,6 +27,8 @@ type mobileApp struct {
 
 	shell       fyne.CanvasObject // the persistent nav+content+fab; shown once a doc is open
 	content     *fyne.Container   // swappable screen host
+	fabWrap     *fyne.Container    // the FAB layer; rebuilt to expand/collapse the speed dial
+	fabOpen     bool               // whether the Transactions speed dial is expanded
 	nav         *navBar
 	current     int
 	budgetMonth string              // "YYYY-MM" shown on the Budget tab (empty = current month)
@@ -118,14 +121,24 @@ func (m *mobileApp) build() {
 	body := container.NewStack(canvas.NewRectangle(colBg), m.content)
 	root := container.NewBorder(nil, m.nav.bar, nil, nil, body)
 
-	fab := newFab(m.fabAction)
-	fabLayer := insets(
-		container.NewVBox(layout.NewSpacer(),
-			container.NewHBox(layout.NewSpacer(), fab)),
-		0, 104, 0, 18) // clear the tab bar (its top border), inset from the right edge
+	m.fabWrap = container.NewStack()
+	m.rebuildFab()
 
-	m.shell = container.NewStack(root, fabLayer)
+	m.shell = container.NewStack(root, m.fabWrap)
 	m.win.SetContent(m.shell)
+}
+
+// fabTapped handles the floating +. On the Transactions tab it expands a speed
+// dial (Add / Bulk add); on the other tabs it runs that tab's single add action.
+func (m *mobileApp) fabTapped() {
+	if m.store == nil {
+		return
+	}
+	if m.current == 1 {
+		m.toggleFab()
+		return
+	}
+	m.fabAction()
 }
 
 // fabAction routes the floating + to the "add" that fits the current tab:
@@ -146,11 +159,54 @@ func (m *mobileApp) fabAction() {
 	}
 }
 
+// toggleFab flips the speed dial open/closed; closeFab only collapses it (called
+// before pushing a page so the shell is collapsed again when the user returns).
+func (m *mobileApp) toggleFab() { m.fabOpen = !m.fabOpen; m.rebuildFab() }
+func (m *mobileApp) closeFab() {
+	if m.fabOpen {
+		m.fabOpen = false
+		m.rebuildFab()
+	}
+}
+
+// rebuildFab renders the FAB layer: a lone + when collapsed, or a dimming scrim
+// plus the stacked "Add / Bulk add" actions when the Transactions speed dial is
+// expanded.
+func (m *mobileApp) rebuildFab() {
+	if m.fabWrap == nil {
+		return
+	}
+	collapsed := insets(
+		container.NewVBox(layout.NewSpacer(),
+			container.NewHBox(layout.NewSpacer(), newFab(m.fabTapped))),
+		0, 104, 0, 18) // clear the tab bar (its top border), inset from the right edge
+
+	if m.current != 1 || !m.fabOpen {
+		m.fabWrap.Objects = []fyne.CanvasObject{collapsed}
+		m.fabWrap.Refresh()
+		return
+	}
+
+	scrim := newTappableCard(canvas.NewRectangle(withAlpha(colInk, 0x55)), m.toggleFab)
+	actions := insets(
+		container.NewVBox(
+			layout.NewSpacer(),
+			speedDialItem("Bulk add", theme.ListIcon(), 46, func() { m.closeFab(); m.openBulkAdd() }),
+			gap(14),
+			speedDialItem("Add", theme.ContentAddIcon(), 58, func() { m.closeFab(); m.openAdd(nil) }),
+		),
+		0, 104, 0, 18)
+	m.fabWrap.Objects = []fyne.CanvasObject{scrim, actions}
+	m.fabWrap.Refresh()
+}
+
 func (m *mobileApp) selectTab(i int) {
 	m.current = i
+	m.fabOpen = false // never carry an open speed dial across tabs
 	if m.nav != nil {
 		m.nav.setActive(i)
 	}
+	m.rebuildFab()
 	m.render()
 }
 
