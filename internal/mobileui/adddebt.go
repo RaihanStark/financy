@@ -75,17 +75,13 @@ func (m *mobileApp) debtForm(existing *core.Debt) {
 	total.SetPlaceHolder("0.00")
 	count := widget.NewEntry()
 	count.SetPlaceHolder("e.g. 12")
-	purchase := widget.NewEntry()
-	purchase.SetText(core.FmtSerialDate(core.TodaySerial))
-	first := widget.NewEntry()
-	first.SetText(core.FmtSerialDate(core.TodaySerial))
+	purchaseF, purchaseSerial := m.dateField("Purchase date", core.TodaySerial)
+	firstF, firstSerial := m.dateField("First due", core.TodaySerial)
 	freq := widget.NewSelect(core.Frequencies(), nil)
 	freq.SetSelected("Monthly")
 
 	totalF := field("Total amount", total)
 	countF := field("Installments", count)
-	purchaseF := field("Purchase date (YYYY-MM-DD)", purchase)
-	firstF := field("First due (YYYY-MM-DD)", first)
 
 	fields := container.NewVBox(
 		field("Type", kind), nameF, lenderF, field("Pay from", acct),
@@ -93,13 +89,13 @@ func (m *mobileApp) debtForm(existing *core.Debt) {
 	)
 	targets := map[fyne.Focusable]fyne.CanvasObject{
 		name: nameF, lender: lenderF, total: totalF, count: countF,
-		purchase: purchaseF, first: firstF, note: noteF,
+		note: noteF,
 	}
 	save := func() {
 		amt := core.ParseAmount(total.Text)
 		n, _ := strconv.Atoi(strings.TrimSpace(count.Text))
-		due := core.ParseDateSerial(first.Text)
-		purch := core.ParseDateSerial(purchase.Text)
+		due := firstSerial()
+		purch := purchaseSerial()
 		if name.Text == "" || acct.Selected == "" || amt <= 0 || n < 1 || due == 0 {
 			dialog.ShowError(errors.New("enter a name, pay-from account, amount, installment count, and a valid first-due date"), m.win)
 			return

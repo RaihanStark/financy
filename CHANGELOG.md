@@ -26,6 +26,10 @@ See `RELEASING.md`.
   Liabilities as separate groups, each with its own count and color-coded
   subtotal, instead of one flat mixed list (matching the desktop Accounts
   screen).
+- **Mobile date fields use a calendar picker** — every date input on mobile
+  (add/edit transaction, reconcile as-of, and a debt's purchase / first-due
+  dates) now opens a tappable month calendar instead of requiring you to type a
+  `YYYY-MM-DD` string.
 
 ## [0.9.0] - 2026-07-01
 

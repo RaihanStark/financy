@@ -50,8 +50,11 @@ func (m *mobileApp) txnForm(title, action string, prefill *core.Account, existin
 	other := widget.NewSelect(nil, nil)
 	payee := widget.NewEntry()
 	payee.SetPlaceHolder("Optional")
-	date := widget.NewEntry()
-	date.SetText(core.FmtSerialDate(core.TodaySerial))
+	initialDate := core.TodaySerial
+	if existing != nil {
+		initialDate = existing.Date
+	}
+	dateF, dateSerial := m.dateField("Date", initialDate)
 	memo := widget.NewEntry()
 	memo.SetPlaceHolder("Optional")
 
@@ -88,14 +91,13 @@ func (m *mobileApp) txnForm(title, action string, prefill *core.Account, existin
 		}
 		payee.SetText(existing.Payee)
 		memo.SetText(existing.Memo)
-		date.SetText(core.FmtSerialDate(existing.Date))
 	}
 
 	commit := func() {
 		amt := core.ParseAmount(amount.Text)
-		serial := core.ParseDateSerial(date.Text)
+		serial := dateSerial()
 		if amt <= 0 || serial == 0 || account.Selected == "" || other.Selected == "" {
-			dialog.ShowError(errors.New("enter an amount, accounts, and a valid date (YYYY-MM-DD)"), m.win)
+			dialog.ShowError(errors.New("enter an amount, accounts, and a valid date"), m.win)
 			return
 		}
 		moneyID := idByName(s, account.Selected)
@@ -127,14 +129,12 @@ func (m *mobileApp) txnForm(title, action string, prefill *core.Account, existin
 	accountF := field("Account", account)
 	otherF := container.NewVBox(otherLabel, other, gap(8))
 	payeeF := field("Payee", payee)
-	dateF := field("Date (YYYY-MM-DD)", date)
 	memoF := field("Memo", memo)
 
 	fields := container.NewVBox(typeF, amountF, accountF, otherF, payeeF, dateF, memoF)
 	targets := map[fyne.Focusable]fyne.CanvasObject{
 		amount: amountF,
 		payee:  payeeF,
-		date:   dateF,
 		memo:   memoF,
 	}
 	m.pushView(m.formPage(title, action, fields, targets, commit, m.back))

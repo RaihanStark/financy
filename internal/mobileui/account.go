@@ -226,18 +226,16 @@ func (m *mobileApp) reconcileAccount(a core.Account) {
 
 	actual := widget.NewEntry()
 	actual.SetText(core.FmtMoneyInput(current))
-	date := widget.NewEntry()
-	date.SetText(core.FmtSerialDate(core.TodaySerial))
+	dateF, dateSerial := m.dateField("As of", core.TodaySerial)
 
 	currentF := field("Financy "+noun, currentControl)
 	actualF := field("Actual "+noun, actual)
-	dateF := field("As of (YYYY-MM-DD)", date)
 	body := container.NewVBox(currentF, actualF, dateF)
-	targets := map[fyne.Focusable]fyne.CanvasObject{actual: actualF, date: dateF}
+	targets := map[fyne.Focusable]fyne.CanvasObject{actual: actualF}
 
 	commit := func() {
 		target := core.ParseAmount(actual.Text)
-		d := core.ParseDateSerial(date.Text)
+		d := dateSerial()
 		if d == 0 {
 			d = core.TodaySerial
 		}
