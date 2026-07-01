@@ -38,8 +38,7 @@ func (m *mobileApp) txnForm(title, action string, prefill *core.Account, existin
 	s := m.store
 
 	kind := widget.NewSelect([]string{"Expense", "Income", "Transfer"}, nil)
-	amount := widget.NewEntry()
-	amount.SetPlaceHolder("0.00")
+	amount := newAmountEntry()
 	account := widget.NewSelect(accountNames(s.MoneyAccounts()), nil)
 	if prefill != nil {
 		account.SetSelected(prefill.Name)

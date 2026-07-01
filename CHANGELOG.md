@@ -13,6 +13,17 @@ See `RELEASING.md`.
 
 ## [Unreleased]
 
+### Added
+- **Mobile Settings sections** — the mobile Settings screen is now a menu that
+  drills into Document, Configuration (currency & number format), Categories
+  (add / edit / delete income & expense labels), Data summary, and About —
+  mirroring the desktop Preferences with a mobile-native UI.
+
+### Changed
+- **Live amount formatting on mobile** — every money field (add/edit and bulk
+  transaction, assign, reconcile, add debt) now formats with thousands grouping
+  as you type, following the document's number format.
+
 ## [0.10.0] - 2026-07-01
 
 ### Added

@@ -72,13 +72,12 @@ func (m *mobileApp) openBulkAdd() {
 	addRow := func() {
 		r := &bulkRow{
 			kind:    widget.NewSelect([]string{"Expense", "Income", "Transfer"}, nil),
-			amount:  widget.NewEntry(),
+			amount:  newAmountEntry(),
 			account: widget.NewSelect(moneyNames, nil),
 			other:   widget.NewSelect(nil, nil),
 			payee:   widget.NewEntry(),
 			memo:    widget.NewEntry(),
 		}
-		r.amount.SetPlaceHolder("0.00")
 		r.payee.SetPlaceHolder("Payee (optional)")
 		r.memo.SetPlaceHolder("Memo (optional)")
 		r.otherCap = newText("Category", colInkDim, 12, false)

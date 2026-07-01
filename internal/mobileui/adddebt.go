@@ -71,8 +71,7 @@ func (m *mobileApp) debtForm(existing *core.Debt) {
 	}
 
 	// Add: full schedule.
-	total := widget.NewEntry()
-	total.SetPlaceHolder("0.00")
+	total := newAmountEntry()
 	count := widget.NewEntry()
 	count.SetPlaceHolder("e.g. 12")
 	purchaseF, purchaseSerial := m.dateField("Purchase date", core.TodaySerial)

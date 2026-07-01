@@ -224,7 +224,7 @@ func (m *mobileApp) reconcileAccount(a core.Account) {
 	currentT := newText(core.FmtMoney(current), signColor(current), 20, true)
 	currentControl := insets(container.NewHBox(currentT), 8, 8, 0, 0)
 
-	actual := widget.NewEntry()
+	actual := newAmountEntry()
 	actual.SetText(core.FmtMoneyInput(current))
 	dateF, dateSerial := m.dateField("As of", core.TodaySerial)
 

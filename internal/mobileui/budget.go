@@ -141,7 +141,7 @@ func (m *mobileApp) addCategory() {
 // assignCategory is the full-screen assign page: an amount field plus one-tap
 // quick-assign suggestions (YNAB-style), saving via core.SetAssigned.
 func (m *mobileApp) assignCategory(month string, c core.BudgetCategory) {
-	amount := widget.NewEntry()
+	amount := newAmountEntry()
 	amount.SetText(core.FmtMoneyInput(c.Assigned))
 
 	set := func(v int) { amount.SetText(core.FmtMoneyInput(v)) }
