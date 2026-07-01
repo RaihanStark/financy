@@ -116,7 +116,7 @@ jobs:
       - name: Install the fyne CLI
         run: go install fyne.io/tools/cmd/fyne@latest
 
-      - name: Build the APK (release-signed when secrets are set)
+      - name: Build the APK, then release-sign it
         shell: bash
         env:
           KEYSTORE_B64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
@@ -128,17 +128,27 @@ jobs:
           export ANDROID_NDK_HOME="$ANDROID_HOME/ndk/27.2.12479018"
           # 16 KB-aligned load segments (Android 15+ / Play requirement).
           export CGO_LDFLAGS="-Wl,-z,max-page-size=16384,-z,common-page-size=16384"
+
+          # fyne package builds a zipaligned APK (debug-signed by default).
+          # (`fyne release` builds an AAB and needs bundletool — not what we want
+          # for a sideloadable GitHub Release asset.)
+          fyne package -os android/arm64 -app-id app.financy -icon Icon.png
+
+          apksigner="$ANDROID_HOME/build-tools/34.0.0/apksigner"
           if [ -n "$KEYSTORE_B64" ]; then
             echo "$KEYSTORE_B64" | base64 -d > release.jks
-            fyne release -os android/arm64 -app-id app.financy -icon Icon.png \
-              -keyStore release.jks -keyStorePass "$KS_PASS" \
-              -keyName "$KEY_ALIAS" -keyPass "$KEY_PASS"
+            # Re-sign with the release key so users can upgrade in place.
+            "$apksigner" sign \
+              --ks release.jks --ks-pass "pass:$KS_PASS" \
+              --ks-key-alias "$KEY_ALIAS" --key-pass "pass:$KEY_PASS" \
+              Financy.apk
+            "$apksigner" verify Financy.apk && echo "APK signature verified"
           else
-            echo "::warning::No ANDROID_KEYSTORE_BASE64 secret — building a DEBUG-signed APK. Fine for sideloading, but each build uses a different key so users can't upgrade in place. Add the signing secrets for a proper release."
-            fyne package -os android/arm64 -app-id app.financy -icon Icon.png
+            echo "::warning::No ANDROID_KEYSTORE_BASE64 secret — shipping the debug-signed APK (fine for sideloading, but each build uses a different key, so users can't upgrade in place)."
           fi
+
           mkdir -p dist
-          mv "$(ls *.apk | head -1)" "dist/Financy-${GITHUB_REF_NAME}-android-arm64.apk"
+          mv Financy.apk "dist/Financy-${GITHUB_REF_NAME}-android-arm64.apk"
 
       - name: Attach APK to the GitHub Release
         uses: softprops/action-gh-release@v2
