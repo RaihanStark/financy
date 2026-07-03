@@ -84,6 +84,19 @@ code {
 .lede strong { color: var(--text); }
 .platforms { color: var(--text-dim); font-size: .9rem; margin-top: 16px; }
 
+.eyebrow {
+  display: inline-block;
+  color: var(--primary);
+  background: rgba(10, 95, 164, .10);
+  border: 1px solid rgba(10, 95, 164, .22);
+  border-radius: 999px;
+  padding: 5px 14px;
+  font-size: .82rem;
+  font-weight: 600;
+  letter-spacing: .01em;
+  margin-bottom: 22px;
+}
+
 .cta { display: flex; gap: 14px; justify-content: center; flex-wrap: wrap; }
 .cta-center { margin-top: 28px; }
 
@@ -125,6 +138,23 @@ code {
 }
 .shot-frame img { display: block; width: 100%; height: auto; border-radius: 6px 6px 0 0; }
 
+/* ---- values / trust strip ---- */
+.values {
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  padding: 26px 0;
+}
+.values-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 22px;
+}
+.value { display: flex; gap: 12px; align-items: flex-start; }
+.value-ico { font-size: 1.5rem; line-height: 1.2; }
+.value strong { display: block; font-size: .98rem; margin-bottom: 2px; }
+.value span { color: var(--text-dim); font-size: .88rem; line-height: 1.45; }
+.value code { font-size: .82em; }
+
 /* ---- sections ---- */
 .section { padding: 76px 0; }
 .section-alt { background: var(--surface); border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); }
@@ -132,7 +162,27 @@ code {
   font-size: clamp(1.5rem, 2.6vw, 2.1rem);
   letter-spacing: -.01em;
   text-align: center;
-  margin: 0 0 44px;
+  margin: 0 0 10px;
+}
+.section-sub {
+  text-align: center;
+  color: var(--text-dim);
+  max-width: 56ch;
+  margin: 0 auto 44px;
+  font-size: 1.02rem;
+}
+.badge {
+  display: inline-block;
+  vertical-align: middle;
+  font-size: .62em;
+  font-weight: 600;
+  color: var(--primary);
+  background: rgba(10, 95, 164, .10);
+  border: 1px solid rgba(10, 95, 164, .22);
+  border-radius: 999px;
+  padding: 3px 10px;
+  margin-left: 8px;
+  letter-spacing: .02em;
 }
 
 /* ---- feature grid ---- */
@@ -170,6 +220,24 @@ code {
 }
 .shot figcaption { color: var(--text-dim); font-size: .9rem; margin-top: 12px; text-align: center; }
 
+/* ---- mobile screenshots ---- */
+.phones {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 22px;
+}
+.phone { margin: 0; }
+.phone img {
+  width: 100%;
+  height: auto;
+  display: block;
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  box-shadow: var(--shadow);
+  background: #000;
+}
+.phone figcaption { color: var(--text-dim); font-size: .86rem; margin-top: 10px; text-align: center; font-weight: 500; }
+
 /* ---- install ---- */
 .install-inner { text-align: center; }
 .install-lede { color: var(--text-dim); max-width: 60ch; margin: -22px auto 40px; }
@@ -201,14 +269,20 @@ code {
 }
 
 /* ---- responsive ---- */
+@media (max-width: 980px) {
+  .phones { grid-template-columns: repeat(3, 1fr); }
+}
 @media (max-width: 860px) {
   .grid { grid-template-columns: 1fr 1fr; }
-  .install-grid { grid-template-columns: 1fr; }
+  .install-grid { grid-template-columns: 1fr 1fr; }
+  .values-grid { grid-template-columns: 1fr 1fr; }
 }
 @media (max-width: 620px) {
   .nav { gap: 16px; }
   .nav a:not(.ghlink) { display: none; }
   .grid, .shots { grid-template-columns: 1fr; }
+  .install-grid { grid-template-columns: 1fr; }
+  .phones { grid-template-columns: repeat(2, 1fr); }
   .section { padding: 56px 0; }
   .hero { padding-top: 52px; }
 }
