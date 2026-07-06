@@ -185,10 +185,42 @@ func (s *Store) AccountByName(name string) *Account {
 	return nil
 }
 
+// AccountByLabel returns the account whose AccountLabel matches label. Used to
+// resolve a selector's displayed string back to its account. Returns the first
+// match; falls back to a bare-name match so previously-stored plain names still
+// resolve.
+func (s *Store) AccountByLabel(label string) *Account {
+	for i := range s.accounts {
+		if AccountLabel(s.accounts[i]) == label {
+			return &s.accounts[i]
+		}
+	}
+	return s.AccountByName(label)
+}
+
 func NamesOf(accts []Account) []string {
 	out := make([]string, len(accts))
 	for i, a := range accts {
 		out[i] = a.Name
+	}
+	return out
+}
+
+// AccountLabel formats an account for display in a selector, adding stable
+// disambiguators (type, and institution when set) so accounts that share a name
+// can be told apart, e.g. "Checking (Asset · Chase)" or "Groceries (Expense)".
+func AccountLabel(a Account) string {
+	if a.Institution != "" {
+		return a.Name + " (" + string(a.Type) + " · " + a.Institution + ")"
+	}
+	return a.Name + " (" + string(a.Type) + ")"
+}
+
+// LabelsOf returns AccountLabel for each account, parallel to NamesOf.
+func LabelsOf(accts []Account) []string {
+	out := make([]string, len(accts))
+	for i, a := range accts {
+		out[i] = AccountLabel(a)
 	}
 	return out
 }
