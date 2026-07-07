@@ -353,12 +353,14 @@ func RecurringForm(existing *Recurring) {
 	freq := widget.NewSelect(frequencies(), nil)
 	next := newDateEntry(todaySerial)
 
-	moneyNames := namesOf(store.MoneyAccounts())
-	assetNames := namesOf(store.AssetAccounts())
-	expenseNames := namesOf(store.ExpenseAccounts())
-	incomeNames := namesOf(store.IncomeAccounts())
+	moneyNames := groupedLabels(store.MoneyAccounts())
+	assetNames := groupedLabels(store.AssetAccounts())
+	expenseNames := groupedLabels(store.ExpenseAccounts())
+	incomeNames := groupedLabels(store.IncomeAccounts())
 	acctA := widget.NewSelect(nil, nil)
 	acctB := widget.NewSelect(nil, nil)
+	guardGroupHeaders(acctA)
+	guardGroupHeaders(acctB)
 	configure := func(k string) {
 		switch k {
 		case "Income":
@@ -378,8 +380,8 @@ func RecurringForm(existing *Recurring) {
 		title = "Edit Recurring"
 		kind.SetSelected(existing.Kind)
 		configure(existing.Kind)
-		acctA.SetSelected(nameOf(existing.AcctA))
-		acctB.SetSelected(nameOf(existing.AcctB))
+		acctA.SetSelected(labelOf(existing.AcctA))
+		acctB.SetSelected(labelOf(existing.AcctB))
 		amount.SetText(fmtMoneyInput(existing.Amount))
 		payee.SetText(existing.Payee)
 		memo.SetText(existing.Memo)

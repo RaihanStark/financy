@@ -185,10 +185,115 @@ func (s *Store) AccountByName(name string) *Account {
 	return nil
 }
 
+// AccountByLabel returns the account whose AccountLabel matches label. Used to
+// resolve a selector's displayed string back to its account. Returns the first
+// match; falls back to a bare-name match so previously-stored plain names still
+// resolve.
+func (s *Store) AccountByLabel(label string) *Account {
+	for i := range s.accounts {
+		if AccountLabel(s.accounts[i]) == label {
+			return &s.accounts[i]
+		}
+	}
+	return s.AccountByName(label)
+}
+
 func NamesOf(accts []Account) []string {
 	out := make([]string, len(accts))
 	for i, a := range accts {
 		out[i] = a.Name
+	}
+	return out
+}
+
+// AccountLabel formats an account for display in a selector, adding stable
+// disambiguators (type, and institution when set) so accounts that share a name
+// can be told apart, e.g. "Checking (Asset · Chase)" or "Groceries (Expense)".
+func AccountLabel(a Account) string {
+	if a.Institution != "" {
+		return a.Name + " (" + string(a.Type) + " · " + a.Institution + ")"
+	}
+	return a.Name + " (" + string(a.Type) + ")"
+}
+
+// LabelsOf returns AccountLabel for each account, parallel to NamesOf.
+func LabelsOf(accts []Account) []string {
+	out := make([]string, len(accts))
+	for i, a := range accts {
+		out[i] = AccountLabel(a)
+	}
+	return out
+}
+
+// acctTypeOrder is the canonical grouping order for account selectors, matching
+// the Accounts screen: money accounts first (assets, then liabilities), then
+// income and expense categories.
+var acctTypeOrder = []AcctType{Asset, Liability, Income, Expense, Equity}
+
+var acctGroupTitle = map[AcctType]string{
+	Asset:     "Assets",
+	Liability: "Liabilities",
+	Income:    "Income",
+	Expense:   "Expenses",
+	Equity:    "Equity",
+}
+
+const groupHeaderPrefix = "—— "
+
+func groupHeader(t AcctType) string { return groupHeaderPrefix + acctGroupTitle[t] + " ——" }
+
+// IsGroupHeader reports whether a selector option is a non-selectable section
+// header (produced by GroupedLabels) rather than a real account label.
+func IsGroupHeader(opt string) bool { return strings.HasPrefix(opt, groupHeaderPrefix) }
+
+// FirstSelectable returns the first real (non-header) option in a grouped option
+// list, or "" if there are none. Use it instead of options[0] when picking a
+// default, since options[0] may be a section header.
+func FirstSelectable(options []string) string {
+	for _, o := range options {
+		if !IsGroupHeader(o) {
+			return o
+		}
+	}
+	return ""
+}
+
+// GroupedLabels formats accounts for a selector, clustered into type sections in
+// a stable order (Assets, Liabilities, Income, Expenses) and sorted by
+// institution then name within each section. When more than one section is
+// present a non-selectable header row precedes each one, so a mixed list (e.g.
+// asset + liability money accounts) reads like the Accounts screen instead of an
+// arbitrarily-ordered flat list. A single-section list is just sorted, with no
+// header.
+func GroupedLabels(accts []Account) []string {
+	byType := map[AcctType][]Account{}
+	for _, a := range accts {
+		byType[a.Type] = append(byType[a.Type], a)
+	}
+	sections := 0
+	for _, t := range acctTypeOrder {
+		if len(byType[t]) > 0 {
+			sections++
+		}
+	}
+	var out []string
+	for _, t := range acctTypeOrder {
+		g := byType[t]
+		if len(g) == 0 {
+			continue
+		}
+		sort.Slice(g, func(i, j int) bool {
+			if g[i].Institution != g[j].Institution {
+				return g[i].Institution < g[j].Institution
+			}
+			return g[i].Name < g[j].Name
+		})
+		if sections > 1 {
+			out = append(out, groupHeader(t))
+		}
+		for _, a := range g {
+			out = append(out, AccountLabel(a))
+		}
 	}
 	return out
 }

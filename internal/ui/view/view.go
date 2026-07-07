@@ -60,28 +60,31 @@ const (
 // ---- core helpers ----
 
 var (
-	itoa            = core.Itoa
-	fmtMoney        = core.FmtMoney
-	fmtMoneyPlain   = core.FmtMoneyPlain
-	fmtMoneyShort   = core.FmtMoneyShort
-	fmtSerialDate   = core.FmtSerialDate
-	fmtSerialMonth  = core.FmtSerialMonth
-	serialToTime    = core.SerialToTime
-	timeToSerial    = core.TimeToSerial
-	parseAmount     = core.ParseAmount
-	fmtMoneyInput      = core.FmtMoneyInput
-	groupTyped         = core.GroupTyped
-	numberFormatStyles = core.NumberFormatStyles
-	parseDateSerial = core.ParseDateSerial
-	slugify         = core.Slugify
-	namesOf         = core.NamesOf
-	p               = core.P
-	postingsFor     = core.PostingsFor
-	frequencies     = core.Frequencies
+	itoa                 = core.Itoa
+	fmtMoney             = core.FmtMoney
+	fmtMoneyPlain        = core.FmtMoneyPlain
+	fmtMoneyShort        = core.FmtMoneyShort
+	fmtSerialDate        = core.FmtSerialDate
+	fmtSerialMonth       = core.FmtSerialMonth
+	serialToTime         = core.SerialToTime
+	timeToSerial         = core.TimeToSerial
+	parseAmount          = core.ParseAmount
+	fmtMoneyInput        = core.FmtMoneyInput
+	groupTyped           = core.GroupTyped
+	numberFormatStyles   = core.NumberFormatStyles
+	parseDateSerial      = core.ParseDateSerial
+	slugify              = core.Slugify
+	groupedLabels        = core.GroupedLabels
+	firstSelectable      = core.FirstSelectable
+	isGroupHeader        = core.IsGroupHeader
+	accountLabel         = core.AccountLabel
+	p                    = core.P
+	postingsFor          = core.PostingsFor
+	frequencies          = core.Frequencies
 	debtTypes            = core.DebtTypes
 	generateInstallments = core.GenerateInstallments
-	todaySerial     = core.TodaySerial
-	version         = core.Version
+	todaySerial          = core.TodaySerial
+	version              = core.Version
 
 	currentMonthKey = core.CurrentMonthKey
 	shiftMonth      = core.ShiftMonth

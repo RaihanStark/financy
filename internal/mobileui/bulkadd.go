@@ -37,11 +37,8 @@ func (m *mobileApp) openBulkAdd() {
 		return
 	}
 	s := m.store
-	moneyNames := accountNames(s.MoneyAccounts())
-	defaultMoney := ""
-	if len(moneyNames) > 0 {
-		defaultMoney = moneyNames[0]
-	}
+	moneyNames := accountLabels(s.MoneyAccounts())
+	defaultMoney := core.FirstSelectable(moneyNames)
 
 	var rows []*bulkRow
 	list := container.NewVBox()
@@ -84,6 +81,8 @@ func (m *mobileApp) openBulkAdd() {
 		if defaultMoney != "" {
 			r.account.SetSelected(defaultMoney)
 		}
+		guardGroupHeaders(r.account)
+		guardGroupHeaders(r.other)
 
 		// The "other" leg depends on the type: a category for income/expense, or a
 		// second money account for a transfer.
@@ -91,17 +90,17 @@ func (m *mobileApp) openBulkAdd() {
 			switch k {
 			case "Transfer":
 				r.otherCap.Text = "To account"
-				r.other.Options = accountNames(s.MoneyAccounts())
+				r.other.Options = accountLabels(s.MoneyAccounts())
 			case "Income":
 				r.otherCap.Text = "Category"
-				r.other.Options = accountNames(s.IncomeAccounts())
+				r.other.Options = accountLabels(s.IncomeAccounts())
 			default:
 				r.otherCap.Text = "Category"
-				r.other.Options = accountNames(s.ExpenseAccounts())
+				r.other.Options = accountLabels(s.ExpenseAccounts())
 			}
 			r.otherCap.Refresh()
-			if len(r.other.Options) > 0 {
-				r.other.SetSelected(r.other.Options[0])
+			if first := core.FirstSelectable(r.other.Options); first != "" {
+				r.other.SetSelected(first)
 			} else {
 				r.other.Selected = ""
 				r.other.Refresh()
@@ -139,12 +138,12 @@ func (m *mobileApp) openBulkAdd() {
 		var txns []core.Transaction
 		for _, r := range rows {
 			amt := core.ParseAmount(r.amount.Text)
-			money := idByName(s, r.account.Selected)
+			money := idForLabel(s, r.account.Selected)
 			serial := r.dateOf()
 			if amt <= 0 || money == "" || r.other.Selected == "" || serial == 0 {
 				continue // skip blank/incomplete rows
 			}
-			otherID := idByName(s, r.other.Selected)
+			otherID := idForLabel(s, r.other.Selected)
 			if r.kind.Selected == "Transfer" && (otherID == "" || otherID == money) {
 				continue // a transfer needs two different accounts
 			}

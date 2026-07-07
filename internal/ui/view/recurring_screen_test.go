@@ -63,8 +63,8 @@ func TestRecurringFormAdd(t *testing.T) {
 		t.Fatalf("expected >=4 selects, got %d", len(selects))
 	}
 	selects[0].SetSelected("Expense")
-	selects[1].SetSelected("Checking")
-	selects[2].SetSelected("Housing")
+	selects[1].SetSelected(acctLabel("Checking"))
+	selects[2].SetSelected(acctLabel("Housing"))
 	selects[3].SetSelected("Monthly")
 	for _, e := range entries {
 		if e.Text == "" {
