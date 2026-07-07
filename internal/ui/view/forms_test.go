@@ -92,7 +92,7 @@ func TestBulkRecategorize(t *testing.T) {
 	if len(selects) == 0 {
 		t.Fatal("no category select in recategorize form")
 	}
-	selects[0].SetSelected("Shopping")
+	selects[0].SetSelected(acctLabel("Shopping"))
 	if !tapButton(d, "Save") {
 		t.Fatal("no Save button")
 	}

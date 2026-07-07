@@ -37,14 +37,16 @@ func (m *mobileApp) txnForm(title, action string, prefill *core.Account, existin
 
 	kind := newSelect([]string{"Expense", "Income", "Transfer"}, nil)
 	amount := newAmountEntry()
-	account := newSelect(accountNames(s.MoneyAccounts()), nil)
+	account := newSelect(accountLabels(s.MoneyAccounts()), nil)
 	if prefill != nil {
-		account.SetSelected(prefill.Name)
+		account.SetSelected(core.AccountLabel(*prefill))
 		account.Disable()
 	} else if a := s.MoneyAccounts(); len(a) > 0 {
-		account.SetSelected(a[0].Name)
+		account.SetSelected(core.AccountLabel(a[0]))
 	}
 	other := newSelect(nil, nil)
+	guardGroupHeaders(account)
+	guardGroupHeaders(other)
 	payee := newEntry()
 	payee.SetPlaceHolder("Optional")
 	initialDate := core.TodaySerial
@@ -60,17 +62,17 @@ func (m *mobileApp) txnForm(title, action string, prefill *core.Account, existin
 		switch k {
 		case "Transfer":
 			otherLabel.Text = "To account"
-			other.Options = accountNames(s.MoneyAccounts())
+			other.Options = accountLabels(s.MoneyAccounts())
 		case "Income":
 			otherLabel.Text = "Category"
-			other.Options = accountNames(s.IncomeAccounts())
+			other.Options = accountLabels(s.IncomeAccounts())
 		default:
 			otherLabel.Text = "Category"
-			other.Options = accountNames(s.ExpenseAccounts())
+			other.Options = accountLabels(s.ExpenseAccounts())
 		}
 		otherLabel.Refresh()
-		if len(other.Options) > 0 {
-			other.SetSelected(other.Options[0])
+		if first := core.FirstSelectable(other.Options); first != "" {
+			other.SetSelected(first)
 		} else {
 			other.Selected = ""
 			other.Refresh()
@@ -82,8 +84,8 @@ func (m *mobileApp) txnForm(title, action string, prefill *core.Account, existin
 	if existing != nil {
 		if e := deriveEdit(s, *existing); e.ok {
 			kind.SetSelected(e.kind) // repopulates the category/to options
-			account.SetSelected(e.money)
-			other.SetSelected(e.other)
+			account.SetSelected(labelByName(s, e.money))
+			other.SetSelected(labelByName(s, e.other))
 			amount.SetText(core.FmtMoneyInput(e.amount))
 		}
 		payee.SetText(existing.Payee)
@@ -97,8 +99,8 @@ func (m *mobileApp) txnForm(title, action string, prefill *core.Account, existin
 			dialog.ShowError(errors.New("enter an amount, accounts, and a valid date"), m.win)
 			return
 		}
-		moneyID := idByName(s, account.Selected)
-		otherID := idByName(s, other.Selected)
+		moneyID := idForLabel(s, account.Selected)
+		otherID := idForLabel(s, other.Selected)
 		if kind.Selected == "Transfer" && moneyID == otherID {
 			dialog.ShowError(errors.New("choose two different accounts for a transfer"), m.win)
 			return
@@ -132,17 +134,29 @@ func (m *mobileApp) txnForm(title, action string, prefill *core.Account, existin
 	m.pushView(m.formPage(title, action, fields, commit, m.back))
 }
 
-func accountNames(accts []core.Account) []string {
-	out := make([]string, len(accts))
-	for i, a := range accts {
-		out[i] = a.Name
-	}
-	return out
+// accountLabels returns selector options for accts, clustered into type sections
+// (Assets, Liabilities, …) with a non-selectable header before each when more
+// than one type is present, and sorted by institution then name within each — so
+// a mixed money list reads as grouped rather than arbitrarily ordered. Labels
+// include type/institution so same-named accounts stay distinguishable.
+func accountLabels(accts []core.Account) []string {
+	return core.GroupedLabels(accts)
 }
 
-func idByName(s *core.Store, name string) string {
-	if a := s.AccountByName(name); a != nil {
+// idForLabel resolves a selector's displayed string (a label from accountLabels,
+// or a bare name) back to its account ID.
+func idForLabel(s *core.Store, label string) string {
+	if a := s.AccountByLabel(label); a != nil {
 		return a.ID
 	}
 	return ""
+}
+
+// labelByName returns the selector label for the (first) account named name, so
+// an edit form can pre-select an option built by accountLabels.
+func labelByName(s *core.Store, name string) string {
+	if a := s.AccountByName(name); a != nil {
+		return core.AccountLabel(*a)
+	}
+	return name
 }

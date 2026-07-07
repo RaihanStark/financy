@@ -144,9 +144,10 @@ func ScreenTransactions() fyne.CanvasObject {
 	typeSel := widget.NewSelect([]string{"All types", "Income", "Expense", "Transfer", "Opening"}, nil)
 	typeSel.SetSelected(filterType)
 	typeSel.OnChanged = func(v string) { filterType = v; render() }
-	acctSel := widget.NewSelect(append([]string{"All accounts"}, namesOf(store.MoneyAccounts())...), nil)
+	acctSel := widget.NewSelect(append([]string{"All accounts"}, groupedLabels(store.MoneyAccounts())...), nil)
 	acctSel.SetSelected(filterAccount)
 	acctSel.OnChanged = func(v string) { filterAccount = v; render() }
+	guardGroupHeaders(acctSel)
 	search := widget.NewEntry()
 	search.SetPlaceHolder("Search payee / memo / category…  (Enter)")
 	search.SetText(filterSearch)
@@ -369,10 +370,11 @@ func selectionBar(rows []Transaction) fyne.CanvasObject {
 // bulkRecategorize asks for a target category and reassigns it to every selected
 // transaction whose kind matches (the core skips transfers/openings/mismatches).
 func bulkRecategorize() {
-	expense := namesOf(store.ExpenseAccounts())
-	income := namesOf(store.IncomeAccounts())
+	expense := groupedLabels(store.ExpenseAccounts())
+	income := groupedLabels(store.IncomeAccounts())
 	cat := widget.NewSelect(append(append([]string{}, expense...), income...), nil)
 	cat.PlaceHolder = "Choose a category…"
+	guardGroupHeaders(cat)
 
 	n := len(selected)
 	hint := widget.NewLabel(itoa(n) + " transaction(s) selected. Transfers, opening balances and " +
@@ -474,6 +476,12 @@ func distinctMonths() []string {
 func filteredTransactions() []Transaction {
 	var out []Transaction
 	q := strings.ToLower(filterSearch)
+	// The account dropdown shows disambiguated labels; resolve the selection back
+	// to a plain account name for comparison against derived transaction views.
+	wantAccount := filterAccount
+	if wantAccount != "All accounts" {
+		wantAccount = nameOf(idOf(filterAccount))
+	}
 	for _, t := range store.Transactions() {
 		v := deriveView(t)
 		if filterMonth != "All months" && fmtSerialMonth(t.Date) != filterMonth {
@@ -482,8 +490,8 @@ func filteredTransactions() []Transaction {
 		if filterType != "All types" && v.kind != filterType {
 			continue
 		}
-		if filterAccount != "All accounts" && v.moneyName != filterAccount &&
-			(v.kind != "Transfer" || !strings.Contains(v.moneyName, filterAccount)) {
+		if filterAccount != "All accounts" && v.moneyName != wantAccount &&
+			(v.kind != "Transfer" || !strings.Contains(v.moneyName, wantAccount)) {
 			continue
 		}
 		if q != "" {
@@ -528,16 +536,18 @@ func TransactionForm(id, prefillMoney string) {
 	payee := newCompletionEntry(store.Payees())
 	memo := widget.NewEntry()
 
-	moneyNames := namesOf(store.MoneyAccounts())
-	assetNames := namesOf(store.AssetAccounts())
-	expenseNames := namesOf(store.ExpenseAccounts())
-	incomeNames := namesOf(store.IncomeAccounts())
+	moneyNames := groupedLabels(store.MoneyAccounts())
+	assetNames := groupedLabels(store.AssetAccounts())
+	expenseNames := groupedLabels(store.ExpenseAccounts())
+	incomeNames := groupedLabels(store.IncomeAccounts())
 
 	// Two account pickers; their options change with the chosen kind.
 	// acctA = money side (paid-from / deposit-to / transfer-from)
 	// acctB = category side (expense / income / transfer-to)
 	acctA := widget.NewSelect(nil, nil)
 	acctB := widget.NewSelect(nil, nil)
+	guardGroupHeaders(acctA)
+	guardGroupHeaders(acctB)
 
 	configure := func(k string) {
 		switch k {
@@ -577,21 +587,21 @@ func TransactionForm(id, prefillMoney string) {
 		configure(k)
 		switch v.kind {
 		case "Expense":
-			acctA.SetSelected(nameOf(v.moneyID))
-			acctB.SetSelected(nameOf(v.catID))
+			acctA.SetSelected(labelOf(v.moneyID))
+			acctB.SetSelected(labelOf(v.catID))
 		case "Income":
-			acctA.SetSelected(nameOf(v.moneyID))
-			acctB.SetSelected(nameOf(v.catID))
+			acctA.SetSelected(labelOf(v.moneyID))
+			acctB.SetSelected(labelOf(v.catID))
 		case "Transfer":
-			acctA.SetSelected(nameOf(v.fromID))
-			acctB.SetSelected(nameOf(v.toID))
+			acctA.SetSelected(labelOf(v.fromID))
+			acctB.SetSelected(labelOf(v.toID))
 		}
 	} else {
 		date.SetText(fmtSerialDate(todaySerial))
 		kind.SetSelected("Expense")
 		configure("Expense")
 		if prefillMoney != "" {
-			acctA.SetSelected(prefillMoney)
+			acctA.SetSelected(labelForName(prefillMoney))
 		}
 	}
 
@@ -752,9 +762,48 @@ func nameOf(id string) string {
 	return ""
 }
 
-func idOf(name string) string {
+// labelOf returns an account's selector label (name plus type/institution), used
+// to pre-select an option built by groupedLabels.
+func labelOf(id string) string {
+	if a := store.AccountByID(id); a != nil {
+		return accountLabel(*a)
+	}
+	return ""
+}
+
+// labelForName returns the selector label for the account named name (its first
+// match), so a bare name (e.g. a prefill) can pre-select a grouped option.
+func labelForName(name string) string {
 	if a := store.AccountByName(name); a != nil {
+		return accountLabel(*a)
+	}
+	return name
+}
+
+// idOf resolves a selector's displayed string (a label from groupedLabels, or a
+// bare name) back to its account ID.
+func idOf(name string) string {
+	if a := store.AccountByLabel(name); a != nil {
 		return a.ID
 	}
 	return ""
+}
+
+// guardGroupHeaders makes a Select's section-header rows non-selectable: tapping
+// a header snaps the selection back to the previous real value (or the
+// placeholder). Any existing OnChanged still runs for real selections.
+func guardGroupHeaders(sel *widget.Select) {
+	prev := sel.Selected
+	inner := sel.OnChanged
+	sel.OnChanged = func(v string) {
+		if isGroupHeader(v) {
+			sel.Selected = prev
+			sel.Refresh()
+			return
+		}
+		prev = v
+		if inner != nil {
+			inner(v)
+		}
+	}
 }

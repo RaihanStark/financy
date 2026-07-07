@@ -292,8 +292,9 @@ func DebtForm(existing *Debt) {
 	kind := widget.NewSelect(debtTypes(), nil)
 	note := widget.NewEntry()
 
-	moneyNames := namesOf(store.MoneyAccounts())
+	moneyNames := groupedLabels(store.MoneyAccounts())
 	acctMoney := widget.NewSelect(moneyNames, nil)
+	guardGroupHeaders(acctMoney)
 
 	if existing != nil {
 		// Edit: metadata only.
@@ -301,7 +302,7 @@ func DebtForm(existing *Debt) {
 		name.SetText(existing.Name)
 		lender.SetText(existing.Lender)
 		note.SetText(existing.Note)
-		acctMoney.SetSelected(nameOf(existing.AcctMoney))
+		acctMoney.SetSelected(labelOf(existing.AcctMoney))
 
 		items := []*widget.FormItem{
 			widget.NewFormItem("Name", name),

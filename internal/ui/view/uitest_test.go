@@ -72,6 +72,16 @@ func emptyViewTest(t *testing.T) (*core.Store, fyne.Window) {
 	return s, w
 }
 
+// acctLabel returns the selector label the UI shows for the account named name
+// (name plus type/institution), so tests can drive account and category
+// dropdowns whose options are now disambiguated labels rather than bare names.
+func acctLabel(name string) string {
+	if a := store.AccountByName(name); a != nil {
+		return core.AccountLabel(*a)
+	}
+	return name
+}
+
 // mount lays a screen out inside the test window so every widget has a renderer,
 // then returns it. Collecting text only works reliably on mounted trees.
 func mount(w fyne.Window, screen fyne.CanvasObject) fyne.CanvasObject {

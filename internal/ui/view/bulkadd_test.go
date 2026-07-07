@@ -40,10 +40,10 @@ func TestQuickAddIncomeExpenseRows(t *testing.T) {
 	if len(selects) < 6 {
 		t.Fatalf("unexpected selects: %d", len(selects))
 	}
-	selects[0].SetSelected("Checking")
-	selects[1].SetSelected("Groceries") // expense
-	selects[2].SetSelected("Checking")
-	selects[3].SetSelected("Salary") // income
+	selects[0].SetSelected(acctLabel("Checking"))
+	selects[1].SetSelected(acctLabel("Groceries")) // expense
+	selects[2].SetSelected(acctLabel("Checking"))
+	selects[3].SetSelected(acctLabel("Salary")) // income
 
 	// Per row: entries [date, amount, payee]; two I&E rows then the transfer row
 	// give [d1, a1, p1, d2, a2, p2, d3, a3, p3].
@@ -85,8 +85,8 @@ func TestQuickAddTransferRow(t *testing.T) {
 	if len(selects) < 4 {
 		t.Fatalf("unexpected selects: %d", len(selects))
 	}
-	selects[2].SetSelected("Checking")
-	selects[3].SetSelected("Savings")
+	selects[2].SetSelected(acctLabel("Checking"))
+	selects[3].SetSelected(acctLabel("Savings"))
 	entries := findEntries(d)
 	if len(entries) < 6 {
 		t.Fatalf("unexpected entries: %d", len(entries))
@@ -108,8 +108,8 @@ func TestQuickAddTransferRow(t *testing.T) {
 	QuickAddForm()
 	d = dialogContent(w)
 	selects = findSelects(d)
-	selects[2].SetSelected("Checking")
-	selects[3].SetSelected("Checking")
+	selects[2].SetSelected(acctLabel("Checking"))
+	selects[3].SetSelected(acctLabel("Checking"))
 	entries = findEntries(d)
 	entries[4].SetText("100")
 	entries[5].SetText("QA-self")
@@ -134,8 +134,8 @@ func TestQuickAddSkipsBlankRows(t *testing.T) {
 		t.Fatal("no Add row button")
 	}
 	selects := findSelects(d)
-	selects[0].SetSelected("Checking")
-	selects[1].SetSelected("Groceries")
+	selects[0].SetSelected(acctLabel("Checking"))
+	selects[1].SetSelected(acctLabel("Groceries"))
 	entries := findEntries(d)
 	entries[1].SetText("25")
 	entries[2].SetText("QA-blank")

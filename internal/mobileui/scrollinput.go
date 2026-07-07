@@ -4,6 +4,8 @@ import (
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/container"
 	"fyne.io/fyne/v2/widget"
+
+	"github.com/raihanstark/financy/internal/core"
 )
 
 // Fyne's mobile driver routes a touch-drag to the top-most Draggable/Touchable
@@ -73,6 +75,25 @@ func newSelect(options []string, changed func(string)) *scrollSelect {
 	s.OnChanged = changed
 	s.ExtendBaseWidget(s)
 	return s
+}
+
+// guardGroupHeaders makes a select's section-header rows non-selectable: tapping
+// a header snaps the selection back to the previous real value (or the
+// placeholder). Any existing OnChanged still runs for real selections.
+func guardGroupHeaders(sel *scrollSelect) {
+	prev := sel.Selected
+	inner := sel.OnChanged
+	sel.OnChanged = func(v string) {
+		if core.IsGroupHeader(v) {
+			sel.Selected = prev
+			sel.Refresh()
+			return
+		}
+		prev = v
+		if inner != nil {
+			inner(v)
+		}
+	}
 }
 
 func (s *scrollSelect) setScroll(sc *container.Scroll) { s.scroll = sc }

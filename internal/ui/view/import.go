@@ -69,9 +69,10 @@ func showImportMapping(records [][]string) {
 	labels := columnLabels(records)
 
 	// Target money account.
-	acctNames := namesOf(store.MoneyAccounts())
+	acctNames := groupedLabels(store.MoneyAccounts())
 	account := widget.NewSelect(acctNames, nil)
-	account.SetSelected(acctNames[0])
+	account.SetSelected(firstSelectable(acctNames))
+	guardGroupHeaders(account)
 
 	header := widget.NewCheck("First row is a header", nil)
 	header.SetChecked(true)
@@ -106,8 +107,8 @@ func showImportMapping(records [][]string) {
 
 	flip := widget.NewCheck("My export uses + for money spent (flip the sign)", nil)
 
-	expCats := namesOf(store.ExpenseAccounts())
-	incCats := namesOf(store.IncomeAccounts())
+	expCats := groupedLabels(store.ExpenseAccounts())
+	incCats := groupedLabels(store.IncomeAccounts())
 	expCat := widget.NewSelect(expCats, nil)
 	expCat.SetSelected(orFirst(expCats, "Uncategorized"))
 	incCat := widget.NewSelect(incCats, nil)
@@ -183,8 +184,8 @@ func showImportPreview(records [][]string, spec core.ImportSpec) {
 		}
 	}
 
-	incCats, incAccts := namesOf(store.IncomeAccounts()), store.IncomeAccounts()
-	expCats, expAccts := namesOf(store.ExpenseAccounts()), store.ExpenseAccounts()
+	incCats, incAccts := groupedLabels(store.IncomeAccounts()), store.IncomeAccounts()
+	expCats, expAccts := groupedLabels(store.ExpenseAccounts()), store.ExpenseAccounts()
 
 	tbl := tableSpec{
 		Headers: []string{"#", "Date", "Payee", "Amount", "Category", "Status"},
@@ -212,7 +213,7 @@ func showImportPreview(records [][]string, spec core.ImportSpec) {
 				opts, accts = expCats, expAccts
 			}
 			sel := widget.NewSelect(opts, nil)
-			sel.SetSelected(nameOf(r.CategoryID))
+			sel.SetSelected(labelOf(r.CategoryID))
 			idx := i
 			sel.OnChanged = func(name string) {
 				id := idForName(accts, name)
@@ -402,9 +403,11 @@ func orFirst(opts []string, want string) string {
 	return ""
 }
 
+// idForName resolves a selector's displayed string (a disambiguated label, or a
+// bare account name) back to its account ID within the given slice.
 func idForName(accts []core.Account, name string) string {
 	for _, a := range accts {
-		if a.Name == name {
+		if core.AccountLabel(a) == name || a.Name == name {
 			return a.ID
 		}
 	}

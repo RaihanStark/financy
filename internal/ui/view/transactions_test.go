@@ -6,6 +6,46 @@ import (
 	"github.com/raihanstark/financy/internal/core"
 )
 
+// The money-account dropdown clusters accounts into Assets/Liabilities sections
+// with non-selectable header rows, mirroring the Accounts screen.
+func TestTransactionFormGroupedAccounts(t *testing.T) {
+	resetTxnFilters(t)
+	_, w := newViewTest(t)
+
+	TransactionForm("", "")
+	d := dialogContent(w)
+	if d == nil {
+		t.Fatal("transaction form did not open")
+	}
+	selects := findSelects(d) // [kind, acctA(money), acctB(category)]
+	if len(selects) < 2 {
+		t.Fatalf("unexpected form shape: %d selects", len(selects))
+	}
+	money := selects[1]
+
+	ai, li := -1, -1
+	for i, o := range money.Options {
+		switch o {
+		case "—— Assets ——":
+			ai = i
+		case "—— Liabilities ——":
+			li = i
+		}
+	}
+	if ai < 0 || li < 0 {
+		t.Fatalf("money dropdown not grouped into sections: %v", money.Options)
+	}
+	if ai >= li {
+		t.Errorf("Assets section should precede Liabilities: %v", money.Options)
+	}
+
+	// Tapping a section header must not select it.
+	money.SetSelected("—— Assets ——")
+	if money.Selected == "—— Assets ——" {
+		t.Error("section header should not be selectable")
+	}
+}
+
 // resetTxnFilters restores the package-level filter/selection state so tests
 // don't leak into each other (these globals persist across renders by design).
 func resetTxnFilters(t *testing.T) {
@@ -139,8 +179,8 @@ func TestTransactionFormAdd(t *testing.T) {
 		t.Fatalf("unexpected form shape: %d selects, %d entries", len(selects), len(entries))
 	}
 	selects[0].SetSelected("Expense")
-	selects[1].SetSelected("Checking")
-	selects[2].SetSelected("Groceries")
+	selects[1].SetSelected(acctLabel("Checking"))
+	selects[2].SetSelected(acctLabel("Groceries"))
 
 	// Find the amount entry (the one that lives between date and payee). The
 	// date entry is prefilled with today; set amount + payee by content.
@@ -178,8 +218,8 @@ func TestTransactionFormSaveAndAddAnother(t *testing.T) {
 		t.Fatalf("unexpected form shape: %d selects, %d entries", len(selects), len(entries))
 	}
 	selects[0].SetSelected("Expense")
-	selects[1].SetSelected("Checking")
-	selects[2].SetSelected("Groceries")
+	selects[1].SetSelected(acctLabel("Checking"))
+	selects[2].SetSelected(acctLabel("Groceries"))
 	entries[1].SetText("50") // amount
 
 	if !tapButton(d, "Save & Add another") {
@@ -196,7 +236,7 @@ func TestTransactionFormSaveAndAddAnother(t *testing.T) {
 	if entries[1].Text != "" {
 		t.Errorf("amount not cleared: %q", entries[1].Text)
 	}
-	if selects[1].Selected != "Checking" {
+	if selects[1].Selected != acctLabel("Checking") {
 		t.Errorf("money account not retained: %q", selects[1].Selected)
 	}
 }

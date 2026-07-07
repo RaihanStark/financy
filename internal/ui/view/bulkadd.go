@@ -41,13 +41,10 @@ func QuickAddForm() {
 		return
 	}
 
-	moneyNames := namesOf(store.MoneyAccounts())
-	catNames := append(append([]string{}, namesOf(store.ExpenseAccounts())...), namesOf(store.IncomeAccounts())...)
+	moneyNames := groupedLabels(store.MoneyAccounts())
+	catNames := append(append([]string{}, groupedLabels(store.ExpenseAccounts())...), groupedLabels(store.IncomeAccounts())...)
 	payeeNames := store.Payees()
-	defaultMoney := ""
-	if len(moneyNames) > 0 {
-		defaultMoney = moneyNames[0]
-	}
+	defaultMoney := firstSelectable(moneyNames)
 
 	// Column weights: give the date its own wider column so the calendar-picker
 	// button reads clearly (as on the single transaction form) instead of being
@@ -91,6 +88,8 @@ func QuickAddForm() {
 			r.money.SetSelected(defaultMoney)
 		}
 		r.cat.PlaceHolder = "Category…"
+		guardGroupHeaders(r.money)
+		guardGroupHeaders(r.cat)
 		r.payee.SetPlaceHolder("Payee")
 		r.box = rowWithRemove(
 			container.New(&columnsLayout{Weights: colWeights, Gap: 6}, dateCell(r.date), r.money, r.amount, r.cat, r.payee),
@@ -135,6 +134,8 @@ func QuickAddForm() {
 		r.from.PlaceHolder = "From…"
 		r.to.PlaceHolder = "To…"
 		r.payee.SetPlaceHolder("Payee")
+		guardGroupHeaders(r.from)
+		guardGroupHeaders(r.to)
 		r.box = rowWithRemove(
 			container.New(&columnsLayout{Weights: colWeights, Gap: 6}, dateCell(r.date), r.from, r.to, r.amount, r.payee),
 			func() { removeTR(r) },
@@ -156,7 +157,7 @@ func QuickAddForm() {
 			if serial == 0 || amt <= 0 || money == "" || r.cat.Selected == "" {
 				continue
 			}
-			a := store.AccountByName(r.cat.Selected)
+			a := store.AccountByLabel(r.cat.Selected)
 			if a == nil {
 				continue
 			}

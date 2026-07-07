@@ -22,7 +22,7 @@ func (m *mobileApp) debtForm(existing *core.Debt) {
 		return
 	}
 	s := m.store
-	money := accountNames(s.MoneyAccounts())
+	money := accountLabels(s.MoneyAccounts())
 
 	kind := newSelect(core.DebtTypes(), nil)
 	kind.SetSelected(core.DebtTypes()[0])
@@ -31,8 +31,9 @@ func (m *mobileApp) debtForm(existing *core.Debt) {
 	lender := newEntry()
 	lender.SetPlaceHolder("e.g. Shopee PayLater")
 	acct := newSelect(money, nil)
-	if len(money) > 0 {
-		acct.SetSelected(money[0])
+	guardGroupHeaders(acct)
+	if first := core.FirstSelectable(money); first != "" {
+		acct.SetSelected(first)
 	}
 	note := newEntry()
 	note.SetPlaceHolder("Optional")
@@ -44,7 +45,7 @@ func (m *mobileApp) debtForm(existing *core.Debt) {
 		name.SetText(existing.Name)
 		lender.SetText(existing.Lender)
 		if a := s.AccountByID(existing.AcctMoney); a != nil {
-			acct.SetSelected(a.Name)
+			acct.SetSelected(core.AccountLabel(*a))
 		}
 		note.SetText(existing.Note)
 
@@ -58,7 +59,7 @@ func (m *mobileApp) debtForm(existing *core.Debt) {
 			}
 			nd := *existing
 			nd.Name, nd.Type, nd.Lender = name.Text, kind.Selected, lender.Text
-			nd.AcctMoney, nd.Note = idByName(s, acct.Selected), note.Text
+			nd.AcctMoney, nd.Note = idForLabel(s, acct.Selected), note.Text
 			s.UpdateDebt(existing.ID, nd)
 			m.back()
 			m.rebuildDebt(existing.ID)
@@ -97,7 +98,7 @@ func (m *mobileApp) debtForm(existing *core.Debt) {
 		}
 		d := core.Debt{
 			Name: name.Text, Type: kind.Selected, Lender: lender.Text,
-			AcctMoney: idByName(s, acct.Selected), PurchaseDate: purch, Note: note.Text,
+			AcctMoney: idForLabel(s, acct.Selected), PurchaseDate: purch, Note: note.Text,
 		}
 		s.AddDebt(d, core.GenerateInstallments(amt, n, due, freq.Selected))
 		m.back() // back to the Debts tab; the store change refreshes it
