@@ -13,6 +13,8 @@ See `RELEASING.md`.
 
 ## [Unreleased]
 
+## [0.13.0] - 2026-07-11
+
 ### Added
 - **Debts, reworked — every debt type, on desktop and mobile.** The Debts
   module grows beyond fixed BNPL schedules into full debt tracking:
@@ -406,7 +408,8 @@ double-entry accounting, with data in a single `.financy` file you own.
   automatic `.bak` before any file upgrade.
 - Cross-platform release bundles (Linux / Windows / macOS) published from CI on tag.
 
-[Unreleased]: https://github.com/raihanstark/financy/compare/v0.12.0...HEAD
+[Unreleased]: https://github.com/raihanstark/financy/compare/v0.13.0...HEAD
+[0.13.0]: https://github.com/raihanstark/financy/compare/v0.12.0...v0.13.0
 [0.12.0]: https://github.com/raihanstark/financy/compare/v0.11.0...v0.12.0
 [0.11.0]: https://github.com/raihanstark/financy/compare/v0.10.0...v0.11.0
 [0.10.0]: https://github.com/raihanstark/financy/compare/v0.9.0...v0.10.0
