@@ -163,7 +163,9 @@ func (s *Store) spendIndex() map[string]int {
 	}
 	debt := map[string]bool{}
 	for _, d := range s.debts {
-		if d.AcctLiability != "" {
+		// Revolving debts carry no envelope: a card purchase already depletes a
+		// spending envelope, so counting the payment too would double-budget it.
+		if d.HasEnvelope() && d.AcctLiability != "" {
 			debt[d.AcctLiability] = true
 		}
 	}
@@ -188,6 +190,9 @@ func (s *Store) spendIndex() map[string]int {
 func (s *Store) budgetCategories() []Account {
 	cats := s.ExpenseAccounts()
 	for _, d := range s.debts {
+		if !d.HasEnvelope() {
+			continue
+		}
 		if a := s.AccountByID(d.AcctLiability); a != nil {
 			cats = append(cats, *a)
 		}

@@ -388,6 +388,40 @@ func ParseAmount(s string) int {
 	return minor
 }
 
+// ParseAPRBps parses a user-entered annual percentage rate into basis points:
+// "19.99" (or "19,99%") → 1999. Tolerates a % sign, spaces, and either decimal
+// separator; extra decimals are truncated. Returns 0 on empty/invalid input.
+func ParseAPRBps(s string) int {
+	var t strings.Builder
+	for _, r := range s {
+		if (r >= '0' && r <= '9') || r == '.' || r == ',' {
+			t.WriteByte(byte(r))
+		}
+	}
+	str := t.String()
+	whole, frac := str, ""
+	if i := strings.LastIndexAny(str, ".,"); i >= 0 {
+		whole, frac = onlyDigits(str[:i]), onlyDigits(str[i+1:])
+	}
+	for len(frac) < 2 {
+		frac += "0"
+	}
+	return atoiSafe(onlyDigits(whole))*100 + atoiSafe(frac[:2])
+}
+
+// FmtAPRBps renders basis points as a percentage: 1999 → "19.99%", 1200 → "12%".
+func FmtAPRBps(bps int) string {
+	whole, frac := bps/100, bps%100
+	switch {
+	case frac == 0:
+		return fmt.Sprintf("%d%%", whole)
+	case frac%10 == 0:
+		return fmt.Sprintf("%d.%d%%", whole, frac/10)
+	default:
+		return fmt.Sprintf("%d.%02d%%", whole, frac)
+	}
+}
+
 // FmtPercent formats a 0..1 ratio as a percentage, e.g. 0.6698 -> "66.98%".
 func FmtPercent(ratio float64) string {
 	if math.IsNaN(ratio) || math.IsInf(ratio, 0) {

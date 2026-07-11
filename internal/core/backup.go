@@ -21,6 +21,7 @@ var schemaReleases = map[int]string{
 	6: "v0.6.0",
 	7: "v0.6.0",
 	8: "v0.8.0",
+	9: "v0.13.0",
 }
 
 // BackupSuffix returns the filename suffix for a pre-migration backup of a file
