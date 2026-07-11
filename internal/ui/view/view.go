@@ -45,6 +45,12 @@ type (
 	Debt             = core.Debt
 	Installment      = core.Installment
 	DebtStatus       = core.DebtStatus
+	PayoffProjection = core.PayoffProjection
+	StatementDue     = core.StatementDue
+	StrategyResult   = core.StrategyResult
+	DebtPayoff       = core.DebtPayoff
+	DebtOverview     = core.DebtOverview
+	DebtOverviewRow  = core.DebtOverviewRow
 	BudgetMonth      = core.BudgetMonth
 	BudgetCategory   = core.BudgetCategory
 )
@@ -55,6 +61,11 @@ const (
 	Income    = core.Income
 	Expense   = core.Expense
 	Equity    = core.Equity
+
+	DebtBNPL      = core.DebtBNPL
+	DebtLoan      = core.DebtLoan
+	DebtRevolving = core.DebtRevolving
+	DebtInformal  = core.DebtInformal
 )
 
 // ---- core helpers ----
@@ -83,6 +94,13 @@ var (
 	frequencies          = core.Frequencies
 	debtTypes            = core.DebtTypes
 	generateInstallments = core.GenerateInstallments
+	generateLoanSchedule = core.GenerateLoanSchedule
+	amortizedPayment     = core.AmortizedPayment
+	loanTermFor          = core.LoanTermFor
+	scheduleInterest     = core.ScheduleInterestTotal
+	periodInterest       = core.PeriodInterest
+	parseAPRBps          = core.ParseAPRBps
+	fmtAPRBps            = core.FmtAPRBps
 	todaySerial          = core.TodaySerial
 	version              = core.Version
 
@@ -119,6 +137,7 @@ var (
 	detailField     = component.DetailField
 	emptyState      = component.EmptyState
 	badge           = component.Badge
+	alertBanner     = component.AlertBanner
 	progressBar     = component.ProgressBar
 	pillStat        = component.PillStat
 	padCell         = component.PadCell

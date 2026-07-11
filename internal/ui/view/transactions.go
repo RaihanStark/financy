@@ -683,10 +683,11 @@ func TransactionForm(id, prefillMoney string) {
 	d.Show()
 }
 
-// payInstallmentForm is the "Pay debt" path of the Add Transaction flow: pick a
-// debt and one of its unpaid installments; saving posts that installment as a
-// payment dated when you actually pay (today by default). The amount comes from
-// the installment, and the money leaves the debt's configured pay-from account.
+// payInstallmentForm is the "Pay debt" path of the Add Transaction flow: pick
+// a debt, then pay it its way — an unpaid installment on schedule debts (BNPL,
+// loans), or a free amount on revolving / informal debts (defaulted to the
+// minimum due or the remaining balance). Payments are dated when you actually
+// pay (today by default) and leave the debt's configured pay-from account.
 func payInstallmentForm() {
 	debts := store.Debts()
 	if len(debts) == 0 {
@@ -694,24 +695,42 @@ func payInstallmentForm() {
 		return
 	}
 	debtNames := make([]string, len(debts))
+	byName := map[string]Debt{}
 	for i, d := range debts {
 		debtNames[i] = d.Name
+		byName[d.Name] = d
 	}
 
 	debtSel := widget.NewSelect(debtNames, nil)
 	instSel := widget.NewSelect(nil, nil)
 	date := newDateEntry(todaySerial)
 	amountLabel := widget.NewLabel("—")
+	amountEntry := newAmountEntry()
+
+	instRow := widget.NewFormItem("Installment", instSel)
+	amtLabelRow := widget.NewFormItem("Amount", amountLabel)
+	amtEntryRow := widget.NewFormItem("Amount", amountEntry)
 
 	instID := map[string]string{} // installment label → ID
 	instAmt := map[string]int{}   // installment label → amount
+	var form *widget.Form
 	reload := func(debtName string) {
-		instID, instAmt = map[string]string{}, map[string]int{}
-		var labels []string
-		for _, d := range debts {
-			if d.Name != debtName {
-				continue
+		d, ok := byName[debtName]
+		if !ok {
+			return
+		}
+		if !d.HasSchedule() {
+			// Free-amount payment: hide the installment picker, prefill the amount.
+			def := store.DebtBalance(d.ID)
+			if d.IsRevolving() {
+				def = store.MinPaymentDue(d)
 			}
+			amountEntry.SetText(fmtMoneyInput(def))
+			instSel.Options = nil
+			instSel.SetSelected("")
+		} else {
+			instID, instAmt = map[string]string{}, map[string]int{}
+			var labels []string
 			for _, in := range store.Installments(d.ID) {
 				if in.Paid {
 					continue
@@ -721,14 +740,18 @@ func payInstallmentForm() {
 				instID[lab] = in.ID
 				instAmt[lab] = in.Amount
 			}
+			instSel.Options = labels
+			instSel.Refresh()
+			if len(labels) > 0 {
+				instSel.SetSelected(labels[0]) // fires OnChanged → fills the amount
+			} else {
+				instSel.SetSelected("")
+				amountLabel.SetText("—")
+			}
 		}
-		instSel.Options = labels
-		instSel.Refresh()
-		if len(labels) > 0 {
-			instSel.SetSelected(labels[0]) // fires OnChanged → fills the amount
-		} else {
-			instSel.SetSelected("")
-			amountLabel.SetText("—")
+		if form != nil {
+			form.Items = payDebtItems(d, debtSel, instRow, amtLabelRow, amtEntryRow, date)
+			form.Refresh()
 		}
 	}
 	debtSel.OnChanged = reload
@@ -737,22 +760,42 @@ func payInstallmentForm() {
 			amountLabel.SetText(fmtMoney(a))
 		}
 	}
+
+	form = widget.NewForm(payDebtItems(debts[0], debtSel, instRow, amtLabelRow, amtEntryRow, date)...)
 	debtSel.SetSelected(debtNames[0])
 
-	items := []*widget.FormItem{
-		widget.NewFormItem("Debt", debtSel),
-		widget.NewFormItem("Installment", instSel),
-		widget.NewFormItem("Amount", amountLabel),
-		widget.NewFormItem("Date (YYYY-MM-DD)", date),
-	}
-	showForm("Pay debt", items, func() {
-		id := instID[instSel.Selected]
-		serial := parseDateSerial(date.Text)
-		if id == "" || serial == 0 {
+	dlg := dialog.NewCustomConfirm("Pay debt", "Save", "Cancel", form, func(ok bool) {
+		if !ok {
 			return
 		}
-		store.PayInstallment(id, serial)
-	})
+		d, exists := byName[debtSel.Selected]
+		serial := parseDateSerial(date.Text)
+		if !exists || serial == 0 {
+			return
+		}
+		if !d.HasSchedule() {
+			if a := parseAmount(amountEntry.Text); a > 0 {
+				store.PayDebtAmount(d.ID, a, serial)
+			}
+			return
+		}
+		if id := instID[instSel.Selected]; id != "" {
+			store.PayInstallment(id, serial)
+		}
+	}, win)
+	dlg.Resize(fyne.NewSize(460, 340))
+	dlg.Show()
+}
+
+// payDebtItems assembles the Pay-debt form rows for the selected debt's kind.
+func payDebtItems(d Debt, debtSel *widget.Select, instRow, amtLabelRow, amtEntryRow *widget.FormItem, date *widget.Entry) []*widget.FormItem {
+	items := []*widget.FormItem{widget.NewFormItem("Debt", debtSel)}
+	if d.HasSchedule() {
+		items = append(items, instRow, amtLabelRow)
+	} else {
+		items = append(items, amtEntryRow)
+	}
+	return append(items, widget.NewFormItem("Date (YYYY-MM-DD)", date))
 }
 
 func nameOf(id string) string {
