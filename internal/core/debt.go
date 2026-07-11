@@ -416,6 +416,30 @@ func (s *Store) UnpayInstallment(instID string) bool {
 	return true
 }
 
+// clearInstallmentForTxn resets any installment satisfied by txnID back to unpaid.
+// Called from DeleteTransaction so deleting a debt payment from the Transactions
+// page also rolls back the installment on the Debt page. It only mutates the
+// installment (never deletes the txn), so it's safe to call mid-delete without
+// recursing back into DeleteTransaction. For a linked installment the transaction
+// was the user's own; it's being deleted, so we can't restore OrigPosts — reverting
+// to unpaid is the right outcome (the user can re-link later).
+func (s *Store) clearInstallmentForTxn(txnID string) {
+	if txnID == "" {
+		return
+	}
+	for i := range s.installments {
+		in := &s.installments[i]
+		if in.TxnID != txnID {
+			continue
+		}
+		in.Paid = false
+		in.TxnID = ""
+		in.Linked = false
+		in.OrigPosts = nil
+		s.reportError(s.dbUpsertInstallment(*in))
+	}
+}
+
 // ---- progress ----
 
 // DebtStatus is a debt's rolled-up progress as of a date.
