@@ -220,17 +220,6 @@ func TestDebtOverview(t *testing.T) {
 	if o.DebtFreeDate == 0 {
 		t.Error("missing DebtFreeDate")
 	}
-	// History spans 12 months ending now, and the current month carries the debt.
-	if len(o.History) != 12 {
-		t.Fatalf("history = %d points, want 12", len(o.History))
-	}
-	last := o.History[11]
-	if last.Balance != 2_000_000 {
-		t.Errorf("current history point = %+v, want balance 2000000", last)
-	}
-	if first := o.History[0]; first.Balance != 0 {
-		t.Errorf("a year ago = %+v, want 0 (debts created this month)", first)
-	}
 
 	// Loan progress grows once payments land.
 	insts := s.Installments(s.Debts()[1].ID)

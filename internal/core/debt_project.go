@@ -1,9 +1,6 @@
 package core
 
-import (
-	"sort"
-	"time"
-)
+import "sort"
 
 // Payoff projections and strategies. Everything here is pure simulation over
 // the debts' current state — nothing is posted. All simulations share the
@@ -315,19 +312,12 @@ type DebtOverviewRow struct {
 	Progress float64
 }
 
-// MonthBalance is one point of the total-owed history.
-type MonthBalance struct {
-	Month   string // "YYYY-MM"
-	Balance int    // total owed at month end
-}
-
 // DebtOverview is the aggregate picture across every debt.
 type DebtOverview struct {
 	TotalOwed      int
 	WeightedAPRBps int // balance-weighted average APR
 	DebtFreeDate   int // latest projected payoff; 0 when any debt is unprojectable
 	Rows           []DebtOverviewRow
-	History        []MonthBalance // last 12 months of total owed, oldest first
 }
 
 // DebtOverview rolls every debt into the dashboard aggregate.
@@ -378,42 +368,5 @@ func (s *Store) DebtOverview(asOf int) DebtOverview {
 	if !allFeasible {
 		o.DebtFreeDate = 0
 	}
-	o.History = s.debtHistory(asOf, 12)
 	return o
-}
-
-// debtHistory is the total owed across all debts at each of the last n month
-// ends (this month is measured as of asOf).
-func (s *Store) debtHistory(asOf, n int) []MonthBalance {
-	liabs := map[string]bool{}
-	for _, d := range s.debts {
-		if d.AcctLiability != "" {
-			liabs[d.AcctLiability] = true
-		}
-	}
-	out := make([]MonthBalance, 0, n)
-	for i := n - 1; i >= 0; i-- {
-		end := asOf
-		if i > 0 {
-			t := SerialToTime(asOf)
-			firstOfMonth := time.Date(t.Year(), t.Month(), 1, 0, 0, 0, 0, time.UTC)
-			end = TimeToSerial(addMonths(firstOfMonth, -i+1)) - 1 // last day of that month
-		}
-		sum := 0
-		for _, t := range s.txns {
-			if t.Date > end {
-				continue
-			}
-			for _, p := range t.Posts {
-				if liabs[p.AccountID] {
-					sum -= p.Amount
-				}
-			}
-		}
-		if sum < 0 {
-			sum = 0
-		}
-		out = append(out, MonthBalance{Month: FmtSerialMonth(end), Balance: sum})
-	}
-	return out
 }

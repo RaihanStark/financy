@@ -71,7 +71,7 @@ func debtNeedsAttention(d Debt) bool {
 }
 
 // debtDashboard is the overview header: the aggregate position across every
-// debt, plus the total-owed trend over the last year.
+// debt.
 func debtDashboard() fyne.CanvasObject {
 	o := store.DebtOverview(todaySerial)
 	b := store.DebtBuckets(todaySerial)
@@ -90,30 +90,12 @@ func debtDashboard() fyne.CanvasObject {
 	if b.Due > 0 {
 		dueCol = colWarning
 	}
-	cards := container.NewGridWithColumns(4,
+	return container.NewGridWithColumns(4,
 		statCard("Total owed", fmtMoney(o.TotalOwed), colNegative, ""),
 		statCard("Average APR", apr, colText, "balance-weighted"),
 		statCard("Due now", fmtMoney(b.Due), dueCol, ""),
 		statCard("Debt-free by", debtFree, colPositive, "at current plans"),
 	)
-
-	// The trend only earns its space once there's history to see.
-	trending := false
-	vals := make([]int, 0, len(o.History))
-	tips := make([]string, 0, len(o.History))
-	for _, h := range o.History {
-		vals = append(vals, h.Balance)
-		tips = append(tips, fmtMonthLong(h.Month)+" · "+fmtMoney(h.Balance))
-		if h.Balance != 0 {
-			trending = true
-		}
-	}
-	if !trending {
-		return cards
-	}
-	chart := container.New(padCell(6, 0), lineChart(vals, colPrimary, tips, fmtMoneyShort))
-	return container.NewVBox(cards, spacerH(10),
-		txt("Total owed, last 12 months", colTextDim, 10.5, true), chart)
 }
 
 // statementBanner surfaces revolving statements awaiting review.

@@ -35,8 +35,7 @@ See `RELEASING.md`.
     remaining interest; a **snowball vs. avalanche** comparison shows payoff
     order, debt-free date and total interest for any extra monthly amount.
   - **Debt overview dashboard**: total owed, balance-weighted average APR,
-    what's due now, projected debt-free date, and a 12-month trend of total
-    owed.
+    what's due now, and the projected debt-free date.
   - **Type-driven setup**: pick the debt kind and only its fields appear,
     with a live plan preview (computed payment or term, payoff date, total
     interest) before saving — on desktop and mobile alike.
