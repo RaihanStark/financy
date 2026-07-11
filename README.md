@@ -38,7 +38,7 @@ unreadable without your passphrase.
 - 💵 **Proper money handling** — amounts are stored as integer minor units (cents), with per-currency formatting for **Rp · $ · € · £** (no floating-point money, ever).
 - 🏦 **Accounts & net worth** — asset & liability cards, a net-worth overview, and a per-account **register with running balance**.
 - 🧾 **Transactions** — a clean, date-grouped journal with a familiar **Income / Expense / Transfer** entry form, live filters and search, plus a **bulk-select mode** to recategorize many entries at once.
-- 🗓️ **Debts (BNPL & installments)** — track Buy-Now-Pay-Later and other installment debts on a fixed schedule. Each debt opens an off-budget **Liability** account (so it shows in Accounts & Net Worth) and becomes its own **budget envelope** you fund monthly — paying an installment is budgeted spending that draws the balance down, leaving Ready to Assign neutral. The purchase is booked on its **purchase date** against an equity contra (no expense double-count). A tabbed screen shows each debt's installment table with **Pay / Undo**, plus an **Outstanding · Due now · This month · Next month** summary.
+- 💳 **Debts — every kind** — track **BNPL/installment plans**, **amortizing loans** (APR with a proper principal-vs-interest split per payment, extra payments that shorten the term or lower the payment), **revolving credit** (attach your existing card account, credit limit & utilization, minimum payments, a monthly **statement review** that proposes the interest charge for you to confirm), and **informal IOUs** (a balance, an optional due date, pay any amount). Schedule debts open an off-budget **Liability** account and become their own **budget envelope**; card payments are budget-neutral transfers so envelopes never double-count. An **overview dashboard** shows total owed, weighted average APR and the projected **debt-free date**, and a **snowball vs. avalanche** comparison shows where extra money pays off fastest.
 - 📊 **Analytics** — KPIs, income-vs-expenses, net-worth-over-time and spending-by-category charts — all derived from the journal, so they never drift from your transactions.
 - 🔐 **Password encryption (optional)** — protect a document with a passphrase and the `.financy` file is encrypted at rest with **XChaCha20-Poly1305** and an **Argon2id**-derived key, and is tamper-evident. Your data is only ever decrypted in memory, never persisted to disk in plaintext. A forgotten passphrase is unrecoverable — there's no backdoor.
 - 💾 **Local-first persistence** — each document is a single **`.financy` SQLite file** you own. **Unencrypted** files are *always auto-saved* (ACID writes — no save button, no lost work); **encrypted** files use **manual save** (Cmd/Ctrl-S) with an *unsaved-changes prompt* when you close — the trade-off that keeps plaintext off your disk.
@@ -122,9 +122,12 @@ save your `.financy` file.
 - **Add a transaction** — the toolbar **`+`**, or the *Add Transaction* button. Choose
   Income / Expense / Transfer; the app writes the correct double-entry postings for you,
   and the spending flows straight into your budget's *Activity*.
-- **Track a debt** — open **🗓️ Debts** to add a BNPL/installment plan (set a purchase
-  date and first due date). Pay installments from the Debts screen or via *Add
-  Transaction ▸ Pay debt*, and fund each debt's envelope on the Budget screen.
+- **Track a debt** — open **💳 Debts** and pick the kind: a BNPL/installment plan,
+  an amortizing loan (enter principal + APR and either the term or the payment —
+  the other is computed, with a live payoff preview), a credit card / line of
+  credit, or an informal IOU. Pay installments from the Debts screen or via *Add
+  Transaction ▸ Pay debt*, record card payments and extra loan payments from the
+  debt's page, and compare **snowball vs. avalanche** under *Strategies*.
 - **Open an account's register** — click an account card. Right-click a card (or use the
   **⋮** button) for *New Transaction · View Register · Edit · Delete*.
 - **Filter the journal** — by month, type, account, or free-text search.

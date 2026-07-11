@@ -13,6 +13,41 @@ See `RELEASING.md`.
 
 ## [Unreleased]
 
+### Added
+- **Debts, reworked — every debt type, on desktop and mobile.** The Debts
+  module grows beyond fixed BNPL schedules into full debt tracking:
+  - **Amortizing loans** (mortgage, auto, student, personal) with APR: the
+    schedule is generated from principal + rate, every payment posts a real
+    principal-vs-interest split (interest lands in an expense category, the
+    liability always equals remaining principal), and **extra payments**
+    either shorten the term or lower the payment — with a live preview of the
+    payoff date and interest saved.
+  - **Revolving credit** (credit cards, lines of credit): attach the card
+    account you already track (its history stays yours) or create one, with
+    credit limit, utilization, and a minimum-payment rule. Interest is never
+    auto-posted — a monthly **statement review** proposes an editable charge
+    for you to confirm, correct, or skip. Card payments are budget-neutral
+    transfers, so envelopes are never double-counted.
+  - **Informal debts** (an IOU, money from a friend): just a balance with an
+    optional due date; pay any amount anytime, and optionally record which
+    account the borrowed cash landed in.
+  - **Payoff projections & strategies**: every debt shows its payoff date and
+    remaining interest; a **snowball vs. avalanche** comparison shows payoff
+    order, debt-free date and total interest for any extra monthly amount.
+  - **Debt overview dashboard**: total owed, balance-weighted average APR,
+    what's due now, and the projected debt-free date.
+  - **Type-driven setup**: pick the debt kind and only its fields appear,
+    with a live plan preview (computed payment or term, payoff date, total
+    interest) before saving — on desktop and mobile alike.
+- The demo document now includes a car loan mid-term, the credit card tracked
+  as a revolving debt, and a partly-repaid IOU alongside the BNPL plans.
+
+### Fixed
+- **Deleting a debt no longer destroys linked transactions** — installments
+  that were satisfied by linking one of your existing transactions now have
+  those transactions restored to their original categories when the debt is
+  deleted, instead of being removed with the debt's own postings.
+
 ## [0.12.0] - 2026-07-01
 
 ### Added

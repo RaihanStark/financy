@@ -115,6 +115,29 @@ var migrations = []string{
 	ALTER TABLE debt_installments ADD COLUMN linked INTEGER NOT NULL DEFAULT 0;
 	ALTER TABLE debt_installments ADD COLUMN orig_posts TEXT NOT NULL DEFAULT '';
 	`,
+	// v9 — debt rework: amortizing loans (APR, principal/interest split),
+	// revolving credit (cards / lines of credit) and informal debts join BNPL.
+	// All defaults are the zero value, so existing BNPL rows keep behaving
+	// exactly as before; installments are backfilled as 100% principal.
+	`
+	ALTER TABLE debts ADD COLUMN apr_bps        INTEGER NOT NULL DEFAULT 0;
+	ALTER TABLE debts ADD COLUMN freq           TEXT    NOT NULL DEFAULT '';
+	ALTER TABLE debts ADD COLUMN payment_amount INTEGER NOT NULL DEFAULT 0;
+	ALTER TABLE debts ADD COLUMN principal      INTEGER NOT NULL DEFAULT 0;
+	ALTER TABLE debts ADD COLUMN credit_limit   INTEGER NOT NULL DEFAULT 0;
+	ALTER TABLE debts ADD COLUMN statement_day  INTEGER NOT NULL DEFAULT 0;
+	ALTER TABLE debts ADD COLUMN pay_due_day    INTEGER NOT NULL DEFAULT 0;
+	ALTER TABLE debts ADD COLUMN min_pay_bps    INTEGER NOT NULL DEFAULT 0;
+	ALTER TABLE debts ADD COLUMN min_pay_floor  INTEGER NOT NULL DEFAULT 0;
+	ALTER TABLE debts ADD COLUMN next_statement INTEGER NOT NULL DEFAULT 0;
+	ALTER TABLE debts ADD COLUMN due_date       INTEGER NOT NULL DEFAULT 0;
+	ALTER TABLE debts ADD COLUMN acct_interest  TEXT    NOT NULL DEFAULT '';
+	ALTER TABLE debts ADD COLUMN acct_origin    TEXT    NOT NULL DEFAULT '';
+	ALTER TABLE debts ADD COLUMN owns_account   INTEGER NOT NULL DEFAULT 0;
+	ALTER TABLE debt_installments ADD COLUMN principal INTEGER NOT NULL DEFAULT 0;
+	ALTER TABLE debt_installments ADD COLUMN interest  INTEGER NOT NULL DEFAULT 0;
+	UPDATE debt_installments SET principal = amount;
+	`,
 }
 
 // schemaVersion is the number of migrations that define the current schema.

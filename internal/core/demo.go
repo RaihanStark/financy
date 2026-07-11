@@ -203,6 +203,35 @@ func SeedDemo(s *Store, currency string) {
 		s.UpdateInstallment(in.ID, in.DueDate, uneven[i])
 	}
 
+	// An amortizing car loan a year into its three-year term: every payment
+	// splits into principal and interest, so the schedule shows the split and
+	// the dashboard has an APR to weight.
+	carPay := AmortizedPayment(1_200_000, 790, 36, "Monthly")
+	carInsts, _ := GenerateLoanSchedule(1_200_000, 790, carPay, d-360, "Monthly")
+	s.AddDebt(Debt{Name: "Car Loan", Type: DebtLoan, Lender: "AutoFinance Co",
+		AcctMoney: "checking", PurchaseDate: d - 380,
+		APRBps: 790, Freq: "Monthly", PaymentAmount: carPay}, carInsts)
+	carID := s.debts[len(s.debts)-1].ID
+	for _, in := range s.Installments(carID) {
+		if in.DueDate <= d {
+			s.PayInstallment(in.ID, in.DueDate)
+		}
+	}
+
+	// The demo credit card, upgraded to a tracked revolving debt by ATTACHING
+	// the existing account (months of purchases and payments stay untouched) —
+	// its statement review proposes the month's interest when it comes due.
+	s.AddDebt(Debt{Name: "Credit Card", Type: DebtRevolving, Lender: "Demo Card",
+		AcctMoney: "checking", PurchaseDate: d - 45, AcctLiability: "visa",
+		APRBps: 2199, CreditLimit: 300000, StatementDay: 8, PayDueDay: 26,
+		MinPayBps: 500, MinPayFloor: 2500}, nil)
+
+	// Money owed to a person — no schedule, just a balance, partly repaid.
+	s.AddDebt(Debt{Name: "Borrowed from Mom", Type: DebtInformal, Lender: "Mom",
+		AcctMoney: "checking", PurchaseDate: d - 30, Principal: 50000, DueDate: d + 20}, nil)
+	momID := s.debts[len(s.debts)-1].ID
+	s.PayDebtAmount(momID, 20000, d-10)
+
 	// Fund each debt's payment envelope the zero-based way: every installment that
 	// has already been paid is assigned in the month it fell due (so the envelope
 	// nets to zero — no phantom overspend), and each debt's next upcoming payment

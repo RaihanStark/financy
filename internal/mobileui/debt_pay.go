@@ -6,6 +6,7 @@ import (
 
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/container"
+	"fyne.io/fyne/v2/widget"
 
 	"github.com/raihanstark/financy/internal/core"
 )
@@ -126,6 +127,168 @@ func (m *mobileApp) payInstallment(d core.Debt, in core.Installment) {
 			field("Record this payment as", sel),
 		)
 		return m.formPage("Pay installment", "Confirm", body, confirm, close)
+	})
+}
+
+// payDebtAmountPage records an arbitrary-amount payment against a revolving or
+// informal debt — defaulted to the minimum due (cards) or the full balance
+// (IOUs).
+func (m *mobileApp) payDebtAmountPage(d core.Debt) {
+	bal := m.store.DebtBalance(d.ID)
+	def := bal
+	hint := "Owed: " + core.FmtMoney(bal)
+	if d.IsRevolving() {
+		def = m.store.MinPaymentDue(d)
+		hint = "Balance: " + core.FmtMoney(bal) + "  ·  minimum: " + core.FmtMoney(def)
+	}
+
+	amt := newAmountEntry()
+	amt.SetText(core.FmtMoneyInput(def))
+	dateF, dateSerial := m.dateField("Date", core.TodaySerial)
+
+	m.pushPage(func(close func()) fyne.CanvasObject {
+		confirm := func() {
+			a := core.ParseAmount(amt.Text)
+			if a <= 0 {
+				return
+			}
+			close()
+			m.store.PayDebtAmount(d.ID, a, dateSerial())
+			m.rebuildDebt(d.ID)
+		}
+		body := container.NewVBox(
+			wrapText(hint),
+			gap(8),
+			field("Amount", amt),
+			dateF,
+		)
+		return m.formPage("Record payment", "Confirm", body, confirm, close)
+	})
+}
+
+// extraPaymentPage posts an extra principal payment on a loan: choose whether
+// the regular payment stays (term shortens — the default, saves the most
+// interest) or the term stays (each remaining payment drops), with a live
+// preview of what it buys.
+func (m *mobileApp) extraPaymentPage(d core.Debt) {
+	bal := m.store.DebtBalance(d.ID)
+	cur := m.store.ProjectPayoff(d.ID, core.TodaySerial, 0)
+
+	const shorten = "Shorten the term (keep the payment)"
+	const lower = "Lower the payment (keep the term)"
+	amt := newAmountEntry()
+	mode := newSelect([]string{shorten, lower}, nil)
+	mode.SetSelected(shorten)
+	dateF, dateSerial := m.dateField("Date", core.TodaySerial)
+
+	preview := newText("—", colInkDim, 12, false)
+	update := func() {
+		a := core.ParseAmount(amt.Text)
+		if a <= 0 || a >= bal {
+			preview.Text = "—"
+			if a >= bal && bal > 0 {
+				preview.Text = "pays the loan off entirely"
+			}
+			preview.Refresh()
+			return
+		}
+		newBal := bal - a
+		unpaid, firstDue := 0, core.TodaySerial
+		for _, in := range m.store.Installments(d.ID) {
+			if !in.Paid {
+				if unpaid == 0 {
+					firstDue = in.DueDate
+				}
+				unpaid++
+			}
+		}
+		payment := d.PaymentAmount
+		if mode.Selected == lower && unpaid > 0 {
+			payment = core.AmortizedPayment(newBal, d.APRBps, unpaid, d.Freq)
+		}
+		insts, ok := core.GenerateLoanSchedule(newBal, d.APRBps, payment, firstDue, d.Freq)
+		if !ok {
+			preview.Text = "—"
+			preview.Refresh()
+			return
+		}
+		msg := "payoff " + core.FmtSerialDate(insts[len(insts)-1].DueDate) +
+			" · saves " + core.FmtMoney(cur.InterestRemaining-core.ScheduleInterestTotal(insts)) + " interest"
+		if mode.Selected == lower {
+			msg = "new payment " + core.FmtMoney(payment) + " · " + msg
+		}
+		preview.Text = msg
+		preview.Refresh()
+	}
+	amt.OnChanged = func(string) { update() }
+	mode.OnChanged = func(string) { update() }
+
+	m.pushPage(func(close func()) fyne.CanvasObject {
+		confirm := func() {
+			a := core.ParseAmount(amt.Text)
+			if a <= 0 {
+				return
+			}
+			close()
+			m.store.ApplyExtraPayment(d.ID, a, dateSerial(), mode.Selected == shorten)
+			m.rebuildDebt(d.ID)
+		}
+		body := container.NewVBox(
+			wrapText(d.Name+" · balance "+core.FmtMoney(bal)),
+			gap(8),
+			field("Extra amount", amt),
+			dateF,
+			field("Then", mode),
+			insets(preview, 4, 4, 2, 2),
+		)
+		return m.formPage("Extra payment", "Confirm", body, confirm, close)
+	})
+}
+
+// statementReviewPage confirms one revolving statement: the proposed interest
+// estimate is editable (the real statement is ground truth); posting charges
+// the card, "No interest" just advances the cycle. after runs once the
+// statement is processed, so the caller can refresh whatever view it came from.
+func (m *mobileApp) statementReviewPage(sd core.StatementDue, after func()) {
+	amt := newAmountEntry()
+	amt.SetText(core.FmtMoneyInput(sd.Interest))
+
+	m.pushPage(func(close func()) fyne.CanvasObject {
+		post := func() {
+			a := core.ParseAmount(amt.Text)
+			if a < 0 {
+				return
+			}
+			close()
+			m.store.PostStatement(sd.DebtID, a, sd.Date)
+			if after != nil {
+				after()
+			}
+		}
+		skip := widget.NewButton("No interest this month", func() {
+			close()
+			m.store.SkipStatement(sd.DebtID)
+			if after != nil {
+				after()
+			}
+		})
+
+		info := container.NewStack(rounded(colCard, 16), insets(container.NewVBox(
+			newText(sd.Name+"  ·  statement "+core.FmtSerialDate(sd.Date), colInk, 14, true),
+			gap(2),
+			newText("balance "+core.FmtMoney(sd.Balance)+"  ·  min payment "+core.FmtMoney(sd.MinPayment), colInkDim, 12, false),
+		), 10, 10, 14, 14))
+
+		body := container.NewVBox(
+			info,
+			gap(14),
+			wrapText("Enter the interest your statement charged this month."),
+			gap(8),
+			field("Interest", amt),
+			gap(10),
+			skip,
+		)
+		return m.formPage("Review statement", "Post", body, post, close)
 	})
 }
 

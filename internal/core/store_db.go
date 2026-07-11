@@ -130,21 +130,28 @@ func loadStore(db *sql.DB) (*Store, error) {
 	_ = brows.Close()
 
 	// Debts (table added in migration v5) and their installment schedules.
-	drows, err := db.Query(`SELECT id, name, type, lender, acct_money, purchase_date, note, acct_liability, origin_txn FROM debts ORDER BY rowid`)
+	drows, err := db.Query(`SELECT id, name, type, lender, acct_money, purchase_date, note, acct_liability, origin_txn,
+		apr_bps, freq, payment_amount, principal, credit_limit, statement_day, pay_due_day,
+		min_pay_bps, min_pay_floor, next_statement, due_date, acct_interest, acct_origin, owns_account
+		FROM debts ORDER BY rowid`)
 	if err != nil {
 		return nil, err
 	}
 	for drows.Next() {
 		var d Debt
-		if err := drows.Scan(&d.ID, &d.Name, &d.Type, &d.Lender, &d.AcctMoney, &d.PurchaseDate, &d.Note, &d.AcctLiability, &d.OriginTxnID); err != nil {
+		var owns int
+		if err := drows.Scan(&d.ID, &d.Name, &d.Type, &d.Lender, &d.AcctMoney, &d.PurchaseDate, &d.Note, &d.AcctLiability, &d.OriginTxnID,
+			&d.APRBps, &d.Freq, &d.PaymentAmount, &d.Principal, &d.CreditLimit, &d.StatementDay, &d.PayDueDay,
+			&d.MinPayBps, &d.MinPayFloor, &d.NextStatement, &d.DueDate, &d.AcctInterest, &d.AcctOrigin, &owns); err != nil {
 			_ = drows.Close()
 			return nil, err
 		}
+		d.OwnsAccount = owns != 0
 		s.debts = append(s.debts, d)
 	}
 	_ = drows.Close()
 
-	irows, err := db.Query(`SELECT id, debt_id, seq, due_date, amount, paid, txn_id, linked, orig_posts FROM debt_installments ORDER BY debt_id, seq`)
+	irows, err := db.Query(`SELECT id, debt_id, seq, due_date, amount, principal, interest, paid, txn_id, linked, orig_posts FROM debt_installments ORDER BY debt_id, seq`)
 	if err != nil {
 		return nil, err
 	}
@@ -152,7 +159,7 @@ func loadStore(db *sql.DB) (*Store, error) {
 		var in Installment
 		var paid, linked int
 		var origPosts string
-		if err := irows.Scan(&in.ID, &in.DebtID, &in.Seq, &in.DueDate, &in.Amount, &paid, &in.TxnID, &linked, &origPosts); err != nil {
+		if err := irows.Scan(&in.ID, &in.DebtID, &in.Seq, &in.DueDate, &in.Amount, &in.Principal, &in.Interest, &paid, &in.TxnID, &linked, &origPosts); err != nil {
 			_ = irows.Close()
 			return nil, err
 		}
@@ -200,15 +207,30 @@ func (s *Store) dbUpsertDebt(d Debt) error {
 	if s.db == nil {
 		return nil
 	}
+	owns := 0
+	if d.OwnsAccount {
+		owns = 1
+	}
 	_, err := s.db.Exec(`
-		INSERT INTO debts (id, name, type, lender, acct_money, purchase_date, note, acct_liability, origin_txn)
-		VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+		INSERT INTO debts (id, name, type, lender, acct_money, purchase_date, note, acct_liability, origin_txn,
+			apr_bps, freq, payment_amount, principal, credit_limit, statement_day, pay_due_day,
+			min_pay_bps, min_pay_floor, next_statement, due_date, acct_interest, acct_origin, owns_account)
+		VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
 		ON CONFLICT(id) DO UPDATE SET
 			name = excluded.name, type = excluded.type, lender = excluded.lender,
 			acct_money = excluded.acct_money, purchase_date = excluded.purchase_date,
 			note = excluded.note, acct_liability = excluded.acct_liability,
-			origin_txn = excluded.origin_txn`,
-		d.ID, d.Name, d.Type, d.Lender, d.AcctMoney, d.PurchaseDate, d.Note, d.AcctLiability, d.OriginTxnID)
+			origin_txn = excluded.origin_txn,
+			apr_bps = excluded.apr_bps, freq = excluded.freq,
+			payment_amount = excluded.payment_amount, principal = excluded.principal,
+			credit_limit = excluded.credit_limit, statement_day = excluded.statement_day,
+			pay_due_day = excluded.pay_due_day, min_pay_bps = excluded.min_pay_bps,
+			min_pay_floor = excluded.min_pay_floor, next_statement = excluded.next_statement,
+			due_date = excluded.due_date, acct_interest = excluded.acct_interest,
+			acct_origin = excluded.acct_origin, owns_account = excluded.owns_account`,
+		d.ID, d.Name, d.Type, d.Lender, d.AcctMoney, d.PurchaseDate, d.Note, d.AcctLiability, d.OriginTxnID,
+		d.APRBps, d.Freq, d.PaymentAmount, d.Principal, d.CreditLimit, d.StatementDay, d.PayDueDay,
+		d.MinPayBps, d.MinPayFloor, d.NextStatement, d.DueDate, d.AcctInterest, d.AcctOrigin, owns)
 	return err
 }
 
@@ -233,13 +255,22 @@ func (s *Store) dbUpsertInstallment(in Installment) error {
 		linked = 1
 	}
 	_, err := s.db.Exec(`
-		INSERT INTO debt_installments (id, debt_id, seq, due_date, amount, paid, txn_id, linked, orig_posts)
-		VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+		INSERT INTO debt_installments (id, debt_id, seq, due_date, amount, principal, interest, paid, txn_id, linked, orig_posts)
+		VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
 		ON CONFLICT(id) DO UPDATE SET
 			debt_id = excluded.debt_id, seq = excluded.seq, due_date = excluded.due_date,
-			amount = excluded.amount, paid = excluded.paid, txn_id = excluded.txn_id,
+			amount = excluded.amount, principal = excluded.principal, interest = excluded.interest,
+			paid = excluded.paid, txn_id = excluded.txn_id,
 			linked = excluded.linked, orig_posts = excluded.orig_posts`,
-		in.ID, in.DebtID, in.Seq, in.DueDate, in.Amount, paid, in.TxnID, linked, encodePosts(in.OrigPosts))
+		in.ID, in.DebtID, in.Seq, in.DueDate, in.Amount, in.Principal, in.Interest, paid, in.TxnID, linked, encodePosts(in.OrigPosts))
+	return err
+}
+
+func (s *Store) dbDeleteInstallment(id string) error {
+	if s.db == nil {
+		return nil
+	}
+	_, err := s.db.Exec(`DELETE FROM debt_installments WHERE id = ?`, id)
 	return err
 }
 

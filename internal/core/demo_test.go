@@ -18,17 +18,33 @@ func TestSeedDemo(t *testing.T) {
 		t.Fatalf("currency = %q, want $", s.Currency())
 	}
 	// 5 hand-made money accounts (4 assets incl. the off-budget brokerage + the
-	// credit card) plus one Liability account per demo BNPL debt.
-	if got := len(s.MoneyAccounts()); got != 8 {
-		t.Fatalf("money accounts = %d, want 8", got)
+	// credit card) plus one Liability account per debt that owns one: 3 BNPL,
+	// the car loan, and the IOU. The revolving debt attaches the existing card.
+	if got := len(s.MoneyAccounts()); got != 10 {
+		t.Fatalf("money accounts = %d, want 10", got)
 	}
-	if got := len(s.Debts()); got != 3 {
-		t.Fatalf("demo debts = %d, want 3", got)
+	if got := len(s.Debts()); got != 6 {
+		t.Fatalf("demo debts = %d, want 6 (3 BNPL + loan + card + IOU)", got)
 	}
+	types := map[string]int{}
 	for _, d := range s.Debts() {
+		types[d.Type]++
 		if s.AccountByID(d.AcctLiability) == nil {
 			t.Fatalf("demo debt %q has no liability account", d.Name)
 		}
+	}
+	if types[DebtBNPL] != 3 || types[DebtLoan] != 1 || types[DebtRevolving] != 1 || types[DebtInformal] != 1 {
+		t.Fatalf("demo debt mix = %v, want 3 BNPL / 1 Loan / 1 Revolving / 1 Informal", types)
+	}
+	// The revolving debt attaches the pre-existing card account, not a new one.
+	for _, d := range s.Debts() {
+		if d.IsRevolving() && (d.AcctLiability != "visa" || d.OwnsAccount) {
+			t.Fatalf("revolving demo debt should attach the visa account: %+v", d)
+		}
+	}
+	// The demo card's statement shouldn't nag the moment the demo loads.
+	if got := len(s.PendingStatements(TodaySerial)); got != 0 {
+		t.Fatalf("pending statements on load = %d, want 0", got)
 	}
 	if got := len(s.Recurrings()); got != 4 {
 		t.Fatalf("recurring templates = %d, want 4", got)
