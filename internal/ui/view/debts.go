@@ -14,8 +14,9 @@ import (
 var debtsTab string
 
 // ScreenDebts shows every tracked debt — BNPL plans, amortizing loans, credit
-// cards and IOUs — under an overview dashboard, as a tabbed master/detail: a
-// tab per debt down the side, each opening a detail pane matched to its kind.
+// cards and IOUs — under an overview dashboard, as a compact table: one row
+// per debt (kind, APR, balance, progress, status), with the selected row's
+// detail pane opening below it.
 func ScreenDebts() fyne.CanvasObject {
 	bar := appBar("Debts", "Loans, cards, BNPL and IOUs in one place",
 		secondaryButton("Strategies", theme.ViewRefreshIcon(), func() { strategyDialog() }),
@@ -28,45 +29,134 @@ func ScreenDebts() fyne.CanvasObject {
 		return container.NewBorder(bar, nil, nil, nil, container.NewPadded(body))
 	}
 
-	tabs := container.NewAppTabs()
-	tabs.SetTabLocation(container.TabLocationLeading)
 	selected := 0
 	for i, d := range ds {
-		title := d.Name
-		if debtNeedsAttention(d) {
-			title = "● " + title // amber dot hint: overdue, or a statement to review
-		}
-		tabs.Append(container.NewTabItem(title, debtTabContent(d)))
 		if d.ID == debtsTab {
 			selected = i
 		}
 	}
-	tabs.SelectIndex(selected)
 	debtsTab = ds[selected].ID
-	tabs.OnSelected = func(*container.TabItem) {
-		if i := tabs.SelectedIndex(); i >= 0 && i < len(ds) {
-			debtsTab = ds[i].ID
-		}
-	}
 
-	head := container.NewPadded(container.NewVBox(debtDashboard(), statementBanner(), debtDueBanner()))
-	return container.NewBorder(
-		container.NewVBox(bar, head), nil, nil, nil,
-		container.NewPadded(tabs),
+	head := container.NewVBox(debtDashboard(), statementBanner(), debtDueBanner())
+	return container.NewVBox(
+		bar,
+		container.NewPadded(head),
+		container.NewPadded(panel(debtsTable(ds))),
+		container.NewPadded(panel(debtTabContent(ds[selected]))),
 	)
 }
 
-// debtNeedsAttention flags a debt for the tab-title dot: an overdue installment
-// on schedule kinds, a statement awaiting review on revolving, a blown due date
-// on informal.
-func debtNeedsAttention(d Debt) bool {
+// debtsTable is the compact all-debts list: a header row plus one tappable
+// line per debt. Tapping a row selects it, opening its detail pane below.
+func debtsTable(ds []Debt) fyne.CanvasObject {
+	cols := &columnsLayout{Weights: []float32{2.4, 1.0, 0.7, 1.4, 1.6, 1.7}, Gap: 10}
+	h := func(s string) fyne.CanvasObject { return txt(s, colTextDim, 10.5, true) }
+	header := container.New(cols,
+		h("Debt"), h("Type"), alignRight(txt("APR", colTextDim, 10.5, true)),
+		alignRight(txt("Balance", colTextDim, 10.5, true)), h("Progress"), h("Status"))
+
+	table := container.NewVBox(container.New(padCell(2, 8), header), divider())
+	for i, d := range ds {
+		table.Add(debtsTableRow(d, cols, i))
+	}
+	return container.New(padCell(8, 8), table)
+}
+
+func debtsTableRow(d Debt, cols *columnsLayout, idx int) fyne.CanvasObject {
+	bal := store.DebtBalance(d.ID)
+	ratio, ratioCol := debtProgress(d, bal)
+	status, statusCol := debtStatusLine(d, bal)
+
+	apr := "—"
+	if d.APRBps > 0 {
+		apr = fmtAPRBps(d.APRBps)
+	}
+	cells := container.New(cols,
+		txt(d.Name, colText, 12.5, true),
+		txt(d.Type, colTextDim, 12, false),
+		alignRight(mono(apr, colTextDim, 12, false)),
+		alignRight(mono(fmtMoney(bal), colText, 12.5, false)),
+		container.New(padCell(2, 6), progressBar(ratio, ratioCol)),
+		txt(status, statusCol, 12, false),
+	)
+
+	var fill color.Color = colSurface
+	if idx%2 == 1 {
+		fill = colAltRow
+	}
+	if d.ID == debtsTab {
+		fill = withAlpha(colPrimary, 0x1a)
+	}
+	return newTappableRow(container.New(padCell(8, 8), cells), fill, func() {
+		debtsTab = d.ID
+		render()
+	})
+}
+
+// debtProgress is the row's progress ratio and color: schedule and informal
+// debts show how much is repaid; revolving shows credit utilization (tinted
+// as it climbs).
+func debtProgress(d Debt, bal int) (float64, color.Color) {
+	if d.IsRevolving() {
+		if d.CreditLimit <= 0 {
+			return 0, colPositive
+		}
+		u := float64(bal) / float64(d.CreditLimit)
+		switch {
+		case u > 0.7:
+			return u, colNegative
+		case u > 0.3:
+			return u, colWarning
+		default:
+			return u, colPositive
+		}
+	}
+	if d.HasSchedule() {
+		st := store.DebtStatus(d.ID, todaySerial)
+		if st.Total <= 0 {
+			return 0, colPositive
+		}
+		return float64(st.Paid) / float64(st.Total), colPositive
+	}
+	if d.Principal <= 0 {
+		return 0, colPositive
+	}
+	return float64(d.Principal-bal) / float64(d.Principal), colPositive
+}
+
+// debtStatusLine is the row's status text: what needs doing next, tinted when
+// it needs attention.
+func debtStatusLine(d Debt, bal int) (string, color.Color) {
 	switch {
 	case d.IsRevolving():
-		return d.NextStatement > 0 && d.NextStatement <= todaySerial
+		if d.NextStatement > 0 && d.NextStatement <= todaySerial {
+			return "statement to review", colWarning
+		}
+		if bal <= 0 {
+			return "paid off", colPositive
+		}
+		return "min due " + fmtMoney(store.MinPaymentDue(d)), colTextDim
 	case d.HasSchedule():
-		return store.DebtStatus(d.ID, todaySerial).OverdueCount > 0
+		st := store.DebtStatus(d.ID, todaySerial)
+		switch {
+		case st.PaidCount == st.Count:
+			return "paid off", colPositive
+		case st.OverdueCount > 0:
+			return itoa(st.OverdueCount) + " overdue", colWarning
+		default:
+			return "next " + fmtSerialDate(st.NextDue), colTextDim
+		}
 	default:
-		return d.DueDate > 0 && d.DueDate <= todaySerial && store.DebtBalance(d.ID) > 0
+		switch {
+		case bal <= 0:
+			return "settled", colPositive
+		case d.DueDate > 0 && d.DueDate <= todaySerial:
+			return "due " + fmtSerialDate(d.DueDate), colWarning
+		case d.DueDate > 0:
+			return "due " + fmtSerialDate(d.DueDate), colTextDim
+		default:
+			return "no due date", colTextDim
+		}
 	}
 }
 

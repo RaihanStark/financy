@@ -112,10 +112,7 @@ func scheduleDebtPane(d Debt) fyne.CanvasObject {
 	}
 
 	hint := txt("Tap an unpaid installment to edit its due date or amount.", colTextDim, 10.5, false)
-	return container.New(padCell(16, 14), container.NewBorder(
-		header, container.NewVBox(spacerH(8), hint), nil, nil,
-		container.NewScroll(table),
-	))
+	return container.New(padCell(16, 14), container.NewVBox(header, table, spacerH(8), hint))
 }
 
 // installmentCols is the shared column layout (weights) for the installment
@@ -256,10 +253,7 @@ func revolvingPane(d Debt) fyne.CanvasObject {
 	}
 	header.Add(divider())
 
-	return container.New(padCell(16, 14), container.NewBorder(
-		header, nil, nil, nil,
-		container.NewScroll(debtActivityList(d)),
-	))
+	return container.New(padCell(16, 14), container.NewVBox(header, debtActivityList(d)))
 }
 
 // informalPane renders an IOU: what's still owed, when it's due, and the
@@ -309,10 +303,7 @@ func informalPane(d Debt) fyne.CanvasObject {
 	header.Add(spacerH(12))
 	header.Add(divider())
 
-	return container.New(padCell(16, 14), container.NewBorder(
-		header, nil, nil, nil,
-		container.NewScroll(debtActivityList(d)),
-	))
+	return container.New(padCell(16, 14), container.NewVBox(header, debtActivityList(d)))
 }
 
 // debtActivityList shows the debt account's recent transactions, newest first —
