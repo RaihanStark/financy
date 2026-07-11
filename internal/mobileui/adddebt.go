@@ -103,6 +103,15 @@ func (m *mobileApp) debtCommon(namePH, lenderPH string, existing *core.Debt) deb
 
 func (c debtCommonFields) valid() bool { return c.name.Text != "" && c.acct.Selected != "" }
 
+// withAdvanced stacks the essential fields over an "Advanced setup" accordion
+// holding the optional ones — adding a debt stays bare-minimum by default, and
+// every advanced field carries a working default.
+func withAdvanced(basic *fyne.Container, advanced ...fyne.CanvasObject) fyne.CanvasObject {
+	acc := widget.NewAccordion(widget.NewAccordionItem("Advanced setup",
+		container.NewVBox(advanced...)))
+	return container.NewVBox(basic, gap(4), acc)
+}
+
 func (c debtCommonFields) apply(s *core.Store, d *core.Debt) {
 	d.Name, d.Lender, d.Note = c.name.Text, c.lender.Text, c.note.Text
 	d.AcctMoney = idForLabel(s, c.acct.Selected)
@@ -115,9 +124,6 @@ func (m *mobileApp) debtFormError(msg string) { dialog.ShowError(errors.New(msg)
 func (m *mobileApp) bnplFormFields(existing *core.Debt) (fyne.CanvasObject, func() bool) {
 	s := m.store
 	c := m.debtCommon("e.g. iPhone 15", "e.g. Shopee PayLater", existing)
-	base := container.NewVBox(
-		field("Name", c.name), field("Lender", c.lender), field("Pay from", c.acct),
-	)
 
 	if existing != nil {
 		save := func() bool {
@@ -130,13 +136,15 @@ func (m *mobileApp) bnplFormFields(existing *core.Debt) (fyne.CanvasObject, func
 			s.UpdateDebt(existing.ID, nd)
 			return true
 		}
-		base.Add(field("Note", c.note))
-		return base, save
+		return container.NewVBox(
+			field("Name", c.name), field("Lender", c.lender), field("Pay from", c.acct),
+			field("Note", c.note),
+		), save
 	}
 
 	total := newAmountEntry()
 	count := newEntry()
-	count.SetPlaceHolder("e.g. 12")
+	count.SetText("12")
 	purchaseF, purchaseSerial := m.dateField("Purchase date", core.TodaySerial)
 	firstF, firstSerial := m.dateField("First due", core.TodaySerial)
 	freq := newSelect(core.Frequencies(), nil)
@@ -159,13 +167,13 @@ func (m *mobileApp) bnplFormFields(existing *core.Debt) (fyne.CanvasObject, func
 	count.OnChanged = func(string) { update() }
 	freq.OnChanged = func(string) { update() }
 
-	base.Add(field("Total amount", total))
-	base.Add(field("Installments", count))
-	base.Add(purchaseF)
-	base.Add(firstF)
-	base.Add(field("Frequency", freq))
-	base.Add(field("Plan", insets(preview, 4, 4, 2, 2)))
-	base.Add(field("Note", c.note))
+	basic := container.NewVBox(
+		field("Name", c.name),
+		field("Total amount", total),
+		field("Installments", count),
+		firstF,
+		field("Plan", insets(preview, 4, 4, 2, 2)),
+	)
 
 	save := func() bool {
 		amt := core.ParseAmount(total.Text)
@@ -180,7 +188,13 @@ func (m *mobileApp) bnplFormFields(existing *core.Debt) (fyne.CanvasObject, func
 		s.AddDebt(d, core.GenerateInstallments(amt, n, due, freq.Selected))
 		return true
 	}
-	return base, save
+	return withAdvanced(basic,
+		field("Lender", c.lender),
+		field("Pay from", c.acct),
+		purchaseF,
+		field("Frequency", freq),
+		field("Note", c.note),
+	), save
 }
 
 // ---- Loan ----
@@ -205,18 +219,9 @@ func (m *mobileApp) loanFormFields(existing *core.Debt) (fyne.CanvasObject, func
 		freq.SetSelected("Monthly")
 	}
 
-	base := container.NewVBox(
-		field("Name", c.name), field("Lender", c.lender), field("Pay from", c.acct),
-	)
-
 	if existing != nil {
 		payment := newAmountEntry()
 		payment.SetText(core.FmtMoneyInput(existing.PaymentAmount))
-		base.Add(field("APR %", apr))
-		base.Add(field("Payment", payment))
-		base.Add(field("Frequency", freq))
-		base.Add(field("Note", c.note))
-		base.Add(insets(wrapText("Changing APR, payment, or frequency regenerates the unpaid schedule."), 4, 0, 2, 2))
 		save := func() bool {
 			pay := core.ParseAmount(payment.Text)
 			if !c.valid() || pay <= 0 {
@@ -231,7 +236,14 @@ func (m *mobileApp) loanFormFields(existing *core.Debt) (fyne.CanvasObject, func
 			s.UpdateDebt(existing.ID, nd)
 			return true
 		}
-		return base, save
+		return container.NewVBox(
+			field("Name", c.name), field("Lender", c.lender), field("Pay from", c.acct),
+			field("APR %", apr),
+			field("Payment", payment),
+			field("Frequency", freq),
+			field("Note", c.note),
+			insets(wrapText("Changing APR, payment, or frequency regenerates the unpaid schedule."), 4, 0, 2, 2),
+		), save
 	}
 
 	principal := newAmountEntry()
@@ -290,16 +302,14 @@ func (m *mobileApp) loanFormFields(existing *core.Debt) (fyne.CanvasObject, func
 	mode.OnChanged = func(string) { update() }
 	freq.OnChanged = func(string) { update() }
 
-	base.Add(field("Principal owed", principal))
-	base.Add(asOfF)
-	base.Add(field("APR %", apr))
-	base.Add(field("Set up", mode))
-	base.Add(field("Term (payments)", term))
-	base.Add(field("Payment", payment))
-	base.Add(firstF)
-	base.Add(field("Frequency", freq))
-	base.Add(field("Plan", insets(preview, 4, 4, 2, 2)))
-	base.Add(field("Note", c.note))
+	basic := container.NewVBox(
+		field("Name", c.name),
+		field("Principal owed", principal),
+		field("APR %", apr),
+		field("Term (payments)", term),
+		firstF,
+		field("Plan", insets(preview, 4, 4, 2, 2)),
+	)
 
 	save := func() bool {
 		insts, pay := solve()
@@ -315,7 +325,15 @@ func (m *mobileApp) loanFormFields(existing *core.Debt) (fyne.CanvasObject, func
 		s.AddDebt(d, insts)
 		return true
 	}
-	return base, save
+	return withAdvanced(basic,
+		field("Lender", c.lender),
+		field("Pay from", c.acct),
+		field("Set up", mode),
+		field("Payment", payment),
+		asOfF,
+		field("Frequency", freq),
+		field("Note", c.note),
+	), save
 }
 
 // ---- Revolving ----
@@ -351,10 +369,6 @@ func (m *mobileApp) revolvingFormFields(existing *core.Debt) (fyne.CanvasObject,
 		dueDay.SetText("15")
 	}
 
-	base := container.NewVBox(
-		field("Name", c.name), field("Issuer", c.lender), field("Pay from", c.acct),
-	)
-
 	// Attach an existing card account, or create a fresh one with a balance.
 	var acctSel *scrollSelect
 	balance := newAmountEntry()
@@ -367,17 +381,7 @@ func (m *mobileApp) revolvingFormFields(existing *core.Debt) (fyne.CanvasObject,
 		}
 		acctSel = newSelect(opts, nil)
 		acctSel.SetSelected(newCardAccountOption)
-		base.Add(field("Card account", acctSel))
-		base.Add(field("Current balance", balance))
 	}
-
-	base.Add(field("APR %", apr))
-	base.Add(field("Credit limit", limit))
-	base.Add(field("Statement day", stmtDay))
-	base.Add(field("Payment due day", dueDay))
-	base.Add(field("Min payment %", minPct))
-	base.Add(field("Min payment floor", minFloor))
-	base.Add(field("Note", c.note))
 
 	save := func() bool {
 		sd, _ := strconv.Atoi(strings.TrimSpace(stmtDay.Text))
@@ -407,7 +411,35 @@ func (m *mobileApp) revolvingFormFields(existing *core.Debt) (fyne.CanvasObject,
 		s.AddDebt(d, nil)
 		return true
 	}
-	return base, save
+
+	if existing != nil {
+		return container.NewVBox(
+			field("Name", c.name), field("Issuer", c.lender), field("Pay from", c.acct),
+			field("APR %", apr),
+			field("Credit limit", limit),
+			field("Statement day", stmtDay),
+			field("Payment due day", dueDay),
+			field("Min payment %", minPct),
+			field("Min payment floor", minFloor),
+			field("Note", c.note),
+		), save
+	}
+	basic := container.NewVBox(
+		field("Name", c.name),
+		field("Current balance", balance),
+		field("APR %", apr),
+	)
+	return withAdvanced(basic,
+		field("Issuer", c.lender),
+		field("Pay from", c.acct),
+		field("Card account", acctSel),
+		field("Credit limit", limit),
+		field("Statement day", stmtDay),
+		field("Payment due day", dueDay),
+		field("Min payment %", minPct),
+		field("Min payment floor", minFloor),
+		field("Note", c.note),
+	), save
 }
 
 // debtBoundAccount reports whether a liability account already backs a debt.
@@ -443,12 +475,6 @@ func (m *mobileApp) informalFormFields(existing *core.Debt) (fyne.CanvasObject, 
 		}
 	}
 
-	base := container.NewVBox(
-		field("Name", c.name), field("Owed to", c.lender), field("Pay from", c.acct),
-		field("Amount owed", amount),
-		insets(hasDue, 4, 0, 2, 2), dueBox,
-	)
-
 	// New IOUs can record where the borrowed money landed, so an actual cash
 	// loan raises your asset and the debt together.
 	var originSel *scrollSelect
@@ -458,9 +484,7 @@ func (m *mobileApp) informalFormFields(existing *core.Debt) (fyne.CanvasObject, 
 		originSel = newSelect(opts, nil)
 		guardGroupHeaders(originSel)
 		originSel.SetSelected(opts[0])
-		base.Add(field("Deposited to", originSel))
 	}
-	base.Add(field("Note", c.note))
 
 	save := func() bool {
 		amt := core.ParseAmount(amount.Text)
@@ -484,5 +508,24 @@ func (m *mobileApp) informalFormFields(existing *core.Debt) (fyne.CanvasObject, 
 		s.AddDebt(d, nil)
 		return true
 	}
-	return base, save
+
+	if existing != nil {
+		return container.NewVBox(
+			field("Name", c.name), field("Owed to", c.lender), field("Pay from", c.acct),
+			field("Amount owed", amount),
+			insets(hasDue, 4, 0, 2, 2), dueBox,
+			field("Note", c.note),
+		), save
+	}
+	basic := container.NewVBox(
+		field("Name", c.name),
+		field("Amount owed", amount),
+	)
+	return withAdvanced(basic,
+		field("Owed to", c.lender),
+		field("Pay from", c.acct),
+		insets(hasDue, 4, 0, 2, 2), dueBox,
+		field("Deposited to", originSel),
+		field("Note", c.note),
+	), save
 }

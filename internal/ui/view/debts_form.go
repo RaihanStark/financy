@@ -12,10 +12,12 @@ import (
 )
 
 // DebtForm is the add/edit dialog. It's type-driven: pick the debt kind first
-// and only that kind's fields appear, with a live preview (computed payment,
-// payoff date, total interest, schedule head) before anything is saved. On
-// edit the kind is fixed; terms stay editable (a loan regenerates its unpaid
-// schedule when APR / payment / frequency change).
+// and only that kind's fields appear. Adding stays deliberately minimal — a
+// handful of essentials with a live plan preview — while everything optional
+// (lender, accounts, dates, frequency, card profile, note) folds into an
+// "Advanced setup" accordion with defaults that just work. On edit the kind is
+// fixed; terms stay editable (a loan regenerates its unpaid schedule when APR /
+// payment / frequency change).
 func DebtForm(existing *Debt) {
 	if win == nil {
 		return
@@ -50,7 +52,7 @@ func DebtForm(existing *Debt) {
 	head := container.New(layout.NewFormLayout(), widget.NewLabel("Type"), kind)
 	content := container.NewVBox(head, spacerH(4), body, spacerH(8), footer)
 	dlg = dialog.NewCustomWithoutButtons("Add Debt", container.NewScroll(content), win)
-	dlg.Resize(fyne.NewSize(520, 560))
+	dlg.Resize(fyne.NewSize(520, 520))
 	dlg.Show()
 }
 
@@ -73,20 +75,31 @@ func editDebtForm(d Debt) {
 	dlg.Show()
 }
 
-// debtFields is one kind's assembled form: its items and the commit closure
-// that validates and saves. grid() lays the items out like a widget form.
+// debtFields is one kind's assembled form: the essential items (always
+// visible), the optional ones (folded into an Advanced accordion), and the
+// commit closure that validates and saves.
 type debtFields struct {
-	items  []*widget.FormItem
-	commit func() bool
+	items    []*widget.FormItem // the bare minimum to set the debt up
+	advanced []*widget.FormItem // optional detail; defaults already work
+	commit   func() bool
 }
 
-func (f *debtFields) grid() fyne.CanvasObject {
+func formItemGrid(items []*widget.FormItem) fyne.CanvasObject {
 	g := container.New(layout.NewFormLayout())
-	for _, it := range f.items {
+	for _, it := range items {
 		g.Add(widget.NewLabel(it.Text))
 		g.Add(it.Widget)
 	}
 	return g
+}
+
+func (f *debtFields) grid() fyne.CanvasObject {
+	g := formItemGrid(f.items)
+	if len(f.advanced) == 0 {
+		return g
+	}
+	acc := widget.NewAccordion(widget.NewAccordionItem("Advanced setup", formItemGrid(f.advanced)))
+	return container.NewVBox(g, spacerH(4), acc)
 }
 
 func newDebtFields(kind string, existing *Debt) *debtFields {
@@ -122,11 +135,16 @@ func debtLenderEntry(placeholder string, existing *Debt) *widget.Entry {
 	return e
 }
 
+// debtMoneySelect picks the pay-from account, defaulting to the first real
+// account so the simple form works without ever opening Advanced.
 func debtMoneySelect(existing *Debt) *widget.Select {
-	sel := widget.NewSelect(groupedLabels(store.MoneyAccounts()), nil)
+	names := groupedLabels(store.MoneyAccounts())
+	sel := widget.NewSelect(names, nil)
 	guardGroupHeaders(sel)
 	if existing != nil {
 		sel.SetSelected(labelOf(existing.AcctMoney))
+	} else if first := firstSelectable(names); first != "" {
+		sel.SetSelected(first)
 	}
 	return sel
 }
@@ -218,14 +236,16 @@ func bnplFields(existing *Debt) *debtFields {
 	return &debtFields{
 		items: []*widget.FormItem{
 			widget.NewFormItem("Name", name),
-			widget.NewFormItem("Lender", lender),
-			widget.NewFormItem("Pay from", acctMoney),
 			widget.NewFormItem("Total amount", total),
 			widget.NewFormItem("Installments", count),
-			widget.NewFormItem("Purchase date", purchase),
 			widget.NewFormItem("First due", first),
-			widget.NewFormItem("Frequency", freq),
 			widget.NewFormItem("Plan", preview),
+		},
+		advanced: []*widget.FormItem{
+			widget.NewFormItem("Lender", lender),
+			widget.NewFormItem("Pay from", acctMoney),
+			widget.NewFormItem("Purchase date", purchase),
+			widget.NewFormItem("Frequency", freq),
 			widget.NewFormItem("Note", note),
 		},
 		commit: func() bool {
@@ -386,18 +406,20 @@ func loanFields(existing *Debt) *debtFields {
 	return &debtFields{
 		items: []*widget.FormItem{
 			widget.NewFormItem("Name", name),
+			widget.NewFormItem("Principal owed", principal),
+			widget.NewFormItem("APR %", apr),
+			widget.NewFormItem("Term", term),
+			widget.NewFormItem("First due", first),
+			widget.NewFormItem("Plan", preview),
+		},
+		advanced: []*widget.FormItem{
 			widget.NewFormItem("Lender", lender),
 			widget.NewFormItem("Pay from", acctMoney),
-			widget.NewFormItem("Principal owed", principal),
-			widget.NewFormItem("As of", asOf),
-			widget.NewFormItem("APR %", apr),
 			widget.NewFormItem("Set up", mode),
-			widget.NewFormItem("Term", term),
 			widget.NewFormItem("Payment", payment),
-			widget.NewFormItem("First due", first),
+			widget.NewFormItem("As of", asOf),
 			widget.NewFormItem("Frequency", freq),
 			widget.NewFormItem("Interest category", interestSel),
-			widget.NewFormItem("Plan", preview),
 			widget.NewFormItem("Note", note),
 		},
 		commit: func() bool {
@@ -447,12 +469,6 @@ func revolvingFields(existing *Debt) *debtFields {
 		minFloor.SetText(fmtMoneyInput(existing.MinPayFloor))
 	}
 
-	items := []*widget.FormItem{
-		widget.NewFormItem("Name", name),
-		widget.NewFormItem("Issuer", lender),
-		widget.NewFormItem("Pay from", acctMoney),
-	}
-
 	// Attach an existing card account, or create a fresh one with a balance.
 	var acctSel *widget.Select
 	balance := newAmountEntry()
@@ -472,10 +488,6 @@ func revolvingFields(existing *Debt) *debtFields {
 				balance.Disable()
 			}
 		}
-		items = append(items,
-			widget.NewFormItem("Card account", acctSel),
-			widget.NewFormItem("Current balance", balance),
-		)
 	}
 
 	preview := widget.NewLabel("—")
@@ -516,47 +528,72 @@ func revolvingFields(existing *Debt) *debtFields {
 	}
 	update()
 
-	items = append(items,
-		widget.NewFormItem("APR %", apr),
-		widget.NewFormItem("Credit limit", limit),
-		widget.NewFormItem("Statement day", stmtDay),
-		widget.NewFormItem("Payment due day", dueDay),
-		widget.NewFormItem("Min payment %", minPct),
-		widget.NewFormItem("Min payment floor", minFloor),
-		widget.NewFormItem("Preview", preview),
-		widget.NewFormItem("Note", note),
-	)
-
-	return &debtFields{
-		items: items,
-		commit: func() bool {
-			sd, _ := strconv.Atoi(stmtDay.Text)
-			dd, _ := strconv.Atoi(dueDay.Text)
-			if name.Text == "" || acctMoney.Selected == "" || sd < 1 || sd > 28 {
-				return false
-			}
-			d := Debt{
-				Name: name.Text, Type: DebtRevolving, Lender: lender.Text,
-				AcctMoney:    idOf(acctMoney.Selected),
-				APRBps:       parseAPRBps(apr.Text),
-				CreditLimit:  parseAmount(limit.Text),
-				StatementDay: sd, PayDueDay: dd,
-				MinPayBps:   parseAPRBps(minPct.Text),
-				MinPayFloor: parseAmount(minFloor.Text),
-				Note:        note.Text,
-			}
-			if existing != nil {
-				store.UpdateDebt(existing.ID, d)
-				return true
-			}
-			if acctSel.Selected != newCardAccountOption {
-				d.AcctLiability = idOf(acctSel.Selected)
-			} else {
-				d.Principal = parseAmount(balance.Text)
-			}
-			store.AddDebt(d, nil)
+	commit := func() bool {
+		sd, _ := strconv.Atoi(stmtDay.Text)
+		dd, _ := strconv.Atoi(dueDay.Text)
+		if name.Text == "" || acctMoney.Selected == "" || sd < 1 || sd > 28 {
+			return false
+		}
+		d := Debt{
+			Name: name.Text, Type: DebtRevolving, Lender: lender.Text,
+			AcctMoney:    idOf(acctMoney.Selected),
+			APRBps:       parseAPRBps(apr.Text),
+			CreditLimit:  parseAmount(limit.Text),
+			StatementDay: sd, PayDueDay: dd,
+			MinPayBps:   parseAPRBps(minPct.Text),
+			MinPayFloor: parseAmount(minFloor.Text),
+			Note:        note.Text,
+		}
+		if existing != nil {
+			store.UpdateDebt(existing.ID, d)
 			return true
+		}
+		if acctSel.Selected != newCardAccountOption {
+			d.AcctLiability = idOf(acctSel.Selected)
+		} else {
+			d.Principal = parseAmount(balance.Text)
+		}
+		store.AddDebt(d, nil)
+		return true
+	}
+
+	if existing != nil {
+		return &debtFields{
+			items: []*widget.FormItem{
+				widget.NewFormItem("Name", name),
+				widget.NewFormItem("Issuer", lender),
+				widget.NewFormItem("Pay from", acctMoney),
+				widget.NewFormItem("APR %", apr),
+				widget.NewFormItem("Credit limit", limit),
+				widget.NewFormItem("Statement day", stmtDay),
+				widget.NewFormItem("Payment due day", dueDay),
+				widget.NewFormItem("Min payment %", minPct),
+				widget.NewFormItem("Min payment floor", minFloor),
+				widget.NewFormItem("Preview", preview),
+				widget.NewFormItem("Note", note),
+			},
+			commit: commit,
+		}
+	}
+	return &debtFields{
+		items: []*widget.FormItem{
+			widget.NewFormItem("Name", name),
+			widget.NewFormItem("Current balance", balance),
+			widget.NewFormItem("APR %", apr),
+			widget.NewFormItem("Preview", preview),
 		},
+		advanced: []*widget.FormItem{
+			widget.NewFormItem("Issuer", lender),
+			widget.NewFormItem("Pay from", acctMoney),
+			widget.NewFormItem("Card account", acctSel),
+			widget.NewFormItem("Credit limit", limit),
+			widget.NewFormItem("Statement day", stmtDay),
+			widget.NewFormItem("Payment due day", dueDay),
+			widget.NewFormItem("Min payment %", minPct),
+			widget.NewFormItem("Min payment floor", minFloor),
+			widget.NewFormItem("Note", note),
+		},
+		commit: commit,
 	}
 }
 
@@ -587,14 +624,6 @@ func informalFields(existing *Debt) *debtFields {
 	due := newDateEntry(dueSerial)
 	due.SetPlaceHolder("optional")
 
-	items := []*widget.FormItem{
-		widget.NewFormItem("Name", name),
-		widget.NewFormItem("Owed to", lender),
-		widget.NewFormItem("Pay from", acctMoney),
-		widget.NewFormItem("Amount owed", amount),
-		widget.NewFormItem("Due date", due),
-	}
-
 	// New IOUs can record where the borrowed money landed, so an actual cash
 	// loan raises your asset and the debt together.
 	var originSel *widget.Select
@@ -604,35 +633,58 @@ func informalFields(existing *Debt) *debtFields {
 		originSel = widget.NewSelect(opts, nil)
 		guardGroupHeaders(originSel)
 		originSel.SetSelected(opts[0])
-		items = append(items, widget.NewFormItem("Deposited to", originSel))
 	}
-	items = append(items, widget.NewFormItem("Note", note))
 
-	return &debtFields{
-		items: items,
-		commit: func() bool {
-			amt := parseAmount(amount.Text)
-			if name.Text == "" || acctMoney.Selected == "" || amt <= 0 {
-				return false
-			}
-			d := Debt{
-				Name: name.Text, Type: DebtInformal, Lender: lender.Text,
-				AcctMoney: idOf(acctMoney.Selected),
-				Principal: amt,
-				DueDate:   parseDateSerial(due.Text),
-				Note:      note.Text,
-			}
-			if existing != nil {
-				d.AcctOrigin = existing.AcctOrigin
-				store.UpdateDebt(existing.ID, d)
-				return true
-			}
-			if originSel != nil && originSel.SelectedIndex() > 0 {
-				d.AcctOrigin = idOf(originSel.Selected)
-			}
-			store.AddDebt(d, nil)
+	commit := func() bool {
+		amt := parseAmount(amount.Text)
+		if name.Text == "" || acctMoney.Selected == "" || amt <= 0 {
+			return false
+		}
+		d := Debt{
+			Name: name.Text, Type: DebtInformal, Lender: lender.Text,
+			AcctMoney: idOf(acctMoney.Selected),
+			Principal: amt,
+			DueDate:   parseDateSerial(due.Text),
+			Note:      note.Text,
+		}
+		if existing != nil {
+			d.AcctOrigin = existing.AcctOrigin
+			store.UpdateDebt(existing.ID, d)
 			return true
+		}
+		if originSel != nil && originSel.SelectedIndex() > 0 {
+			d.AcctOrigin = idOf(originSel.Selected)
+		}
+		store.AddDebt(d, nil)
+		return true
+	}
+
+	if existing != nil {
+		return &debtFields{
+			items: []*widget.FormItem{
+				widget.NewFormItem("Name", name),
+				widget.NewFormItem("Owed to", lender),
+				widget.NewFormItem("Pay from", acctMoney),
+				widget.NewFormItem("Amount owed", amount),
+				widget.NewFormItem("Due date", due),
+				widget.NewFormItem("Note", note),
+			},
+			commit: commit,
+		}
+	}
+	return &debtFields{
+		items: []*widget.FormItem{
+			widget.NewFormItem("Name", name),
+			widget.NewFormItem("Amount owed", amount),
 		},
+		advanced: []*widget.FormItem{
+			widget.NewFormItem("Owed to", lender),
+			widget.NewFormItem("Pay from", acctMoney),
+			widget.NewFormItem("Due date", due),
+			widget.NewFormItem("Deposited to", originSel),
+			widget.NewFormItem("Note", note),
+		},
+		commit: commit,
 	}
 }
 

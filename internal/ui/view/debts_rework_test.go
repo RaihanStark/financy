@@ -78,7 +78,8 @@ func TestRevolvingAndInformalPanes(t *testing.T) {
 	assertText(t, pane, "Owed", "Borrowed", "Record payment")
 }
 
-// The add form is type-driven: each kind shows only its own fields.
+// The add form is type-driven: each kind shows only its own fields — a bare
+// minimum up front, everything optional folded into the Advanced accordion.
 func TestDebtFormTypeSwitching(t *testing.T) {
 	_, w := newViewTest(t)
 
@@ -93,16 +94,93 @@ func TestDebtFormTypeSwitching(t *testing.T) {
 	}
 	kind := sels[0]
 
-	assertText(t, dlg, "Total amount", "Installments") // BNPL default
+	assertText(t, dlg, "Total amount", "Installments", "Advanced setup") // BNPL default
 
 	kind.SetSelected(core.DebtLoan)
-	assertText(t, dlg, "Principal owed", "APR %", "Term", "Payment", "Interest category")
+	assertText(t, dlg, "Principal owed", "APR %", "Term")
 
 	kind.SetSelected(core.DebtRevolving)
-	assertText(t, dlg, "Credit limit", "Statement day", "Min payment %", "Card account")
+	assertText(t, dlg, "Current balance", "APR %")
 
 	kind.SetSelected(core.DebtInformal)
-	assertText(t, dlg, "Amount owed", "Owed to", "Deposited to")
+	assertText(t, dlg, "Amount owed")
+
+	// The simple form stays minimal; the detail lives behind Advanced setup,
+	// pre-filled with working defaults.
+	labels := func(items []*widget.FormItem) map[string]bool {
+		m := map[string]bool{}
+		for _, it := range items {
+			m[it.Text] = true
+		}
+		return m
+	}
+	cases := []struct {
+		kind            string
+		basic, advanced []string
+		maxBasic        int
+	}{
+		{core.DebtBNPL, []string{"Name", "Total amount", "Installments", "First due"},
+			[]string{"Lender", "Pay from", "Purchase date", "Frequency", "Note"}, 5},
+		{core.DebtLoan, []string{"Name", "Principal owed", "APR %", "Term", "First due"},
+			[]string{"Lender", "Pay from", "Set up", "Payment", "As of", "Frequency", "Interest category", "Note"}, 6},
+		{core.DebtRevolving, []string{"Name", "Current balance", "APR %"},
+			[]string{"Issuer", "Pay from", "Card account", "Credit limit", "Statement day", "Min payment %", "Note"}, 4},
+		{core.DebtInformal, []string{"Name", "Amount owed"},
+			[]string{"Owed to", "Pay from", "Due date", "Deposited to", "Note"}, 2},
+	}
+	for _, c := range cases {
+		f := newDebtFields(c.kind, nil)
+		if len(f.items) > c.maxBasic {
+			t.Errorf("%s: %d basic fields, want at most %d (keep the simple form simple)", c.kind, len(f.items), c.maxBasic)
+		}
+		basic, adv := labels(f.items), labels(f.advanced)
+		for _, want := range c.basic {
+			if !basic[want] {
+				t.Errorf("%s: basic form missing %q", c.kind, want)
+			}
+		}
+		for _, want := range c.advanced {
+			if !adv[want] {
+				t.Errorf("%s: advanced section missing %q", c.kind, want)
+			}
+			if basic[want] {
+				t.Errorf("%s: %q should live in Advanced, not the simple form", c.kind, want)
+			}
+		}
+	}
+}
+
+// The simple form saves without ever opening Advanced: defaults (pay-from
+// account, dates, frequency) fill the gaps.
+func TestDebtFormSimpleModeSaves(t *testing.T) {
+	s, _ := newViewTest(t)
+
+	f := newDebtFields(core.DebtBNPL, nil)
+	byLabel := map[string]*widget.FormItem{}
+	for _, it := range f.items {
+		byLabel[it.Text] = it
+	}
+	byLabel["Name"].Widget.(*widget.Entry).SetText("Fridge")
+	byLabel["Total amount"].Widget.(*widget.Entry).SetText(fmtMoneyInput(120_000))
+	if !f.commit() {
+		t.Fatal("simple BNPL form did not save with defaults")
+	}
+	var d *core.Debt
+	for _, dd := range s.Debts() {
+		if dd.Name == "Fridge" {
+			d = &dd
+			break
+		}
+	}
+	if d == nil {
+		t.Fatal("debt not created")
+	}
+	if d.AcctMoney == "" {
+		t.Error("pay-from account did not default")
+	}
+	if got := len(s.Installments(d.ID)); got != 12 {
+		t.Errorf("installments = %d, want the default 12", got)
+	}
 }
 
 // Committing the loan form computes the payment from the term and creates the
@@ -112,7 +190,7 @@ func TestLoanFormComputesPayment(t *testing.T) {
 
 	f := newDebtFields(core.DebtLoan, nil)
 	byLabel := map[string]*widget.FormItem{}
-	for _, it := range f.items {
+	for _, it := range append(append([]*widget.FormItem{}, f.items...), f.advanced...) {
 		byLabel[it.Text] = it
 	}
 	byLabel["Name"].Widget.(*widget.Entry).SetText("Car")
