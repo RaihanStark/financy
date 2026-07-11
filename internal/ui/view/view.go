@@ -96,7 +96,6 @@ var (
 	generateInstallments = core.GenerateInstallments
 	generateLoanSchedule = core.GenerateLoanSchedule
 	amortizedPayment     = core.AmortizedPayment
-	loanTermFor          = core.LoanTermFor
 	scheduleInterest     = core.ScheduleInterestTotal
 	periodInterest       = core.PeriodInterest
 	parseAPRBps          = core.ParseAPRBps

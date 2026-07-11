@@ -183,14 +183,6 @@ func statementBanner() fyne.CanvasObject {
 	return container.NewVBox(spacerH(6), alertBanner(theme.InfoIcon(), msg, colWarning, review))
 }
 
-// debtStat is one inline "label  value" pair for the Debts header.
-func debtStat(label, value string, valueCol color.Color) fyne.CanvasObject {
-	return container.NewHBox(
-		txt(label+"  ", colTextDim, 12, true),
-		txt(value, valueCol, 15, true),
-	)
-}
-
 // debtDueBanner nudges when payments need attention.
 func debtDueBanner() fyne.CanvasObject {
 	n := store.DueDebtCount(todaySerial)
