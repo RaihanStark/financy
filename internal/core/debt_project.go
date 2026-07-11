@@ -27,8 +27,9 @@ type PayoffProjection struct {
 //     re-simulated at payment+extra (interest-free BNPL just finishes sooner).
 //   - Revolving assumes you keep paying today's minimum payment (plus the
 //     extra) every month — the classic minimum-payment projection.
-//   - Informal has no plan of its own: it needs an extra to be projectable,
-//     unless it's already settled.
+//   - Informal has no plan of its own: its due date (you'll pay by then) or an
+//     extra per period makes it projectable; otherwise it isn't, unless it's
+//     already settled.
 func (s *Store) ProjectPayoff(debtID string, asOf, extraPerPeriod int) PayoffProjection {
 	d := s.DebtByID(debtID)
 	if d == nil {
@@ -37,6 +38,12 @@ func (s *Store) ProjectPayoff(debtID string, asOf, extraPerPeriod int) PayoffPro
 	bal := s.DebtBalance(debtID)
 	if bal <= 0 {
 		return PayoffProjection{Feasible: true}
+	}
+	if d.Type == DebtInformal && extraPerPeriod <= 0 {
+		if d.DueDate > 0 {
+			return PayoffProjection{Months: 1, PayoffDate: d.DueDate, Feasible: true}
+		}
+		return PayoffProjection{}
 	}
 
 	if d.HasSchedule() && extraPerPeriod <= 0 {

@@ -19,7 +19,10 @@ The core product is feature-complete and in active use:
 - 📒 Real double-entry accounting core with derived balances & net worth
 - 🏦 Accounts & net worth, per-account register with running balance
 - 🧾 Transactions (Income / Expense / Transfer), filters, search, bulk add & recategorize
-- 🗓️ Debts (BNPL / installments) integrated into the budget
+- 💳 In-depth debt management — BNPL/installments, amortizing loans with APR
+  and principal/interest split, revolving credit with statement review,
+  informal IOUs, extra payments, payoff projections, snowball-vs-avalanche
+  comparison, and a debt overview dashboard — integrated into the budget
 - 🔁 Recurring transactions with review-before-post
 - 📊 Analytics (KPIs, income-vs-expenses, net worth, spending by category)
 - 🔁 Reconciliation, CSV import & export
@@ -66,15 +69,6 @@ private file — so you can see your whole financial picture in one place.
 Candidate features under consideration, in priority order. Feedback and
 👍 reactions on issues help decide what comes next.
 
-- **💳 In-depth debt management — first priority.** Grow the Debts module beyond
-  fixed BNPL/installment schedules into full loan tracking: **interest / APR** with
-  proper principal-vs-interest split per payment and an **amortization schedule**,
-  support for **revolving credit** (credit cards, lines of credit) and amortizing
-  loans (mortgage, auto, student), **extra / early payments** and minimum-payment
-  handling, **payoff strategies** (snowball vs. avalanche) with a comparison view,
-  **payoff-date and total-interest projections**, and a debt overview dashboard
-  showing total owed, weighted average rate, and progress over time. This is the
-  next major module we'll build.
 - **📈 Investment tracker** — turn the existing off-budget *Investments* accounts
   into a true portfolio tracker. Record **holdings** (stocks, ETFs, funds, crypto)
   as quantity + cost basis, log **buy / sell / dividend** transactions through the

@@ -115,6 +115,27 @@ func TestGenerateLoanScheduleNonAmortizing(t *testing.T) {
 	}
 }
 
+func TestAmortizedPaymentNeverExceedsTerm(t *testing.T) {
+	// The solved payment must amortize within the requested term — a payment
+	// rounded down would leave a tiny n+1th installment (e.g. 1,200,000 at
+	// 7.90% over 36 used to yield 37 rows).
+	cases := []struct{ p, bps, n int }{
+		{1_200_000, 790, 36}, {1_000_000, 1200, 12}, {50_000_000, 350, 360},
+		{999_999, 1999, 24}, {123_457, 1, 7},
+	}
+	for _, c := range cases {
+		pay := AmortizedPayment(c.p, c.bps, c.n, "Monthly")
+		insts, ok := GenerateLoanSchedule(c.p, c.bps, pay, TodaySerial, "Monthly")
+		if !ok {
+			t.Errorf("p=%d bps=%d n=%d: schedule failed", c.p, c.bps, c.n)
+			continue
+		}
+		if len(insts) > c.n {
+			t.Errorf("p=%d bps=%d n=%d: %d installments — exceeds the term", c.p, c.bps, c.n, len(insts))
+		}
+	}
+}
+
 func TestLoanTermForInverse(t *testing.T) {
 	// Solving payment from term, then term from that payment, round-trips.
 	pay := AmortizedPayment(1_000_000, 1200, 12, "Monthly")

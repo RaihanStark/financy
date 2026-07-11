@@ -408,13 +408,13 @@ func loanFields(existing *Debt) *debtFields {
 			}
 			store.AddDebt(Debt{
 				Name: name.Text, Type: DebtLoan, Lender: lender.Text,
-				AcctMoney:    idOf(acctMoney.Selected),
-				PurchaseDate: bought,
-				APRBps:       parseAPRBps(apr.Text),
-				Freq:         freq.Selected,
+				AcctMoney:     idOf(acctMoney.Selected),
+				PurchaseDate:  bought,
+				APRBps:        parseAPRBps(apr.Text),
+				Freq:          freq.Selected,
 				PaymentAmount: pay,
-				AcctInterest: idOf(interestSel.Selected),
-				Note:         note.Text,
+				AcctInterest:  idOf(interestSel.Selected),
+				Note:          note.Text,
 			}, insts)
 			return true
 		},
@@ -537,9 +537,9 @@ func revolvingFields(existing *Debt) *debtFields {
 			}
 			d := Debt{
 				Name: name.Text, Type: DebtRevolving, Lender: lender.Text,
-				AcctMoney:   idOf(acctMoney.Selected),
-				APRBps:      parseAPRBps(apr.Text),
-				CreditLimit: parseAmount(limit.Text),
+				AcctMoney:    idOf(acctMoney.Selected),
+				APRBps:       parseAPRBps(apr.Text),
+				CreditLimit:  parseAmount(limit.Text),
 				StatementDay: sd, PayDueDay: dd,
 				MinPayBps:   parseAPRBps(minPct.Text),
 				MinPayFloor: parseAmount(minFloor.Text),

@@ -41,9 +41,11 @@ func PeriodInterest(balance, aprBps, periodsPerYear int) int {
 }
 
 // AmortizedPayment solves the regular payment that amortizes principal over n
-// periods at aprBps (the standard annuity formula), rounded half-up. A zero
-// rate degenerates to a near-equal split (ceiling division, so n payments
-// always cover the principal).
+// periods at aprBps (the standard annuity formula), rounded UP to the next
+// minor unit — rounding down would leave a residue that spills into an n+1th
+// installment; rounding up keeps the term at n with a slightly smaller final
+// payment, which is what lenders do. A zero rate degenerates to a near-equal
+// split (ceiling division, same reasoning).
 func AmortizedPayment(principal, aprBps, n int, freq string) int {
 	if principal <= 0 || n <= 0 {
 		return 0
@@ -53,7 +55,7 @@ func AmortizedPayment(principal, aprBps, n int, freq string) int {
 	}
 	r := float64(aprBps) / (10000 * float64(PeriodsPerYear(freq)))
 	pay := float64(principal) * r / (1 - math.Pow(1+r, -float64(n)))
-	return int(math.Floor(pay + 0.5))
+	return int(math.Ceil(pay))
 }
 
 // LoanTermFor solves how many payments of the given size it takes to pay the

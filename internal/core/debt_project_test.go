@@ -79,9 +79,17 @@ func TestProjectPayoffInformal(t *testing.T) {
 	d := s.Debts()[0]
 	asOf := serialOf(2026, 1, 1)
 
-	// No payment plan and no extra → unprojectable.
+	// No payment plan, no due date, no extra → unprojectable.
 	if p := s.ProjectPayoff(d.ID, asOf, 0); p.Feasible {
 		t.Errorf("informal with no plan = %+v, want infeasible", p)
+	}
+	// A due date IS the plan: you'll have paid it by then.
+	due := serialOf(2026, 4, 1)
+	s2 := debtStore()
+	s2.AddDebt(Debt{Name: "IOU2", Type: DebtInformal, AcctMoney: "checking",
+		Principal: 300_000, DueDate: due}, nil)
+	if p := s2.ProjectPayoff(s2.Debts()[0].ID, asOf, 0); !p.Feasible || p.PayoffDate != due {
+		t.Errorf("informal with due date = %+v, want feasible payoff at %d", p, due)
 	}
 	// With 100k/month it clears in 3.
 	p := s.ProjectPayoff(d.ID, asOf, 100_000)

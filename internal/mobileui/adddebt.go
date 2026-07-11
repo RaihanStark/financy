@@ -387,9 +387,9 @@ func (m *mobileApp) revolvingFormFields(existing *core.Debt) (fyne.CanvasObject,
 			return false
 		}
 		d := core.Debt{
-			Type:        core.DebtRevolving,
-			APRBps:      core.ParseAPRBps(apr.Text),
-			CreditLimit: core.ParseAmount(limit.Text),
+			Type:         core.DebtRevolving,
+			APRBps:       core.ParseAPRBps(apr.Text),
+			CreditLimit:  core.ParseAmount(limit.Text),
 			StatementDay: sd, PayDueDay: dd,
 			MinPayBps:   core.ParseAPRBps(minPct.Text),
 			MinPayFloor: core.ParseAmount(minFloor.Text),
