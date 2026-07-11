@@ -9,7 +9,59 @@ import (
 	"fyne.io/fyne/v2/layout"
 	"fyne.io/fyne/v2/theme"
 	"fyne.io/fyne/v2/widget"
+
+	"github.com/raihanstark/financy/internal/core"
 )
+
+// The open debt-detail dialog, if any. Paying, undoing, editing — anything
+// that mutates the store — must repaint the dialog in place, so a single
+// subscriber (registered once per store) rebuilds its content on every store
+// change, and closes it when the debt itself is gone.
+var (
+	debtDlg      *dialog.CustomDialog
+	debtDlgID    string
+	debtDlgBody  *fyne.Container
+	debtDlgStore *core.Store
+)
+
+// showDebtDetail opens a debt's detail pane as a dialog.
+func showDebtDetail(id string) {
+	if win == nil {
+		return
+	}
+	d := store.DebtByID(id)
+	if d == nil {
+		return
+	}
+	if debtDlgStore != store {
+		debtDlgStore = store
+		store.Subscribe(refreshDebtDialog)
+	}
+	debtDlgID = id
+	debtDlgBody = container.NewStack(debtTabContent(*d))
+	dlg := dialog.NewCustom(orDash(d.Name), "Close", container.NewScroll(debtDlgBody), win)
+	debtDlg = dlg
+	dlg.SetOnClosed(func() {
+		if debtDlg == dlg {
+			debtDlg, debtDlgID, debtDlgBody = nil, "", nil
+		}
+	})
+	dlg.Resize(fyne.NewSize(820, 620))
+	dlg.Show()
+}
+
+func refreshDebtDialog() {
+	if debtDlg == nil || debtDlgID == "" || debtDlgBody == nil {
+		return
+	}
+	d := store.DebtByID(debtDlgID)
+	if d == nil { // deleted from within — nothing left to show
+		debtDlg.Hide()
+		return
+	}
+	debtDlgBody.Objects = []fyne.CanvasObject{debtTabContent(*d)}
+	debtDlgBody.Refresh()
+}
 
 // debtTabContent is one debt's detail pane, matched to its kind: an
 // installment table for schedule debts (with principal/interest columns on

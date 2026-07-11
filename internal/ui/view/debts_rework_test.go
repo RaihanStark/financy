@@ -40,6 +40,39 @@ func TestScreenDebtsRendersAllTypes(t *testing.T) {
 	)
 }
 
+// Tapping a debt opens its detail as a dialog that repaints itself after
+// store mutations and closes itself when the debt is deleted.
+func TestDebtDetailDialogRefreshesAndCloses(t *testing.T) {
+	s, w := newViewTest(t)
+	seedAllDebtTypes(t, s)
+	var bnpl core.Debt
+	for _, d := range s.Debts() {
+		if d.Type == core.DebtBNPL {
+			bnpl = d
+		}
+	}
+
+	showDebtDetail(bnpl.ID)
+	dlg := dialogContent(w)
+	if dlg == nil {
+		t.Fatal("detail dialog did not open")
+	}
+	assertText(t, dlg, "Phone", "Remaining", "Pay")
+
+	// A mutation repaints the open dialog with fresh figures.
+	in := s.Installments(bnpl.ID)[0]
+	if !s.PayInstallment(in.ID, in.DueDate) {
+		t.Fatal("PayInstallment failed")
+	}
+	assertText(t, dialogContent(w), "1/12")
+
+	// Deleting the debt closes the dialog — there is nothing left to show.
+	s.DeleteDebt(bnpl.ID)
+	if top := dialogContent(w); top != nil {
+		t.Errorf("dialog still open after the debt was deleted")
+	}
+}
+
 // The loan detail pane shows the balance, principal/interest columns and the
 // extra-payment entry point.
 func TestLoanDetailPane(t *testing.T) {

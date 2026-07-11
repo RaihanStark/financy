@@ -8,15 +8,10 @@ import (
 	"fyne.io/fyne/v2/theme"
 )
 
-// debtsTab is the ID of the debt whose tab is selected. It's preserved across the
-// screen rebuilds that follow every pay / undo / edit, so you stay on the debt you
-// were looking at instead of being thrown back to the first tab.
-var debtsTab string
-
 // ScreenDebts shows every tracked debt — BNPL plans, amortizing loans, credit
 // cards and IOUs — under an overview dashboard, as a compact table: one row
-// per debt (kind, APR, balance, progress, status), with the selected row's
-// detail pane opening below it.
+// per debt (kind, APR, balance, progress, status). Tapping a row opens that
+// debt's detail dialog.
 func ScreenDebts() fyne.CanvasObject {
 	bar := appBar("Debts", "Loans, cards, BNPL and IOUs in one place",
 		secondaryButton("Strategies", theme.ViewRefreshIcon(), func() { strategyDialog() }),
@@ -29,25 +24,16 @@ func ScreenDebts() fyne.CanvasObject {
 		return container.NewBorder(bar, nil, nil, nil, container.NewPadded(body))
 	}
 
-	selected := 0
-	for i, d := range ds {
-		if d.ID == debtsTab {
-			selected = i
-		}
-	}
-	debtsTab = ds[selected].ID
-
 	head := container.NewVBox(debtDashboard(), statementBanner(), debtDueBanner())
 	return container.NewVBox(
 		bar,
 		container.NewPadded(head),
 		container.NewPadded(panel(debtsTable(ds))),
-		container.NewPadded(panel(debtTabContent(ds[selected]))),
 	)
 }
 
 // debtsTable is the compact all-debts list: a header row plus one tappable
-// line per debt. Tapping a row selects it, opening its detail pane below.
+// line per debt. Tapping a row opens its detail dialog.
 func debtsTable(ds []Debt) fyne.CanvasObject {
 	cols := &columnsLayout{Weights: []float32{2.4, 1.0, 0.7, 1.4, 1.6, 1.7}, Gap: 10}
 	h := func(s string) fyne.CanvasObject { return txt(s, colTextDim, 10.5, true) }
@@ -84,12 +70,8 @@ func debtsTableRow(d Debt, cols *columnsLayout, idx int) fyne.CanvasObject {
 	if idx%2 == 1 {
 		fill = colAltRow
 	}
-	if d.ID == debtsTab {
-		fill = withAlpha(colPrimary, 0x1a)
-	}
 	return newTappableRow(container.New(padCell(8, 8), cells), fill, func() {
-		debtsTab = d.ID
-		render()
+		showDebtDetail(d.ID)
 	})
 }
 
