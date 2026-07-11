@@ -611,6 +611,7 @@ func (s *Store) DeleteTransaction(id string) {
 				return
 			}
 			s.txns = append(s.txns[:i], s.txns[i+1:]...)
+			s.clearInstallmentForTxn(id) // roll back any debt installment paid by this txn
 			s.notify()
 			return
 		}

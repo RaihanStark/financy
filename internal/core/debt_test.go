@@ -109,6 +109,102 @@ func TestPayInstallmentPostsTransaction(t *testing.T) {
 	}
 }
 
+func TestDeleteTransactionUnpaysInstallment(t *testing.T) {
+	s := debtStore()
+	first := serialOf(2026, 1, 1)
+	s.AddDebt(Debt{Name: "Phone", Type: DebtBNPL, Lender: "PayLater", AcctMoney: "checking"},
+		GenerateInstallments(12000, 12, first, "Monthly"))
+	id := s.Debts()[0].ID
+	liab := s.Debts()[0].AcctLiability
+	insts := s.Installments(id)
+
+	if !s.PayInstallment(insts[0].ID, insts[0].DueDate) {
+		t.Fatal("PayInstallment returned false")
+	}
+	txnID := s.Installments(id)[0].TxnID
+	if txnID == "" {
+		t.Fatal("installment has no TxnID after pay")
+	}
+
+	// Deleting the payment transaction directly (e.g. from the Transactions page)
+	// must roll the installment back to unpaid, not leave it stranded as paid.
+	s.DeleteTransaction(txnID)
+
+	got := s.Installments(id)[0]
+	if got.Paid || got.TxnID != "" {
+		t.Errorf("installment after txn delete = %+v, want unpaid with no TxnID", got)
+	}
+	st := s.DebtStatus(id, first)
+	if st.PaidCount != 0 || st.Paid != 0 || st.Remaining != 12000 {
+		t.Errorf("status after txn delete = %+v, want PaidCount=0 Paid=0 Remaining=12000", st)
+	}
+	if got := len(s.Transactions()); got != 1 {
+		t.Fatalf("got %d transactions after delete, want 1 (the purchase)", got)
+	}
+	if out := s.DisplayBalance(*s.AccountByID(liab)); out != 12000 {
+		t.Errorf("liability outstanding after delete = %d, want 12000", out)
+	}
+}
+
+func TestDeleteTransactionUnlinksLinkedInstallment(t *testing.T) {
+	s := debtStore()
+	first := serialOf(2026, 1, 1)
+	s.AddDebt(Debt{Name: "Phone", Type: DebtBNPL, Lender: "PayLater", AcctMoney: "checking"},
+		GenerateInstallments(12000, 12, first, "Monthly"))
+	id := s.Debts()[0].ID
+	insts := s.Installments(id)
+
+	extID := s.genID()
+	if !s.AddTransaction(Transaction{
+		ID: extID, Date: first, Payee: "PayLater",
+		Posts: PostingsFor(KindExpense, "checking", "shopping", 1000),
+	}) {
+		t.Fatal("seed transaction not added")
+	}
+	if !s.LinkInstallment(insts[0].ID, extID) {
+		t.Fatal("LinkInstallment returned false")
+	}
+
+	// Deleting the linked transaction can't restore OrigPosts onto a deleted row, so
+	// the installment reverts to unpaid/unlinked (the user can re-link later).
+	s.DeleteTransaction(extID)
+
+	got := s.Installments(id)[0]
+	if got.Paid || got.Linked || got.TxnID != "" {
+		t.Errorf("installment after linked txn delete = %+v, want unpaid/unlinked", got)
+	}
+	if got := len(s.Transactions()); got != 1 {
+		t.Fatalf("got %d transactions after delete, want 1 (the purchase)", got)
+	}
+}
+
+func TestDeleteTransactionLeavesUnrelatedInstallments(t *testing.T) {
+	s := debtStore()
+	first := serialOf(2026, 1, 1)
+	s.AddDebt(Debt{Name: "Phone", Type: DebtBNPL, Lender: "PayLater", AcctMoney: "checking"},
+		GenerateInstallments(12000, 12, first, "Monthly"))
+	id := s.Debts()[0].ID
+	insts := s.Installments(id)
+	if !s.PayInstallment(insts[0].ID, insts[0].DueDate) {
+		t.Fatal("PayInstallment returned false")
+	}
+
+	// An unrelated transaction that no installment points at must not disturb the
+	// paid installment when deleted.
+	otherID := s.genID()
+	if !s.AddTransaction(Transaction{
+		ID: otherID, Date: first, Payee: "Groceries",
+		Posts: PostingsFor(KindExpense, "checking", "shopping", 500),
+	}) {
+		t.Fatal("seed transaction not added")
+	}
+	s.DeleteTransaction(otherID)
+
+	if st := s.DebtStatus(id, first); st.PaidCount != 1 || st.Paid != 1000 {
+		t.Errorf("status after unrelated delete = %+v, want PaidCount=1 Paid=1000", st)
+	}
+}
+
 func TestLinkInstallmentReconcilesLiability(t *testing.T) {
 	s := debtStore()
 	first := serialOf(2026, 1, 1)
