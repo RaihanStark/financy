@@ -53,11 +53,25 @@ func TestRenderShots(t *testing.T) {
 		shot(name)
 	}
 
-	// The debt detail page.
+	// One detail page per debt kind, plus the add form and strategy page.
 	m.selectTab(3)
-	if debts := m.store.Debts(); len(debts) > 0 {
-		m.openDebt(debts[0])
-		shot("debt")
+	seen := map[string]bool{}
+	for _, d := range m.store.Debts() {
+		if seen[d.Type] {
+			continue
+		}
+		seen[d.Type] = true
+		m.openDebt(d)
+		shot("debt-" + d.Type)
+		m.back()
+	}
+	m.debtForm(nil)
+	shot("debt-add")
+	m.back()
+	if m.store.TotalDebtOutstanding() > 0 {
+		m.strategyPage()
+		shot("debt-strategies")
+		m.back()
 	}
 
 	// The add-transaction full-screen form.
