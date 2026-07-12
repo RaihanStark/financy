@@ -13,6 +13,8 @@ See `RELEASING.md`.
 
 ## [Unreleased]
 
+## [0.14.0] - 2026-07-12
+
 ### Added
 - **Recurring, forward-looking.** The Recurring screen no longer just lists
   templates — it leads with what your schedule actually means: **MONTHLY
@@ -488,7 +490,8 @@ double-entry accounting, with data in a single `.financy` file you own.
   automatic `.bak` before any file upgrade.
 - Cross-platform release bundles (Linux / Windows / macOS) published from CI on tag.
 
-[Unreleased]: https://github.com/raihanstark/financy/compare/v0.13.0...HEAD
+[Unreleased]: https://github.com/raihanstark/financy/compare/v0.14.0...HEAD
+[0.14.0]: https://github.com/raihanstark/financy/compare/v0.13.0...v0.14.0
 [0.13.0]: https://github.com/raihanstark/financy/compare/v0.12.0...v0.13.0
 [0.12.0]: https://github.com/raihanstark/financy/compare/v0.11.0...v0.12.0
 [0.11.0]: https://github.com/raihanstark/financy/compare/v0.10.0...v0.11.0
