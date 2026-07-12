@@ -81,8 +81,17 @@ See `RELEASING.md`.
   pinned at the bottom. The design system was refreshed across both themes:
   an indigo accent, calmer emerald/rose money colors (replacing raw
   green/red), a deeper indigo-tinted dark palette, softer rounded corners,
-  slimmer pill progress bars, airier screen headers and stat cards. Desktop
-  only — the mobile layout is unchanged.
+  slimmer pill progress bars, airier screen headers and stat cards. With no
+  document open the sidebar now hides entirely — the welcome screen has
+  nothing to navigate — and reappears when a file opens. Desktop only — the
+  mobile layout is unchanged.
+
+### Removed
+- **iOS release build.** The release workflow no longer produces the unsigned
+  `.ipa`: it wasn't installable without re-signing through Sideloadly/AltStore
+  (and expired weekly on free provisioning), so it added a macOS runner to
+  every release for an artifact almost nobody could use. Android, Linux,
+  Windows and macOS release assets are unchanged.
 
 ## [0.13.0] - 2026-07-11
 
