@@ -9,6 +9,30 @@ transaction for you to confirm**. They never post silently.
 
 ![Recurring screen](../../img/recurring-screen.png)
 
+## What's coming
+
+The Recurring screen leads with the forward view, not the template list:
+
+- **Commitment stats** — what your enabled templates add up to per month:
+  **Monthly bills**, **Monthly income**, and the **net per month**. Every
+  frequency is normalized to a monthly figure (weekly ×52⁄12, biweekly ×26⁄12,
+  quarterly ÷3, yearly ÷12); transfers are excluded since they only move money
+  between your own accounts.
+- **Next 30 days** — a timeline of every projected occurrence, bucketed into
+  **Overdue & due** (amber, with an inline **Review & Post**), **This week**,
+  and **Later this month**. Each row shows the date, payee, category, amount,
+  and how far away it is ("today", "in 5 days", "3 days overdue"). Click a row
+  to edit its template; right-click for the usual actions.
+
+The **Accounts** overview shows the same information at a glance: an
+**Upcoming** card with anything due plus the next 14 days of occurrences,
+linking straight to the Recurring screen.
+
+While the app is open, Financy re-checks the schedule about once a minute —
+crossing midnight or catching up a due entry doesn't require reopening the
+file. The review prompt only reappears when something *new* becomes due, so
+choosing **Later** actually defers it.
+
 ## Add a template
 
 On the **Recurring** screen, click **Add Recurring** and fill in the same fields as
@@ -32,8 +56,8 @@ occurrence won't also prompt you later.
 
 ## Posting what's due
 
-When you open a document, if anything is due Financy shows a prompt — or click
-**Post Due Now** any time. For **each** due occurrence you choose, from a dropdown,
+When you open a document — or while it sits open and something becomes due —
+Financy shows a prompt; you can also click **Review & Post** any time. For **each** due occurrence you choose, from a dropdown,
 either to **post a new transaction** or to **link it to the existing transaction
 that already paid it**:
 

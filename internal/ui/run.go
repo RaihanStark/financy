@@ -76,6 +76,7 @@ func Run(icon fyne.Resource) {
 
 	startup() // opens last-used or a default document, then renders
 
+	startDueTicker()            // date rollover + newly due recurring entries
 	checkForUpdatesAsync(false) // silent, throttled background check
 
 	w.ShowAndRun()

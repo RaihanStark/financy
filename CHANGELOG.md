@@ -14,6 +14,20 @@ See `RELEASING.md`.
 ## [Unreleased]
 
 ### Added
+- **Recurring, forward-looking.** The Recurring screen no longer just lists
+  templates — it leads with what your schedule actually means: **MONTHLY
+  BILLS / MONTHLY INCOME / NET PER MONTH / ACTIVE** stat cards (every
+  frequency normalized to a monthly figure) and a **Next 30 days timeline**
+  with occurrences bucketed into *Overdue & due* (amber, with an inline
+  Review & Post), *This week* and *Later this month*, each row wording its
+  distance ("today", "in 5 days", "3 days overdue"). The Accounts overview
+  gains an **Upcoming** card — due alert plus the next 14 days of
+  occurrences — that deep-links to the Recurring screen. Due entries are now
+  re-checked once a minute while the app runs (midnight rollover included),
+  not just when a file opens; the prompt only reappears when something *new*
+  becomes due, so "Later" means later. Review-before-post is unchanged:
+  nothing ever posts without your confirmation.
+
 - **Cover overspending.** An overspent envelope can now be fixed in place:
   the overspend banner's **Cover…** button and the category row's
   right-click menu open a dialog that moves money from another envelope (or
@@ -23,6 +37,13 @@ See `RELEASING.md`.
   `MoveAssigned` store operation.
 
 ### Changed
+- **Desktop redesign — Recurring page.** Rebuilt around the forward-looking
+  layout above (stats → timeline → templates). The due nudge became a proper
+  amber alert banner with the amount due, the template list moved into a
+  titled **All templates** panel, and first-run shows an explainer ("Put your
+  bills on autopilot — with a veto") instead of a bare empty state. Row
+  actions (post early, edit, pause, delete) and the review dialog are
+  unchanged.
 - **Desktop redesign — Budget page.** Spotting trouble no longer requires
   reading numbers: every category row gains a traffic-light **usage bar**
   (emerald while healthy, amber from 85% used, rose when overspent), overspent

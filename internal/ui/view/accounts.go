@@ -1,6 +1,8 @@
 package view
 
 import (
+	"image/color"
+
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/canvas"
 	"fyne.io/fyne/v2/container"
@@ -17,11 +19,94 @@ func ScreenAccounts() fyne.CanvasObject {
 	body := container.NewVBox(
 		netWorthHero(),
 		spacerH(6),
+		upcomingBills(),
 		accountGroup("Assets", store.AssetAccounts(), store.TotalAssets(), false),
 		spacerH(6),
 		accountGroup("Liabilities", store.LiabilityAccounts(), store.TotalLiabilities(), true),
 	)
 	return container.NewBorder(bar, nil, nil, nil, container.NewPadded(body))
+}
+
+// upcomingBills surfaces the recurring schedule on the overview: a due alert
+// when something needs review, then the next two weeks of occurrences. Hidden
+// until the user has recurring templates at all.
+func upcomingBills() fyne.CanvasObject {
+	if len(store.Recurrings()) == 0 {
+		return spacerH(0)
+	}
+	sum := store.RecurringSummaryFor(todaySerial)
+
+	box := container.NewVBox()
+	if sum.DueCount > 0 {
+		msg := itoa(sum.DueCount) + " recurring entr" + plural(sum.DueCount, "y", "ies") + " due · " + fmtMoney(sum.DueTotal)
+		box.Add(alertBanner(theme.WarningIcon(), msg, colWarning,
+			secondaryButton("Review & Post", theme.MediaPlayIcon(), postDueNow)))
+		box.Add(spacerH(6))
+	}
+
+	netSub := "net " + fmtMoney(sum.MonthlyNet) + "/mo"
+	head := container.NewBorder(nil, nil,
+		sectionTitle("Upcoming"),
+		txt("next 14 days · "+netSub, colTextDim, 11, false))
+	rows := []fyne.CanvasObject{head, spacerH(6)}
+
+	occ := store.UpcomingRecurring(todaySerial, todaySerial+14)
+	if len(occ) == 0 {
+		rows = append(rows, txt("Nothing due in the next 14 days.", colTextDim, 12, false))
+	}
+	for i, o := range occ {
+		if i == 5 {
+			rows = append(rows, container.New(padCell(4, 12),
+				txt("+ "+itoa(len(occ)-5)+" more on the Recurring screen", colTextDim, 11, false)))
+			break
+		}
+		rows = append(rows, upcomingBillRow(o))
+	}
+
+	more := newTappableRow(container.New(padCell(5, 12),
+		txt("View all recurring →", colPrimary, 11.5, true)), colSurface,
+		func() { nav("recurring") })
+	rows = append(rows, spacerH(2), more)
+
+	box.Add(panel(container.New(padCell(10, 12), container.NewVBox(rows...))))
+	box.Add(spacerH(6))
+	return box
+}
+
+// upcomingBillRow is a compact occurrence line on the overview; tapping goes to
+// the Recurring screen.
+func upcomingBillRow(o Occurrence) fyne.CanvasObject {
+	amtCol := colNegative
+	switch o.Kind {
+	case "Income":
+		amtCol = colPositive
+	case "Transfer":
+		amtCol = colText
+	}
+	title := o.Payee
+	if title == "" {
+		title = o.Kind
+	}
+	state, stateCol := dueLabel(o.Date)
+	line := container.NewBorder(nil, nil,
+		container.NewHBox(
+			mono(fmtSerialDate(o.Date), colTextDim, 11, false),
+			spacerW(8),
+			txt(title, colText, 12.5, false),
+		),
+		container.NewHBox(
+			txt(state, stateCol, 10.5, o.Due),
+			spacerW(10),
+			txt(amountLabel(o.Kind, o.Amount), amtCol, 12.5, true),
+		))
+
+	var fill color.Color = colSurface
+	if o.Due {
+		fill = withAlpha(colWarning, 0x14)
+	}
+	row := newTappableRow(container.New(padCell(5, 12), line), fill, func() { nav("recurring") })
+	row.SetBordered()
+	return row
 }
 
 // netWorthHero is the prominent summary banner at the top.

@@ -16,39 +16,216 @@ import (
 
 var errAmount = errors.New("enter an amount greater than zero")
 
-// ScreenRecurring lists recurring templates and lets you add/edit/delete them and
-// post what's due.
+// ScreenRecurring is the forward-looking recurring view: what the schedule
+// costs per month, what's coming in the next 30 days, and the templates
+// themselves. Nothing here posts without confirmation.
 func ScreenRecurring() fyne.CanvasObject {
-	bar := appBar("Recurring", "Scheduled transactions — posted on your confirmation when due",
+	bar := appBar("Recurring", "Financy drafts each entry when due — you review and confirm before anything posts",
 		primaryButton("Add Recurring", theme.ContentAddIcon(), func() { RecurringForm(nil) }),
 	)
 
 	rs := store.Recurrings()
 	if len(rs) == 0 {
-		body := panel(emptyState("No recurring transactions yet. Add rent, salary, subscriptions…"))
-		return container.NewBorder(bar, nil, nil, nil, container.NewPadded(body))
+		return container.NewBorder(bar, nil, nil, nil, container.NewPadded(recurringWelcome()))
 	}
 
-	rows := make([]fyne.CanvasObject, 0, len(rs))
-	for _, r := range rs {
-		rows = append(rows, recurringRow(r))
-	}
-	body := panel(container.NewVBox(rows...))
+	sum := store.RecurringSummaryFor(todaySerial)
 	return container.NewBorder(bar, nil, nil, nil, container.NewPadded(container.NewVBox(
-		dueBanner(), body,
+		dueBanner(sum),
+		recurringSummaryRow(sum),
+		spacerH(6),
+		upcomingPanel(),
+		spacerH(6),
+		templatesPanel(rs),
 	)))
 }
 
+// recurringWelcome explains the feature when no templates exist yet.
+func recurringWelcome() fyne.CanvasObject {
+	box := container.NewVBox(
+		txt("Put your bills on autopilot — with a veto", colText, 18, true),
+		spacerH(4),
+		txt("Add rent, salary and subscriptions once. Financy tracks the schedule,", colTextDim, 12, false),
+		txt("shows what's coming and what it all costs per month, and drafts each", colTextDim, 12, false),
+		txt("entry when it's due. Nothing posts without your confirmation.", colTextDim, 12, false),
+		spacerH(12),
+		container.NewHBox(primaryButton("Add Recurring", theme.ContentAddIcon(), func() { RecurringForm(nil) })),
+	)
+	return container.NewCenter(panel(container.New(padCell(20, 28), box)))
+}
+
 // dueBanner shows a one-line nudge when something is due.
-func dueBanner() fyne.CanvasObject {
-	n := len(store.PendingRecurring(todaySerial))
-	if n == 0 {
+func dueBanner(sum RecurringSummary) fyne.CanvasObject {
+	if sum.DueCount == 0 {
 		return spacerH(0)
 	}
-	msg := itoa(n) + " recurring entr" + plural(n, "y", "ies") + " due"
-	return container.NewBorder(nil, spacerH(6), nil,
-		secondaryButton("Review & Post", theme.MediaPlayIcon(), postDueNow),
-		container.NewHBox(txt("●  ", colWarning, 13, true), txt(msg, colText, 12.5, true)))
+	msg := itoa(sum.DueCount) + " recurring entr" + plural(sum.DueCount, "y", "ies") + " due · " + fmtMoney(sum.DueTotal)
+	return container.NewVBox(
+		alertBanner(theme.WarningIcon(), msg, colWarning,
+			secondaryButton("Review & Post", theme.MediaPlayIcon(), postDueNow)),
+		spacerH(6),
+	)
+}
+
+// recurringSummaryRow is the commitment header: what the enabled templates add
+// up to per month, normalized from each one's frequency.
+func recurringSummaryRow(sum RecurringSummary) fyne.CanvasObject {
+	nExp, nInc := 0, 0
+	for _, r := range store.Recurrings() {
+		if !r.Enabled {
+			continue
+		}
+		switch r.Kind {
+		case "Expense":
+			nExp++
+		case "Income":
+			nInc++
+		}
+	}
+	pausedSub := "all running"
+	if sum.Paused > 0 {
+		pausedSub = itoa(sum.Paused) + " paused"
+	}
+	return container.NewGridWithColumns(4,
+		statCard("MONTHLY BILLS", fmtMoney(sum.MonthlyExpense), colNegative, itoa(nExp)+" template"+plural(nExp, "", "s")),
+		statCard("MONTHLY INCOME", fmtMoney(sum.MonthlyIncome), colPositive, itoa(nInc)+" template"+plural(nInc, "", "s")),
+		statCard("NET PER MONTH", fmtMoney(sum.MonthlyNet), moneyColor(sum.MonthlyNet), "income − bills"),
+		statCard("ACTIVE", itoa(sum.Active), colText, pausedSub),
+	)
+}
+
+// maxBucketRows caps each timeline bucket so a dense schedule stays scannable.
+const maxBucketRows = 8
+
+// upcomingPanel is the 30-day timeline: overdue and due first, then this week,
+// then later this month.
+func upcomingPanel() fyne.CanvasObject {
+	occ := store.UpcomingRecurring(todaySerial, todaySerial+30)
+
+	if len(occ) == 0 {
+		msg := "Nothing scheduled in the next 30 days."
+		if next := store.UpcomingRecurring(todaySerial, todaySerial+366); len(next) > 0 {
+			msg = "Nothing scheduled in the next 30 days — next up: " +
+				fmtSerialDate(next[0].Date) + " · " + orDash(next[0].Payee)
+		}
+		return panel(container.New(padCell(10, 12), container.NewVBox(
+			sectionTitle("Next 30 days"), spacerH(6),
+			txt(msg, colTextDim, 12, false))))
+	}
+
+	var due, week, later []Occurrence
+	for _, o := range occ {
+		switch {
+		case o.Due:
+			due = append(due, o)
+		case o.Date <= todaySerial+7:
+			week = append(week, o)
+		default:
+			later = append(later, o)
+		}
+	}
+
+	rows := []fyne.CanvasObject{sectionTitle("Next 30 days"), spacerH(4)}
+	bucket := func(label string, labelCol color.Color, items []Occurrence, action fyne.CanvasObject) {
+		if len(items) == 0 {
+			return
+		}
+		head := container.NewBorder(nil, nil, txt(label, labelCol, 10.5, true), action)
+		rows = append(rows, spacerH(4), head, spacerH(2))
+		for i, o := range items {
+			if i == maxBucketRows {
+				rows = append(rows, container.New(padCell(4, 12),
+					txt("+ "+itoa(len(items)-maxBucketRows)+" more", colTextDim, 11, false)))
+				break
+			}
+			rows = append(rows, upcomingRow(o))
+		}
+	}
+	bucket("OVERDUE & DUE", colWarning, due,
+		secondaryButton("Review & Post", theme.MediaPlayIcon(), postDueNow))
+	bucket("THIS WEEK", colTextDim, week, nil)
+	bucket("LATER THIS MONTH", colTextDim, later, nil)
+	return panel(container.New(padCell(10, 12), container.NewVBox(rows...)))
+}
+
+// upcomingRow is one projected occurrence on the timeline. Tapping opens the
+// template it comes from; right-click offers the template actions.
+func upcomingRow(o Occurrence) fyne.CanvasObject {
+	amtCol := colNegative
+	switch o.Kind {
+	case "Income":
+		amtCol = colPositive
+	case "Transfer":
+		amtCol = colText
+	}
+	title := o.Payee
+	if title == "" {
+		title = o.Kind
+	}
+	state, stateCol := dueLabel(o.Date)
+
+	left := container.NewHBox(
+		mono(fmtSerialDate(o.Date), colTextDim, 11.5, false),
+		spacerW(10),
+		container.NewVBox(
+			txt(title, colText, 13, true),
+			txt(o.Kind+" · "+orDash(nameOf(o.AcctB)), colTextDim, 10.5, false),
+		),
+	)
+	right := container.NewVBox(
+		alignRight(txt(amountLabel(o.Kind, o.Amount), amtCol, 13.5, true)),
+		alignRight(txt(state, stateCol, 10, o.Due)),
+	)
+	inner := container.NewBorder(nil, nil, left, right)
+
+	var fill color.Color = colSurface
+	if o.Due {
+		fill = withAlpha(colWarning, 0x14) // faint amber tint so due rows stand out
+	}
+	open := func() {
+		if r := store.RecurringByID(o.RecurringID); r != nil {
+			RecurringForm(r)
+		}
+	}
+	row := newTappableRow(container.New(padCell(7, 12), inner), fill, open)
+	row.SetBordered()
+	row.SetOnSecondary(func(pos fyne.Position) {
+		if r := store.RecurringByID(o.RecurringID); r != nil {
+			showContextMenu(pos, recurringMenu(*r)...)
+		}
+	})
+	return row
+}
+
+// dueLabel words an occurrence's distance from today ("today", "in 5 days",
+// "3 days overdue"), amber once it's due.
+func dueLabel(date int) (string, color.Color) {
+	d := date - todaySerial
+	switch {
+	case d < -1:
+		return itoa(-d) + " days overdue", colWarning
+	case d == -1:
+		return "1 day overdue", colWarning
+	case d == 0:
+		return "today", colWarning
+	case d == 1:
+		return "tomorrow", colTextDim
+	default:
+		return "in " + itoa(d) + " days", colTextDim
+	}
+}
+
+// templatesPanel lists every template for managing the schedule itself.
+func templatesPanel(rs []Recurring) fyne.CanvasObject {
+	rows := []fyne.CanvasObject{
+		container.NewBorder(nil, nil, sectionTitle("All templates"),
+			txt(itoa(len(rs))+" template"+plural(len(rs), "", "s"), colTextDim, 11, false)),
+		spacerH(6),
+	}
+	for _, r := range rs {
+		rows = append(rows, recurringRow(r))
+	}
+	return panel(container.New(padCell(10, 12), container.NewVBox(rows...)))
 }
 
 func recurringRow(r Recurring) fyne.CanvasObject {
@@ -442,6 +619,41 @@ func CheckRecurringDue() {
 		return
 	}
 	if items := store.PendingRecurring(todaySerial); len(items) > 0 {
+		lastDueSig = dueSignature(items)
+		showDuePrompt(items)
+	}
+}
+
+// lastDueSig is the due set last shown (or deferred with Later), so periodic
+// re-checks only prompt again when something new becomes due.
+var lastDueSig string
+
+func dueSignature(items []DueItem) string {
+	parts := make([]string, len(items))
+	for i, it := range items {
+		parts[i] = it.RecurringID + ":" + itoa(it.Date)
+	}
+	return strings.Join(parts, ",")
+}
+
+// RecheckRecurringDue is the periodic due check (called from the app's minute
+// ticker). It re-prompts only when the due set changed since the last prompt —
+// so "Later" defers until something new becomes due — and never over an open
+// dialog or menu.
+func RecheckRecurringDue() {
+	if store == nil || win == nil {
+		return
+	}
+	if win.Canvas().Overlays().Top() != nil {
+		return // don't stomp whatever the user is doing
+	}
+	items := store.PendingRecurring(todaySerial)
+	if len(items) == 0 {
+		lastDueSig = ""
+		return
+	}
+	if sig := dueSignature(items); sig != lastDueSig {
+		lastDueSig = sig
 		showDuePrompt(items)
 	}
 }

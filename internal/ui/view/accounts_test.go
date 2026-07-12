@@ -29,11 +29,30 @@ func TestScreenAccountsRendersAccountsAndTotals(t *testing.T) {
 	assertText(t, screen, fmtMoney(s.NetWorth()))
 }
 
-// With no money accounts the asset/liability groups fall back to empty states.
+// With no money accounts the asset/liability groups fall back to empty states,
+// and the Upcoming card stays hidden (no recurring templates yet).
 func TestScreenAccountsEmptyState(t *testing.T) {
 	_, w := emptyViewTest(t)
 	screen := mount(w, ScreenAccounts())
 	assertText(t, screen, "No Assets yet", "No Liabilities yet")
+	assertNoText(t, screen, "Upcoming")
+}
+
+// With recurring templates the overview shows the Upcoming card: the next
+// occurrences and a link that deep-links to the Recurring screen.
+func TestAccountsUpcomingCard(t *testing.T) {
+	s, w := newViewTest(t)
+	addDemoRecurring(s, todaySerial+3)
+
+	screen := mount(w, ScreenAccounts())
+	assertText(t, screen, "Upcoming", "next 14 days", "Rent", "View all recurring")
+
+	if !tapRowWithText(screen, "View all recurring") {
+		t.Fatal("no tappable 'View all recurring' row")
+	}
+	if gotNav != "recurring" {
+		t.Fatalf("nav target = %q, want \"recurring\"", gotNav)
+	}
 }
 
 // Tapping a card's tap target opens the register dialog for that account.
