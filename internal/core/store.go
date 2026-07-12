@@ -66,6 +66,16 @@ func todaySerial() int {
 	return TimeToSerial(time.Date(n.Year(), n.Month(), n.Day(), 0, 0, 0, 0, time.UTC))
 }
 
+// RefreshToday recomputes TodaySerial — the app can run across midnight — and
+// reports whether the date changed.
+func RefreshToday() bool {
+	if n := todaySerial(); n != TodaySerial {
+		TodaySerial = n
+		return true
+	}
+	return false
+}
+
 // NewStore creates an in-memory store seeded with default categories — used for
 // tests and ephemeral sessions. It is not persisted (db is nil).
 func NewStore() *Store {

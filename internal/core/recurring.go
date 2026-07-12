@@ -149,6 +149,125 @@ func addMonths(t time.Time, months int) time.Time {
 	return time.Date(first.Year(), first.Month(), d, 0, 0, 0, 0, time.UTC)
 }
 
+// ---- projection / summary ----
+
+// Occurrence is one projected instance of a recurring template — used by the
+// forward-looking UI (upcoming timeline, overview card). Unlike DueItem it
+// carries no duplicate candidates and building it never advances a schedule.
+type Occurrence struct {
+	RecurringID string
+	Kind        string
+	Date        int // Excel serial
+	Payee       string
+	Memo        string
+	Amount      int
+	AcctA       string
+	AcctB       string
+	Freq        string
+	Due         bool // Date <= asOf: overdue or due today
+}
+
+// maxProjection bounds how many occurrences one template can contribute, so a
+// years-stale weekly template can't expand into thousands of rows.
+const maxProjection = 200
+
+// UpcomingRecurring expands every enabled template from its NextDue through
+// until (inclusive) without advancing any schedule. Occurrences on or before
+// asOf are flagged Due — the same set PendingRecurring would prompt for.
+// Sorted by date, then payee.
+func (s *Store) UpcomingRecurring(asOf, until int) []Occurrence {
+	var out []Occurrence
+	for _, r := range s.recurring {
+		if !r.Enabled {
+			continue
+		}
+		n := 0
+		for d := r.NextDue; d <= until && n < maxProjection; d = nextDate(d, r.Freq) {
+			out = append(out, Occurrence{
+				RecurringID: r.ID,
+				Kind:        r.Kind,
+				Date:        d,
+				Payee:       r.Payee,
+				Memo:        r.Memo,
+				Amount:      r.Amount,
+				AcctA:       r.AcctA,
+				AcctB:       r.AcctB,
+				Freq:        r.Freq,
+				Due:         d <= asOf,
+			})
+			n++
+		}
+	}
+	sort.SliceStable(out, func(i, j int) bool {
+		if out[i].Date != out[j].Date {
+			return out[i].Date < out[j].Date
+		}
+		return out[i].Payee < out[j].Payee
+	})
+	return out
+}
+
+// MonthlyEquivalent converts a per-period amount to its monthly figure:
+// Weekly ×52/12, Biweekly ×26/12, Monthly ×1, Quarterly ÷3, Yearly ÷12,
+// rounded half-up.
+func MonthlyEquivalent(amount int, freq string) int {
+	switch freq {
+	case "Weekly":
+		return mulDivRound(amount, 52, 12)
+	case "Biweekly":
+		return mulDivRound(amount, 26, 12)
+	case "Quarterly":
+		return mulDivRound(amount, 1, 3)
+	case "Yearly":
+		return mulDivRound(amount, 1, 12)
+	default: // Monthly
+		return amount
+	}
+}
+
+func mulDivRound(a int, num, den int64) int {
+	v := int64(a) * num
+	return int((2*v + den) / (2 * den))
+}
+
+// RecurringSummary is the commitment overview shown on the Recurring screen
+// header and the Accounts upcoming card.
+type RecurringSummary struct {
+	MonthlyIncome  int // monthly-equivalent of enabled Income templates
+	MonthlyExpense int // monthly-equivalent of enabled Expense templates
+	MonthlyNet     int // MonthlyIncome − MonthlyExpense (transfers excluded)
+	Active         int
+	Paused         int
+	DueCount       int // occurrences due as of asOf, catch-up included
+	DueTotal       int // sum of |amount| across due occurrences
+}
+
+// RecurringSummaryFor computes the recurring commitment summary as of a date.
+// Transfers count toward Active but not the monthly totals — they move money
+// between accounts rather than in or out.
+func (s *Store) RecurringSummaryFor(asOf int) RecurringSummary {
+	var sum RecurringSummary
+	for _, r := range s.recurring {
+		if !r.Enabled {
+			sum.Paused++
+			continue
+		}
+		sum.Active++
+		switch r.Kind {
+		case KindIncome:
+			sum.MonthlyIncome += MonthlyEquivalent(r.Amount, r.Freq)
+		case KindExpense:
+			sum.MonthlyExpense += MonthlyEquivalent(r.Amount, r.Freq)
+		}
+	}
+	sum.MonthlyNet = sum.MonthlyIncome - sum.MonthlyExpense
+	for _, o := range s.UpcomingRecurring(asOf, asOf) {
+		sum.DueCount++
+		sum.DueTotal += absInt(o.Amount)
+	}
+	return sum
+}
+
 // ---- due / post ----
 
 // DueItem is one occurrence of a recurring template that's due. The user either

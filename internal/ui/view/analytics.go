@@ -104,7 +104,7 @@ func kpiRow(s AnalyticsSummary) fyne.CanvasObject {
 
 func incomeExpensePanel(flows []MonthFlow) fyne.CanvasObject {
 	if len(flows) == 0 {
-		return panel(emptyState("No activity in this period"))
+		return panel(container.New(padCell(10, 12), emptyState("No activity in this period")))
 	}
 	incomes := make([]int, len(flows))
 	expenses := make([]int, len(flows))
@@ -121,17 +121,17 @@ func incomeExpensePanel(flows []MonthFlow) fyne.CanvasObject {
 		container.NewHBox(legendSwatch("Income", colPositive), spacerW(10), legendSwatch("Expenses", colNegative)),
 	)
 	chart := barPairChart(incomes, expenses, colPositive, colNegative, tips, fmtMoneyShort)
-	return panel(container.NewVBox(
+	return panel(container.New(padCell(10, 12), container.NewVBox(
 		header, spacerH(8), chart, spacerH(4),
 		axisLabels(labels),
-	))
+	)))
 }
 
 // ---- net worth trend ----
 
 func netWorthPanel(points []NetWorthPoint) fyne.CanvasObject {
 	if len(points) == 0 {
-		return panel(emptyState("No history in this period"))
+		return panel(container.New(padCell(10, 12), emptyState("No history in this period")))
 	}
 	vals := make([]int, len(points))
 	tips := make([]string, len(points))
@@ -145,17 +145,18 @@ func netWorthPanel(points []NetWorthPoint) fyne.CanvasObject {
 		sectionTitle("Net Worth Over Time"),
 		txt(fmtMoney(vals[len(vals)-1]), moneyColor(vals[len(vals)-1]), 13, true),
 	)
-	return panel(container.NewVBox(
+	return panel(container.New(padCell(10, 12), container.NewVBox(
 		header, spacerH(8), lineChart(vals, colPrimary, tips, fmtMoneyShort), spacerH(4),
 		axisLabels(labels),
-	))
+	)))
 }
 
 // ---- spending by category ----
 
 func spendingPanel(cats []CategorySlice) fyne.CanvasObject {
 	if len(cats) == 0 {
-		return panel(container.NewVBox(sectionTitle("Spending by Category"), spacerH(8), emptyState("No spending in this period")))
+		return panel(container.New(padCell(10, 12), container.NewVBox(
+			sectionTitle("Spending by Category"), spacerH(8), emptyState("No spending in this period"))))
 	}
 	top := cats[0].Total
 	rows := make([]fyne.CanvasObject, 0, len(cats)+2)
@@ -168,7 +169,7 @@ func spendingPanel(cats []CategorySlice) fyne.CanvasObject {
 		label := fmt.Sprintf("%s  ·  %.0f%%", c.Account.Name, c.Pct)
 		rows = append(rows, hbar(label, fmtMoney(c.Total), ratio, colPrimary), spacerH(6))
 	}
-	return panel(container.NewVBox(rows...))
+	return panel(container.New(padCell(10, 12), container.NewVBox(rows...)))
 }
 
 // axisLabels lays the X-axis labels out under the plot, inset by the chart's

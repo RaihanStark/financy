@@ -8,7 +8,6 @@ import (
 
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/container"
-	"fyne.io/fyne/v2/dialog"
 	"fyne.io/fyne/v2/widget"
 
 	"github.com/raihanstark/financy/internal/core"
@@ -48,14 +47,14 @@ func checkForUpdatesAsync(manual bool) {
 			}
 			if err != nil {
 				if manual {
-					dialog.ShowError(err, ctl.win)
+					showError(err)
 				}
 				return
 			}
 			if !available {
 				if manual {
-					dialog.ShowInformation("Up to date",
-						"You're running the latest version of Financy (v"+core.Version+").", ctl.win)
+					showInfo("Up to date",
+						"You're running the latest version of Financy (v"+core.Version+").")
 				}
 				return
 			}
@@ -88,7 +87,7 @@ func showUpdateDialog(rel core.Release) {
 		body.Add(scroll)
 	}
 
-	var d *dialog.CustomDialog
+	var d *modal
 	download := primaryButton("Download", nil, func() {
 		if u, err := url.Parse(rel.URL); err == nil && rel.URL != "" {
 			_ = fyne.CurrentApp().OpenURL(u)
@@ -109,8 +108,8 @@ func showUpdateDialog(rel core.Release) {
 		spacerH(14),
 		container.NewCenter(container.NewHBox(later, skip, download)),
 	)
-	d = dialog.NewCustomWithoutButtons("Software Update", content, ctl.win)
-	d.Resize(fyne.NewSize(500, 380))
+	d = newModal("Software Update", content)
+	d.SetCardSize(fyne.NewSize(500, 380))
 	d.Show()
 }
 

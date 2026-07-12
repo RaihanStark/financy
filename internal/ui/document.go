@@ -47,7 +47,7 @@ func useStore(s *core.Store, path string) {
 		store.Subscribe(ctl.refresh)
 		store.Subscribe(updateTitle) // keep the unsaved-changes marker current
 		store.SetErrorHandler(func(err error) {
-			dialog.ShowError(err, ctl.win)
+			showError(err)
 		})
 	}
 	if ctl.win != nil {
@@ -74,7 +74,7 @@ func useStore(s *core.Store, path string) {
 // version still reads it if they ever need to downgrade.
 func openDocumentAt(path string) {
 	if enc, err := core.IsEncrypted(path); err != nil {
-		dialog.ShowError(err, ctl.win)
+		showError(err)
 		return
 	} else if enc {
 		openEncryptedAt(path)
@@ -98,10 +98,10 @@ func openDocumentAt(path string) {
 				"this one (you're running v" + core.Version + ").\n\n" +
 				"Update Financy to the latest version, then open the file again. " +
 				"It has not been changed."
-			dialog.ShowInformation("Can't open this file", msg, ctl.win)
+			showInfo("Can't open this file", msg)
 			return
 		}
-		dialog.ShowError(err, ctl.win)
+		showError(err)
 		return
 	}
 	useStore(s, path)
@@ -114,7 +114,7 @@ func openDocumentAt(path string) {
 		} else {
 			msg += "Keep it if you may want to downgrade to an older version of Financy."
 		}
-		dialog.ShowInformation("File upgraded", msg, ctl.win)
+		showInfo("File upgraded", msg)
 	}
 }
 
@@ -149,10 +149,10 @@ func doSaveCopy() {
 		_ = w.Close()
 		_ = os.Remove(path) // VACUUM INTO requires a non-existent target
 		if err := store.SaveCopy(path); err != nil {
-			dialog.ShowError(err, ctl.win)
+			showError(err)
 			return
 		}
-		dialog.ShowInformation("Saved a Copy", "Copy written to:\n"+path, ctl.win)
+		showInfo("Saved a Copy", "Copy written to:\n"+path)
 	}, ctl.win)
 	d.SetFileName("copy.financy")
 	d.Show()
@@ -165,7 +165,7 @@ func doExportCSV() {
 	}
 	data, err := store.ExportCSV()
 	if err != nil {
-		dialog.ShowError(err, ctl.win)
+		showError(err)
 		return
 	}
 	d := dialog.NewFileSave(func(w fyne.URIWriteCloser, err error) {
@@ -174,10 +174,10 @@ func doExportCSV() {
 		}
 		defer func() { _ = w.Close() }()
 		if _, err := w.Write(data); err != nil {
-			dialog.ShowError(err, ctl.win)
+			showError(err)
 			return
 		}
-		dialog.ShowInformation("Exported", "Transactions exported to:\n"+w.URI().Path(), ctl.win)
+		showInfo("Exported", "Transactions exported to:\n"+w.URI().Path())
 	}, ctl.win)
 	d.SetFileName(exportFileName())
 	d.SetFilter(storage.NewExtensionFileFilter([]string{".csv"}))

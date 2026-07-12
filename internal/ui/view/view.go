@@ -42,6 +42,8 @@ type (
 	CategorySlice    = core.CategorySlice
 	Recurring        = core.Recurring
 	DueItem          = core.DueItem
+	Occurrence       = core.Occurrence
+	RecurringSummary = core.RecurringSummary
 	Debt             = core.Debt
 	Installment      = core.Installment
 	DebtStatus       = core.DebtStatus
@@ -115,6 +117,7 @@ type (
 	tableSpec     = component.TableSpec
 	cell          = component.Cell
 	columnsLayout = component.ColumnsLayout
+	modal         = component.Modal
 )
 
 var (
@@ -169,6 +172,10 @@ var (
 
 func init() { SyncPalette() }
 
+// SyncToday refreshes the local copy of core.TodaySerial after a date rollover
+// (the app can run across midnight), so due tints and time buckets stay honest.
+func SyncToday() { todaySerial = core.TodaySerial }
+
 // SyncPalette refreshes the local palette aliases from the active style palette.
 func SyncPalette() {
 	colSurface = style.Surface
@@ -183,7 +190,3 @@ func SyncPalette() {
 	colWarning = style.Warning
 }
 
-const (
-	radius   = style.Radius
-	radiusSm = style.RadiusSm
-)

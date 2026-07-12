@@ -13,9 +13,9 @@ import (
 	"github.com/raihanstark/financy/internal/ui/style"
 )
 
-// newShellTest spins up the full application shell (toolbar + status bar +
-// content) wired to a demo-seeded document, exactly as Run does, and returns the
-// controller and its window. Package globals are reset on cleanup.
+// newShellTest spins up the full application shell (sidebar + content) wired to
+// a demo-seeded document, exactly as Run does, and returns the controller and
+// its window. Package globals are reset on cleanup.
 func newShellTest(t *testing.T) (*appController, fyne.Window) {
 	t.Helper()
 	a := test.NewApp()
@@ -97,7 +97,7 @@ func TestShellNavigatesAllScreens(t *testing.T) {
 	c, _ := newShellTest(t)
 	want := map[string]string{
 		"accounts":     "NET WORTH",
-		"transactions": "Journal",
+		"transactions": "SHOWING",
 		"analytics":    "SAVINGS RATE",
 		"recurring":    "Recurring",
 	}
@@ -112,18 +112,29 @@ func TestShellNavigatesAllScreens(t *testing.T) {
 	}
 }
 
-// The status bar reflects the active screen and the live net-worth figure.
-func TestShellStatusBar(t *testing.T) {
+// The sidebar footer shows the live net-worth, assets and liabilities figures.
+func TestShellSidebarFooter(t *testing.T) {
 	c, _ := newShellTest(t)
 	c.show("transactions")
-	if !strings.Contains(c.statusLeft.Text, "Transactions") {
-		t.Errorf("status left = %q, want it to mention Transactions", c.statusLeft.Text)
+	if c.sbNet.Text != fmtMoney(store.NetWorth()) {
+		t.Errorf("footer net worth = %q, want %q", c.sbNet.Text, fmtMoney(store.NetWorth()))
 	}
-	if !strings.Contains(c.statusRight.Text, "Net Worth") {
-		t.Errorf("status right = %q, want a Net Worth figure", c.statusRight.Text)
+	if c.sbAssets.Text != fmtMoney(store.TotalAssets()) {
+		t.Errorf("footer assets = %q, want %q", c.sbAssets.Text, fmtMoney(store.TotalAssets()))
 	}
-	if !strings.Contains(c.statusRight.Text, fmtMoney(store.NetWorth())) {
-		t.Errorf("status right net worth doesn't match store")
+	if c.sbLiab.Text != fmtMoney(store.TotalLiabilities()) {
+		t.Errorf("footer liabilities = %q, want %q", c.sbLiab.Text, fmtMoney(store.TotalLiabilities()))
+	}
+}
+
+// The sidebar highlights the active screen's nav item and only that one.
+func TestShellSidebarHighlight(t *testing.T) {
+	c, _ := newShellTest(t)
+	c.show("budget")
+	for _, b := range navItems {
+		if want := b.uid == "budget"; b.active != want {
+			t.Errorf("nav item %q active = %v, want %v", b.uid, b.active, want)
+		}
 	}
 }
 
@@ -156,15 +167,27 @@ func TestShellQuickAdd(t *testing.T) {
 	}
 }
 
-// With no document open the shell shows the welcome screen and an empty status.
+// With no document open the shell shows the welcome screen and an empty status,
+// and the sidebar hides — there are no screens to navigate without a file.
 func TestShellWelcomeWhenNoStore(t *testing.T) {
 	c, _ := newShellTest(t)
 	useStore(nil, "")
 	if c.currentUID != "" {
 		t.Errorf("currentUID = %q after closing document, want empty", c.currentUID)
 	}
-	if !strings.Contains(c.statusLeft.Text, "No file open") {
-		t.Errorf("status left = %q, want 'No file open'", c.statusLeft.Text)
+	if !strings.Contains(c.sbNet.Text, "No file open") {
+		t.Errorf("sidebar footer = %q, want 'No file open'", c.sbNet.Text)
+	}
+	if c.sidebar.Visible() {
+		t.Error("sidebar should be hidden while no document is open")
+	}
+
+	// Opening a document brings it back.
+	s := core.NewStore()
+	core.SeedDemo(s, "$")
+	useStore(s, "")
+	if !c.sidebar.Visible() {
+		t.Error("sidebar should be visible again once a document opens")
 	}
 }
 

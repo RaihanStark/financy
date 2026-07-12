@@ -38,36 +38,37 @@ type palette struct {
 	Positive, Negative, Warning                                    color.NRGBA
 }
 
-// Light — a clean, modern light look: soft off-white chrome, crisp white
-// surfaces, hairline borders and a confident blue accent.
+// Light — a clean, modern light look: soft cool-gray chrome, crisp white
+// surfaces, hairline borders and a confident indigo accent. Money colors are
+// emerald/rose rather than raw green/red so figures read calm, not alarming.
 var light = palette{
-	BG:        color.NRGBA{R: 0xf5, G: 0xf6, B: 0xf8, A: 0xff},
+	BG:        color.NRGBA{R: 0xf6, G: 0xf7, B: 0xf9, A: 0xff},
 	Surface:   color.NRGBA{R: 0xff, G: 0xff, B: 0xff, A: 0xff},
-	SurfaceHi: color.NRGBA{R: 0xed, G: 0xf0, B: 0xf4, A: 0xff},
-	AltRow:    color.NRGBA{R: 0xf7, G: 0xf9, B: 0xfb, A: 0xff},
-	Border:    color.NRGBA{R: 0xe2, G: 0xe6, B: 0xec, A: 0xff},
-	Text:      color.NRGBA{R: 0x16, G: 0x19, B: 0x1d, A: 0xff},
+	SurfaceHi: color.NRGBA{R: 0xee, G: 0xf0, B: 0xf4, A: 0xff},
+	AltRow:    color.NRGBA{R: 0xf8, G: 0xf9, B: 0xfb, A: 0xff},
+	Border:    color.NRGBA{R: 0xe4, G: 0xe7, B: 0xec, A: 0xff},
+	Text:      color.NRGBA{R: 0x11, G: 0x18, B: 0x27, A: 0xff},
 	TextDim:   color.NRGBA{R: 0x6b, G: 0x72, B: 0x80, A: 0xff},
-	Primary:   color.NRGBA{R: 0x25, G: 0x63, B: 0xeb, A: 0xff},
-	Positive:  color.NRGBA{R: 0x15, G: 0x80, B: 0x3d, A: 0xff},
-	Negative:  color.NRGBA{R: 0xdc, G: 0x26, B: 0x26, A: 0xff},
-	Warning:   color.NRGBA{R: 0xb4, G: 0x53, B: 0x09, A: 0xff},
+	Primary:   color.NRGBA{R: 0x4f, G: 0x46, B: 0xe5, A: 0xff}, // indigo
+	Positive:  color.NRGBA{R: 0x05, G: 0x96, B: 0x69, A: 0xff}, // emerald
+	Negative:  color.NRGBA{R: 0xe1, G: 0x1d, B: 0x48, A: 0xff}, // rose
+	Warning:   color.NRGBA{R: 0xd9, G: 0x77, B: 0x06, A: 0xff}, // amber
 }
 
-// Dark — a deep slate look mirroring the light palette: near-black chrome,
-// raised slate surfaces, hairline borders and brighter accents tuned to read
-// well on a dark ground.
+// Dark — a deep indigo-tinted slate mirroring the light palette: near-black
+// chrome, raised slate surfaces, hairline borders and brighter accents tuned to
+// read well on a dark ground.
 var dark = palette{
-	BG:        color.NRGBA{R: 0x0f, G: 0x11, B: 0x15, A: 0xff}, // window chrome
-	Surface:   color.NRGBA{R: 0x1a, G: 0x1d, B: 0x23, A: 0xff}, // cards / panels / inputs
-	SurfaceHi: color.NRGBA{R: 0x23, G: 0x27, B: 0x2f, A: 0xff}, // header / hover / toolbar
-	AltRow:    color.NRGBA{R: 0x1e, G: 0x22, B: 0x29, A: 0xff}, // alternating grid row
-	Border:    color.NRGBA{R: 0x2d, G: 0x33, B: 0x3c, A: 0xff}, // hairline borders / grid lines
-	Text:      color.NRGBA{R: 0xe6, G: 0xe8, B: 0xec, A: 0xff}, // primary text
-	TextDim:   color.NRGBA{R: 0x97, G: 0x9e, B: 0xab, A: 0xff}, // muted captions
-	Primary:   color.NRGBA{R: 0x3b, G: 0x82, B: 0xf6, A: 0xff}, // brighter blue accent
-	Positive:  color.NRGBA{R: 0x4a, G: 0xde, B: 0x80, A: 0xff}, // light emerald
-	Negative:  color.NRGBA{R: 0xf8, G: 0x71, B: 0x71, A: 0xff}, // light red
+	BG:        color.NRGBA{R: 0x0b, G: 0x0d, B: 0x12, A: 0xff}, // window chrome
+	Surface:   color.NRGBA{R: 0x15, G: 0x18, B: 0x21, A: 0xff}, // cards / panels / inputs
+	SurfaceHi: color.NRGBA{R: 0x1f, G: 0x23, B: 0x30, A: 0xff}, // header / hover / sidebar
+	AltRow:    color.NRGBA{R: 0x19, G: 0x1d, B: 0x28, A: 0xff}, // alternating grid row
+	Border:    color.NRGBA{R: 0x2a, G: 0x2f, B: 0x3d, A: 0xff}, // hairline borders / grid lines
+	Text:      color.NRGBA{R: 0xe7, G: 0xe9, B: 0xee, A: 0xff}, // primary text
+	TextDim:   color.NRGBA{R: 0x9a, G: 0xa1, B: 0xb2, A: 0xff}, // muted captions
+	Primary:   color.NRGBA{R: 0x81, G: 0x8c, B: 0xf8, A: 0xff}, // light indigo accent
+	Positive:  color.NRGBA{R: 0x34, G: 0xd3, B: 0x99, A: 0xff}, // light emerald
+	Negative:  color.NRGBA{R: 0xfb, G: 0x71, B: 0x85, A: 0xff}, // light rose
 	Warning:   color.NRGBA{R: 0xfb, G: 0xbf, B: 0x24, A: 0xff}, // light amber
 }
 
@@ -94,8 +95,8 @@ func SetDark(on bool) {
 
 // Corner radii used across the custom canvas widgets (cards, chips, banners).
 const (
-	Radius   float32 = 10 // cards / panels
-	RadiusSm float32 = 6  // chips / badges / small controls
+	Radius   float32 = 12 // cards / panels
+	RadiusSm float32 = 7  // chips / badges / small controls
 )
 
 // Theme implements fyne.Theme with the active palette above.
@@ -167,9 +168,9 @@ func (Theme) Size(name fyne.ThemeSizeName) float32 {
 	case theme.SizeNameSubHeadingText:
 		return 15
 	case theme.SizeNameInputRadius:
-		return 8
+		return 9
 	case theme.SizeNameSelectionRadius:
-		return 6
+		return 7
 	case theme.SizeNameScrollBar:
 		return 12
 	case theme.SizeNameScrollBarSmall:

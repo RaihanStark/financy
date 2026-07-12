@@ -99,9 +99,9 @@ func TestDeleteUnusedCategory(t *testing.T) {
 	if d == nil {
 		t.Fatal("expected delete-confirm dialog")
 	}
-	// dialog.ShowConfirm uses Yes/No; tap the affirmative.
-	if !tapButton(d, "Yes") {
-		t.Fatal("no confirm (Yes) button in delete dialog")
+	// The delete-confirm modal's affirmative button is labeled "Delete".
+	if !tapButton(d, "Delete") {
+		t.Fatal("no confirm (Delete) button in delete dialog")
 	}
 	if got := len(s.ExpenseAccounts()); got != before-1 {
 		t.Fatalf("expense categories = %d, want %d", got, before-1)

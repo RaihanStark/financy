@@ -10,6 +10,7 @@ import (
 	"fyne.io/fyne/v2/widget"
 
 	"github.com/raihanstark/financy/internal/core"
+	"github.com/raihanstark/financy/internal/ui/component"
 	"github.com/raihanstark/financy/internal/ui/style"
 )
 
@@ -30,12 +31,11 @@ func newViewTest(t *testing.T) (*core.Store, fyne.Window) {
 	w.Resize(fyne.NewSize(1280, 860))
 
 	prevStore, prevWin, prevRender, prevNav := store, win, render, nav
-	var navTarget string
+	gotNav = ""
 	store = s
 	win = w
 	render = func() {}
-	nav = func(uid string) { navTarget = uid }
-	_ = navTarget
+	nav = func(uid string) { gotNav = uid }
 
 	t.Cleanup(func() {
 		w.Close()
@@ -44,6 +44,9 @@ func newViewTest(t *testing.T) (*core.Store, fyne.Window) {
 	})
 	return s, w
 }
+
+// gotNav records the last uid passed to nav by the screen under test.
+var gotNav string
 
 // emptyViewTest is like newViewTest but the store has no money accounts and no
 // transactions (only the seed categories), for exercising empty-state paths.
@@ -181,6 +184,42 @@ func assertNoText(t *testing.T, obj fyne.CanvasObject, unwanted ...string) {
 			t.Errorf("rendered tree unexpectedly contains %q", u)
 		}
 	}
+}
+
+// tapRowWithText finds the first TappableRow whose subtree contains want and
+// taps it, reporting whether one was found.
+func tapRowWithText(obj fyne.CanvasObject, want string) bool {
+	var found *component.TappableRow
+	seen := map[fyne.CanvasObject]bool{}
+	var walk func(o fyne.CanvasObject)
+	walk = func(o fyne.CanvasObject) {
+		if o == nil || seen[o] || found != nil {
+			return
+		}
+		seen[o] = true
+		if r, ok := o.(*component.TappableRow); ok {
+			if strings.Contains(strings.Join(collectText(r), "\n"), want) {
+				found = r
+				return
+			}
+		}
+		switch v := o.(type) {
+		case *fyne.Container:
+			for _, c := range v.Objects {
+				walk(c)
+			}
+		case fyne.Widget:
+			for _, c := range childObjects(v) {
+				walk(c)
+			}
+		}
+	}
+	walk(obj)
+	if found == nil {
+		return false
+	}
+	test.Tap(found)
+	return true
 }
 
 // findButtons returns every *widget.Button in a tree.

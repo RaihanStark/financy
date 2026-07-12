@@ -68,8 +68,7 @@ func TestScreenTransactionsRenders(t *testing.T) {
 
 	assertText(t, screen,
 		"Transactions", "Add Transaction", "Import CSV", "Select",
-		"SHOWING", "INCOME (filtered)", "EXPENSES (filtered)", "NET (filtered)",
-		"Journal",
+		"SHOWING", "INCOME", "EXPENSES", "NET", "in current view",
 	)
 	// The "showing N of M entries" count reflects the store.
 	assertText(t, screen, "of "+itoa(len(s.Transactions()))+" entries")

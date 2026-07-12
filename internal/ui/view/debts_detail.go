@@ -5,7 +5,6 @@ import (
 
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/container"
-	"fyne.io/fyne/v2/dialog"
 	"fyne.io/fyne/v2/layout"
 	"fyne.io/fyne/v2/theme"
 	"fyne.io/fyne/v2/widget"
@@ -18,7 +17,7 @@ import (
 // subscriber (registered once per store) rebuilds its content on every store
 // change, and closes it when the debt itself is gone.
 var (
-	debtDlg      *dialog.CustomDialog
+	debtDlg      *modal
 	debtDlgID    string
 	debtDlgBody  *fyne.Container
 	debtDlgStore *core.Store
@@ -39,14 +38,14 @@ func showDebtDetail(id string) {
 	}
 	debtDlgID = id
 	debtDlgBody = container.NewStack(debtTabContent(*d))
-	dlg := dialog.NewCustom(orDash(d.Name), "Close", container.NewScroll(debtDlgBody), win)
+	dlg := newModalWithClose(orDash(d.Name), "Close", container.NewScroll(debtDlgBody))
 	debtDlg = dlg
 	dlg.SetOnClosed(func() {
 		if debtDlg == dlg {
 			debtDlg, debtDlgID, debtDlgBody = nil, "", nil
 		}
 	})
-	dlg.Resize(fyne.NewSize(820, 620))
+	dlg.SetCardSize(fyne.NewSize(820, 620))
 	dlg.Show()
 }
 
@@ -459,7 +458,7 @@ func payInstallmentDialog(d Debt, in Installment) {
 		sel.widget,
 	)
 
-	var dlg *dialog.CustomDialog
+	var dlg *modal
 	cancel := secondaryButton("Cancel", nil, func() { dlg.Hide() })
 	confirm := primaryButton("Confirm", theme.ConfirmIcon(), func() {
 		postNew, picked := sel.isPostNew(), sel.picked()
@@ -478,8 +477,8 @@ func payInstallmentDialog(d Debt, in Installment) {
 
 	content := container.NewVBox(body, spacerH(16),
 		container.NewHBox(layout.NewSpacer(), cancel, confirm))
-	dlg = dialog.NewCustomWithoutButtons("Pay installment", content, win)
-	dlg.Resize(fyne.NewSize(520, 300))
+	dlg = newModal("Pay installment", content)
+	dlg.SetCardSize(fyne.NewSize(520, 300))
 	dlg.Show()
 }
 
@@ -616,7 +615,7 @@ func statementReviewDialog(sd StatementDue) {
 		amt,
 	)
 
-	var dlg *dialog.CustomDialog
+	var dlg *modal
 	cancel := secondaryButton("Cancel", nil, func() { dlg.Hide() })
 	skip := secondaryButton("No interest", theme.ContentClearIcon(), func() {
 		dlg.Hide()
@@ -637,7 +636,7 @@ func statementReviewDialog(sd StatementDue) {
 
 	content := container.NewVBox(body, spacerH(16),
 		container.NewHBox(layout.NewSpacer(), cancel, skip, post))
-	dlg = dialog.NewCustomWithoutButtons("Review statement", content, win)
-	dlg.Resize(fyne.NewSize(520, 280))
+	dlg = newModal("Review statement", content)
+	dlg.SetCardSize(fyne.NewSize(520, 280))
 	dlg.Show()
 }

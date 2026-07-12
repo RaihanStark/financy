@@ -19,13 +19,13 @@ func applyPalette(dark bool) {
 	view.SyncPalette()
 }
 
-// themeToggleLabel is the tooltip for the toolbar theme button — it names the
-// mode the button switches to.
+// themeToggleLabel is the label for the sidebar theme item — it names the mode
+// the item switches to.
 func themeToggleLabel() string {
 	if style.Dark {
-		return "Switch to light mode"
+		return "Light mode"
 	}
-	return "Switch to dark mode"
+	return "Dark mode"
 }
 
 // toggleTheme flips between the light and dark palettes and rebuilds the window

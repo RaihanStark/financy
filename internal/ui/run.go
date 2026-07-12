@@ -61,7 +61,7 @@ func Run(icon fyne.Resource) {
 	if icon != nil {
 		w.SetIcon(icon)
 	}
-	w.Resize(fyne.NewSize(1320, 860))
+	w.Resize(fyne.NewSize(1420, 880))
 
 	ctl = &appController{win: w}
 	w.SetContent(assembleShell(ctl))
@@ -76,6 +76,7 @@ func Run(icon fyne.Resource) {
 
 	startup() // opens last-used or a default document, then renders
 
+	startDueTicker()            // date rollover + newly due recurring entries
 	checkForUpdatesAsync(false) // silent, throttled background check
 
 	w.ShowAndRun()

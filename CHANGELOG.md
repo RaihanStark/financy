@@ -13,6 +13,86 @@ See `RELEASING.md`.
 
 ## [Unreleased]
 
+### Added
+- **Recurring, forward-looking.** The Recurring screen no longer just lists
+  templates — it leads with what your schedule actually means: **MONTHLY
+  BILLS / MONTHLY INCOME / NET PER MONTH / ACTIVE** stat cards (every
+  frequency normalized to a monthly figure) and a **Next 30 days timeline**
+  with occurrences bucketed into *Overdue & due* (amber, with an inline
+  Review & Post), *This week* and *Later this month*, each row wording its
+  distance ("today", "in 5 days", "3 days overdue"). The Accounts overview
+  gains an **Upcoming** card — due alert plus the next 14 days of
+  occurrences — that deep-links to the Recurring screen. Due entries are now
+  re-checked once a minute while the app runs (midnight rollover included),
+  not just when a file opens; the prompt only reappears when something *new*
+  becomes due, so "Later" means later. Review-before-post is unchanged:
+  nothing ever posts without your confirmation.
+
+- **Cover overspending.** An overspent envelope can now be fixed in place:
+  the overspend banner's **Cover…** button and the category row's
+  right-click menu open a dialog that moves money from another envelope (or
+  from Ready to Assign) into the red one — source picker sorted by what each
+  envelope can give, amount prefilled with the shortfall, and validation so
+  you can't move more than a source has. Backed by a single-notification
+  `MoveAssigned` store operation.
+
+### Changed
+- **Desktop redesign — Recurring page.** Rebuilt around the forward-looking
+  layout above (stats → timeline → templates). The due nudge became a proper
+  amber alert banner with the amount due, the template list moved into a
+  titled **All templates** panel, and first-run shows an explainer ("Put your
+  bills on autopilot — with a veto") instead of a bare empty state. Row
+  actions (post early, edit, pause, delete) and the review dialog are
+  unchanged.
+- **Desktop redesign — Budget page.** Spotting trouble no longer requires
+  reading numbers: every category row gains a traffic-light **usage bar**
+  (emerald while healthy, amber from 85% used, rose when overspent), overspent
+  envelopes show their Available as a filled red pill, and a banner above the
+  table counts them out loud. The Activity column became **Spent** — plain
+  figures, "—" for untouched envelopes, green "+" for refunds — and unassigned
+  categories show "—" instead of a wall of $ 0.00. The Ready-to-Assign hero
+  got the same padding/centering treatment as the Accounts hero. Assign
+  dialog, quick-assign, Auto-Assign and month locking are unchanged.
+- **Desktop redesign — Transactions page.** The journal keeps its daily
+  grouping but each day is now its own card, headed by the date and the day's
+  net (shown only when there is one). The filter panel collapsed from two rows
+  to one slim line — month / type / account selects plus a full-width search —
+  and the summary cards read INCOME / EXPENSES / NET without the "(filtered)"
+  clutter. Transaction type chips are now soft circular badges. Selection
+  mode, row context menus and editing are unchanged.
+- **Desktop redesign — Accounts page.** The card grid is now a grouped table,
+  matching the Debts page: Assets and Liabilities panels with one row per
+  account — name + institution (with a compact Off-budget chip), a
+  share-of-group bar, transaction count, and a right-aligned colored balance
+  column that's actually scannable. Row click still opens the register;
+  the ⋮ / right-click menu is unchanged. The net-worth hero stays.
+- **Desktop redesign — modals.** Every dialog (setup wizard, transaction and
+  debt forms, reconcile, preferences, alerts, confirmations…) moved off Fyne's
+  boxy stock dialogs onto a custom modal: a dimming scrim with a centered
+  rounded card that matches the design system — soft shadow, hairline border,
+  title header and right-aligned footer actions. Delete confirmations now use
+  an explicit red **Delete** button instead of Yes/No. Native file open/save
+  pickers are unchanged.
+- **Desktop redesign — a modern, slick shell.** The icon-only top toolbar and
+  bottom status bar are gone; navigation now lives in a labeled left sidebar
+  with the app brand, a prominent **New Transaction** button, clear icon+label
+  entries with an active highlight, quick access to Categories / Preferences /
+  theme toggle, and a live **net-worth summary card** (assets & liabilities)
+  pinned at the bottom. The design system was refreshed across both themes:
+  an indigo accent, calmer emerald/rose money colors (replacing raw
+  green/red), a deeper indigo-tinted dark palette, softer rounded corners,
+  slimmer pill progress bars, airier screen headers and stat cards. With no
+  document open the sidebar now hides entirely — the welcome screen has
+  nothing to navigate — and reappears when a file opens. Desktop only — the
+  mobile layout is unchanged.
+
+### Removed
+- **iOS release build.** The release workflow no longer produces the unsigned
+  `.ipa`: it wasn't installable without re-signing through Sideloadly/AltStore
+  (and expired weekly on free provisioning), so it added a macOS runner to
+  every release for an artifact almost nobody could use. Android, Linux,
+  Windows and macOS release assets are unchanged.
+
 ## [0.13.0] - 2026-07-11
 
 ### Added
