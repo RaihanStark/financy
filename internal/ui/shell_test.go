@@ -167,7 +167,8 @@ func TestShellQuickAdd(t *testing.T) {
 	}
 }
 
-// With no document open the shell shows the welcome screen and an empty status.
+// With no document open the shell shows the welcome screen and an empty status,
+// and the sidebar hides — there are no screens to navigate without a file.
 func TestShellWelcomeWhenNoStore(t *testing.T) {
 	c, _ := newShellTest(t)
 	useStore(nil, "")
@@ -176,6 +177,17 @@ func TestShellWelcomeWhenNoStore(t *testing.T) {
 	}
 	if !strings.Contains(c.sbNet.Text, "No file open") {
 		t.Errorf("sidebar footer = %q, want 'No file open'", c.sbNet.Text)
+	}
+	if c.sidebar.Visible() {
+		t.Error("sidebar should be hidden while no document is open")
+	}
+
+	// Opening a document brings it back.
+	s := core.NewStore()
+	core.SeedDemo(s, "$")
+	useStore(s, "")
+	if !c.sidebar.Visible() {
+		t.Error("sidebar should be visible again once a document opens")
 	}
 }
 

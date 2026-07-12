@@ -13,6 +13,7 @@ import (
 type appController struct {
 	win        fyne.Window
 	content    *fyne.Container
+	sidebar    fyne.CanvasObject // hidden while no document is open
 	currentUID string
 	// Sidebar footer figures, kept live by updateStatus.
 	sbCaption *canvas.Text
@@ -42,6 +43,9 @@ func (c *appController) render() {
 		c.renderWelcome()
 		return
 	}
+	if c.sidebar != nil {
+		c.sidebar.Show()
+	}
 	highlightNav(c.currentUID)
 	c.content.Objects = []fyne.CanvasObject{
 		container.NewScroll(container.New(padCell(12, 16), n.build())),
@@ -51,6 +55,9 @@ func (c *appController) render() {
 }
 
 func (c *appController) renderWelcome() {
+	if c.sidebar != nil {
+		c.sidebar.Hide() // no document → no screens to navigate
+	}
 	highlightNav("")
 	c.content.Objects = []fyne.CanvasObject{welcomeScreen()}
 	c.content.Refresh()
@@ -89,9 +96,9 @@ func (c *appController) updateStatus() {
 func assembleShell(c *appController) fyne.CanvasObject {
 	c.content = container.NewStack()
 
-	sidebar := buildSidebar(c)
+	c.sidebar = buildSidebar(c)
 	contentBG := container.NewStack(canvas.NewRectangle(colBG), c.content)
-	border := container.NewBorder(nil, nil, sidebar, nil, contentBG)
+	border := container.NewBorder(nil, nil, c.sidebar, nil, contentBG)
 
 	// A floating tooltip layer sits above everything; it never intercepts input.
 	initTooltipLayer()
