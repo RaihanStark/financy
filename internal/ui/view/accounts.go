@@ -2,14 +2,15 @@ package view
 
 import (
 	"fyne.io/fyne/v2"
+	"fyne.io/fyne/v2/canvas"
 	"fyne.io/fyne/v2/container"
-	"fyne.io/fyne/v2/dialog"
+	"fyne.io/fyne/v2/layout"
 	"fyne.io/fyne/v2/theme"
 	"fyne.io/fyne/v2/widget"
 )
 
 func ScreenAccounts() fyne.CanvasObject {
-	bar := appBar("Accounts", "Click a card to open its register · right-click for actions",
+	bar := appBar("Accounts", "Click a row to open its register · right-click for actions",
 		primaryButton("Add Account", theme.ContentAddIcon(), func() { AccountForm(nil) }),
 	)
 
@@ -28,55 +29,114 @@ func netWorthHero() fyne.CanvasObject {
 	nw := store.NetWorth()
 	netBlock := container.NewVBox(
 		txt("NET WORTH", colTextDim, 11, true),
+		spacerH(4),
 		txt(fmtMoney(nw), moneyColor(nw), 30, true),
+		spacerH(3),
 		txt("Assets − Liabilities", colTextDim, 11, false),
 	)
 	assetsBlock := container.NewVBox(
 		txt("TOTAL ASSETS", colTextDim, 10.5, true),
+		spacerH(4),
 		txt(fmtMoney(store.TotalAssets()), colPositive, 18, true),
+		spacerH(3),
 		txt(itoa(len(store.AssetAccounts()))+" accounts", colTextDim, 10, false),
 	)
 	liabBlock := container.NewVBox(
 		txt("TOTAL LIABILITIES", colTextDim, 10.5, true),
+		spacerH(4),
 		txt(fmtMoney(store.TotalLiabilities()), colNegative, 18, true),
+		spacerH(3),
 		txt(itoa(len(store.LiabilityAccounts()))+" accounts", colTextDim, 10, false),
 	)
-	right := container.NewGridWithColumns(2, assetsBlock, liabBlock)
-	return panel(container.New(&columnsLayout{Weights: []float32{1.1, 2}, Gap: 24}, netBlock, right))
+	// Center the shorter side blocks against the taller net-worth block so the
+	// row reads as one aligned band rather than three floating columns.
+	vCenter := func(o fyne.CanvasObject) fyne.CanvasObject {
+		return container.NewVBox(spacerV(), o, spacerV())
+	}
+	right := container.NewGridWithColumns(2, vCenter(assetsBlock), vCenter(liabBlock))
+	inner := container.New(&columnsLayout{Weights: []float32{1.1, 2}, Gap: 24}, netBlock, right)
+	return panel(container.New(padCell(10, 12), inner))
 }
 
-// accountGroup renders a titled section with a subtotal and a grid of cards.
+// accountGroup renders a titled table panel: a header with the subtotal, a
+// column header row, and one tappable line per account (mirroring the Debts
+// table so the two screens read the same).
 func accountGroup(title string, accts []Account, subtotal int, liability bool) fyne.CanvasObject {
 	subCol := colPositive
 	if liability {
 		subCol = colNegative
 	}
 	head := container.NewBorder(nil, nil,
-		txt(title, colText, 14, true),
-		container.NewHBox(txt(itoa(len(accts))+" accounts   ", colTextDim, 11, false),
-			txt(fmtMoney(subtotal), subCol, 14, true)),
+		txt(title, colText, 13.5, true),
+		container.NewHBox(
+			txt(itoa(len(accts))+" account"+plural(len(accts), "", "s"), colTextDim, 11, false),
+			spacerW(10),
+			txt(fmtMoney(subtotal), subCol, 13.5, true),
+		),
 	)
 
 	if len(accts) == 0 {
-		return container.NewVBox(head, spacerH(4), panel(emptyState("No "+title+" yet")))
+		return panel(container.NewVBox(container.New(padCell(4, 8), head), spacerH(4),
+			container.New(padCell(16, 8), emptyState("No "+title+" yet"))))
 	}
 
-	cards := make([]fyne.CanvasObject, 0, len(accts))
-	for _, a := range accts {
-		cards = append(cards, accountCard(a, liability))
+	cols := accountCols()
+	h := func(s string) fyne.CanvasObject { return txt(s, colTextDim, 10.5, true) }
+	header := container.New(cols,
+		h("Account"), h("Share"),
+		alignRight(txt("Txns", colTextDim, 10.5, true)),
+		alignRight(txt("Balance", colTextDim, 10.5, true)),
+		h(""))
+
+	table := container.NewVBox(
+		container.New(padCell(4, 8), head),
+		spacerH(6),
+		container.New(padCell(2, 8), header),
+		divider(),
+	)
+	for i, a := range accts {
+		table.Add(accountRow(a, liability, subtotal, i))
 	}
-	grid := container.NewGridWithColumns(3, cards...)
-	return container.NewVBox(head, spacerH(4), grid)
+	return panel(container.New(padCell(6, 6), table))
 }
 
-// accountCard is a single, scannable account tile with a context menu.
-func accountCard(a Account, liability bool) fyne.CanvasObject {
+// accountCols is the shared column layout for the account header and rows.
+func accountCols() *columnsLayout {
+	return &columnsLayout{Weights: []float32{2.9, 1.9, 0.7, 1.5, 0.4}, Gap: 10}
+}
+
+// accountRow is one account as a table line: name + institution, its share of
+// the group's total, transaction count, balance, and the ⋮ menu. Tapping the
+// row opens the register; right-click opens the same menu.
+func accountRow(a Account, liability bool, subtotal, idx int) fyne.CanvasObject {
 	amtCol := colPositive
 	if liability {
 		amtCol = colNegative
 	}
 	bal := store.DisplayBalance(a)
 	entries := store.TxnCountForAccount(a.ID)
+
+	nameCell := container.NewHBox(container.NewCenter(txt(a.Name, colText, 12.5, true)))
+	if a.Institution != "" {
+		nameCell.Add(container.NewCenter(txt(" · "+a.Institution, colTextDim, 11.5, false)))
+	}
+	if a.OffBudget {
+		nameCell.Add(spacerW(6))
+		nameCell.Add(container.NewCenter(miniBadge("Off-budget")))
+	}
+
+	// Share of the group's total — the at-a-glance composition the old card
+	// grid never offered. Indigo on purpose: it's a proportion, not a verdict.
+	ratio, pct := 0.0, "—"
+	if subtotal > 0 && bal > 0 {
+		ratio = float64(bal) / float64(subtotal)
+		pct = itoa(int(ratio*100+0.5)) + "%"
+	}
+	bar := container.NewVBox(spacerV(), container.New(padCell(0, 4), progressBar(ratio, colPrimary)), spacerV())
+	shareCell := container.NewBorder(nil, nil, nil,
+		container.NewCenter(container.NewGridWrap(fyne.NewSize(38, 16), alignRight(mono(pct, colTextDim, 11, false)))),
+		bar,
+	)
 
 	menuBtn := widget.NewButtonWithIcon("", theme.MoreVerticalIcon(), nil)
 	menuBtn.Importance = widget.LowImportance
@@ -86,24 +146,35 @@ func accountCard(a Account, liability bool) fyne.CanvasObject {
 		showContextMenu(pos, accountMenuItems(a)...)
 	}
 
-	top := container.NewBorder(nil, nil,
-		txt(a.Name, colText, 14, true), menuBtn)
-	subText := string(a.Type) + " · " + orDash(a.Institution)
-	if a.OffBudget {
-		subText += " · Off-budget"
+	cells := container.New(accountCols(),
+		nameCell,
+		shareCell,
+		alignRight(mono(itoa(entries), colTextDim, 12, false)),
+		alignRight(mono(fmtMoney(bal), amtCol, 12.5, false)),
+		container.NewCenter(menuBtn),
+	)
+
+	var fill = colSurface
+	if idx%2 == 1 {
+		fill = colAltRow
 	}
-	sub := txt(subText, colTextDim, 10.5, false)
-	balance := txt(fmtMoney(bal), amtCol, 22, true)
-	footer := txt(itoa(entries)+" transactions", colTextDim, 10, false)
-
-	inner := container.NewVBox(top, sub, spacerH(8), balance, spacerH(2), footer)
-
-	row := newTappableRow(container.New(padCell(10, 12), inner), colSurface,
+	row := newTappableRow(container.New(padCell(6, 8), cells), fill,
 		func() { showRegisterDialog(a) })
-	row.SetBordered()
 	row.SetOnSecondary(func(pos fyne.Position) { showContextMenu(pos, accountMenuItems(a)...) })
 	return row
 }
+
+// miniBadge is a compact inline chip that doesn't inflate a table row's
+// height the way the full-size badge would.
+func miniBadge(label string) fyne.CanvasObject {
+	bg := canvas.NewRectangle(withAlpha(colTextDim, 0x1f))
+	bg.CornerRadius = 6
+	return container.NewStack(bg, container.New(padCell(1, 6), txt(label, colTextDim, 9.5, true)))
+}
+
+// spacerV is an expanding vertical filler used to center fixed-height content
+// inside a stretched table cell.
+func spacerV() fyne.CanvasObject { return layout.NewSpacer() }
 
 // accountMenuItems is the shared right-click / ⋮ menu for an account.
 func accountMenuItems(a Account) []*fyne.MenuItem {
@@ -163,8 +234,8 @@ func showRegisterDialog(a Account) {
 		container.NewScroll(registerTable(a)),
 	)
 
-	d := dialog.NewCustom("Register — "+a.Name, "Close", body, win)
-	d.Resize(fyne.NewSize(820, 560))
+	d := newModalWithClose("Register — "+a.Name, "Close", body)
+	d.SetCardSize(fyne.NewSize(820, 560))
 	d.Show()
 }
 

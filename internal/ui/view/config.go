@@ -3,7 +3,6 @@ package view
 import (
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/container"
-	"fyne.io/fyne/v2/dialog"
 	"fyne.io/fyne/v2/theme"
 	"fyne.io/fyne/v2/widget"
 )
@@ -42,7 +41,7 @@ func OpenConfig(tab int) {
 	}
 
 	content := container.NewGridWrap(fyne.NewSize(760, 540), tabs)
-	d := dialog.NewCustom("Preferences", "Close", content, win)
+	d := newModalWithClose("Preferences", "Close", content)
 	d.Show()
 }
 

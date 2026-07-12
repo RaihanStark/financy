@@ -3,7 +3,6 @@ package view
 import (
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/container"
-	"fyne.io/fyne/v2/dialog"
 	"fyne.io/fyne/v2/layout"
 	"fyne.io/fyne/v2/theme"
 )
@@ -46,15 +45,15 @@ func strategyDialog() {
 	head := container.NewBorder(nil, nil,
 		txt("Extra per month, on top of all required payments:  ", colText, 12, false), nil, extra)
 
-	var dlg *dialog.CustomDialog
+	var dlg *modal
 	closeBtn := secondaryButton("Close", theme.CancelIcon(), func() { dlg.Hide() })
 	content := container.NewBorder(
 		container.NewVBox(head, spacerH(12)),
 		container.NewVBox(spacerH(10), container.NewHBox(layout.NewSpacer(), closeBtn)),
 		nil, nil, results,
 	)
-	dlg = dialog.NewCustomWithoutButtons("Payoff strategies", content, win)
-	dlg.Resize(fyne.NewSize(860, 520))
+	dlg = newModal("Payoff strategies", content)
+	dlg.SetCardSize(fyne.NewSize(860, 520))
 	dlg.Show()
 }
 

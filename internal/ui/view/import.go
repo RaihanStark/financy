@@ -48,7 +48,7 @@ func ImportCSV() {
 		defer func() { _ = r.Close() }()
 		data, e := io.ReadAll(r)
 		if e != nil {
-			dialog.ShowError(e, win)
+			showError(e)
 			return
 		}
 		records, e := core.ParseCSV(data)
@@ -134,7 +134,7 @@ func showImportMapping(records [][]string) {
 	)
 	updateMode(mode.Selected)
 
-	var d *dialog.CustomDialog
+	var d *modal
 	preview := primaryButton("Preview…", nil, func() {
 		spec := core.ImportSpec{
 			AccountID:    idForName(store.MoneyAccounts(), account.Selected),
@@ -163,8 +163,8 @@ func showImportMapping(records [][]string) {
 		nil, nil,
 		container.NewScroll(form),
 	)
-	d = dialog.NewCustomWithoutButtons("Import CSV", content, win)
-	d.Resize(fyne.NewSize(540, 620))
+	d = newModal("Import CSV", content)
+	d.SetCardSize(fyne.NewSize(540, 620))
 	d.Show()
 }
 
@@ -245,7 +245,7 @@ func showImportPreview(records [][]string, spec core.ImportSpec) {
 		container.NewScroll(tbl.Build()),
 	)
 
-	var d *dialog.CustomDialog
+	var d *modal
 	back := secondaryButton("Back", nil, func() { d.Hide(); showImportMapping(records) })
 	cancel := secondaryButton("Cancel", nil, func() { d.Hide() })
 	doImport := primaryButton(fmt.Sprintf("Import %d", okN), nil, func() {
@@ -258,7 +258,7 @@ func showImportPreview(records [][]string, spec core.ImportSpec) {
 		d.Hide()
 		n, err := store.AddTransactions(commit)
 		if err != nil {
-			dialog.ShowError(err, win)
+			showError(err)
 			return
 		}
 		showInfo("Import complete", fmt.Sprintf("Imported %d transaction(s) into %s.\nSkipped %d duplicate(s) and %d unparseable row(s).",
@@ -269,8 +269,8 @@ func showImportPreview(records [][]string, spec core.ImportSpec) {
 		container.NewHBox(layoutSpacer(), cancel, back, doImport))
 	content := container.NewBorder(nil, footer, nil, nil, body)
 
-	d = dialog.NewCustomWithoutButtons("Review import", content, win)
-	d.Resize(fyne.NewSize(760, 600))
+	d = newModal("Review import", content)
+	d.SetCardSize(fyne.NewSize(760, 600))
 	d.Show()
 }
 

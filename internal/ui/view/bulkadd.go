@@ -3,7 +3,6 @@ package view
 import (
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/container"
-	"fyne.io/fyne/v2/dialog"
 	"fyne.io/fyne/v2/layout"
 	"fyne.io/fyne/v2/theme"
 	"fyne.io/fyne/v2/widget"
@@ -199,13 +198,13 @@ func QuickAddForm() {
 		secondaryButton("＋ Add transfer", theme.ContentAddIcon(), func() { addTRRow() }),
 	)
 
-	var d *dialog.CustomDialog
+	var d *modal
 	cancel := secondaryButton("Cancel", nil, func() { d.Hide() })
 	save := primaryButton("Save all", theme.ConfirmIcon(), func() {
 		n, err := commit()
 		d.Hide()
 		if err != nil {
-			dialog.ShowError(err, win)
+			showError(err)
 			return
 		}
 		showInfo("Added", itoa(n)+" transaction"+plural(n, "", "s")+" added.")
@@ -216,8 +215,8 @@ func QuickAddForm() {
 		nil, nil,
 		container.NewScroll(container.NewPadded(body)),
 	)
-	d = dialog.NewCustomWithoutButtons("Quick Add", content, win)
-	d.Resize(fyne.NewSize(820, 620))
+	d = newModal("Quick Add", content)
+	d.SetCardSize(fyne.NewSize(820, 620))
 	d.Show()
 }
 

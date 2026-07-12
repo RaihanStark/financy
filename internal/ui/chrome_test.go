@@ -5,7 +5,6 @@ import (
 	"testing"
 
 	"fyne.io/fyne/v2"
-	"fyne.io/fyne/v2/test"
 	"fyne.io/fyne/v2/theme"
 )
 
@@ -51,42 +50,46 @@ func TestPromptNewDocument(t *testing.T) {
 	assertUITextContains(t, d, "New document")
 }
 
-// The toolbar builds and exposes the navigation buttons.
-func TestBuildToolbar(t *testing.T) {
+// The sidebar builds and registers the six navigation items.
+func TestBuildSidebar(t *testing.T) {
 	c, _ := newShellTest(t)
-	tb := buildToolbar(c)
-	// Tooltips/labels live on the tool buttons; ensure the bar assembles.
-	if tb == nil {
-		t.Fatal("buildToolbar returned nil")
+	sb := buildSidebar(c)
+	if sb == nil {
+		t.Fatal("buildSidebar returned nil")
+	}
+	if len(navItems) != 6 {
+		t.Fatalf("sidebar registered %d nav items, want 6", len(navItems))
+	}
+	got := uiText(sb)
+	for _, want := range []string{"Financy", "New Transaction", "Accounts", "Transactions",
+		"Budget", "Recurring", "Debts", "Analytics", "Categories", "Preferences", "NET WORTH"} {
+		if !strings.Contains(got, want) {
+			t.Errorf("sidebar missing %q; text:\n%s", want, got)
+		}
 	}
 }
 
-// A tool button shows its tooltip on hover and hides it on mouse-out.
-func TestToolButtonTooltip(t *testing.T) {
+// The floating tooltip layer shows and hides on demand (charts drive it).
+func TestTooltipLayer(t *testing.T) {
 	_, _ = newShellTest(t)
-	b := newToolBtn(theme.ContentAddIcon(), "Add entry", func() {})
-	w := test.NewWindow(b)
-	defer w.Close()
-	w.Resize(fyne.NewSize(120, 60))
-
-	b.MouseIn(nil)
+	showToolTip("hello", fyne.NewPos(10, 10))
 	if ttBox == nil || !ttBox.Visible() {
-		t.Error("tooltip not shown on MouseIn")
+		t.Error("tooltip not shown by showToolTip")
 	}
-	b.MouseOut()
+	hideToolTip()
 	if ttBox != nil && ttBox.Visible() {
-		t.Error("tooltip not hidden on MouseOut")
+		t.Error("tooltip not hidden by hideToolTip")
 	}
 }
 
-// Tapping a tool button fires its action.
-func TestToolButtonTapped(t *testing.T) {
+// Tapping a sidebar item fires its action.
+func TestSideItemTapped(t *testing.T) {
 	_, _ = newShellTest(t)
 	fired := false
-	b := newToolBtn(theme.ContentAddIcon(), "Add", func() { fired = true })
+	b := newSideItem(theme.ContentAddIcon(), "Add", func() { fired = true })
 	b.Tapped(nil)
 	if !fired {
-		t.Error("tool button action did not fire on tap")
+		t.Error("sidebar item action did not fire on tap")
 	}
 }
 

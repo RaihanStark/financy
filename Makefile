@@ -72,10 +72,10 @@ build:
 shot: build
 	go run . shot $(SHOTDIR)
 	@echo "Copying screenshots into docs/screenshots and website/static/img…"
-	@for n in accounts analytics categories data-summary recurring reports setup transactions; do \
+	@for n in accounts analytics budget categories data-summary recurring setup transactions; do \
 		cp "$(SHOTDIR)/$$n.png" "docs/screenshots/$$n.png"; \
 	done
-	@for n in accounts analytics categories reports transactions; do \
+	@for n in accounts analytics budget budget-assign categories transactions; do \
 		cp "$(SHOTDIR)/$$n.png" "website/static/img/$$n.png"; \
 	done
 	@cp "$(SHOTDIR)/recurring.png"        website/static/img/recurring-screen.png

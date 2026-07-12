@@ -61,7 +61,7 @@ func Run(icon fyne.Resource) {
 	if icon != nil {
 		w.SetIcon(icon)
 	}
-	w.Resize(fyne.NewSize(1320, 860))
+	w.Resize(fyne.NewSize(1420, 880))
 
 	ctl = &appController{win: w}
 	w.SetContent(assembleShell(ctl))

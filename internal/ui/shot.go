@@ -4,6 +4,7 @@ import (
 	"image"
 	"image/png"
 	"os"
+	"time"
 
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/test"
@@ -18,8 +19,17 @@ import (
 func runShots(outDir string) {
 	_ = os.MkdirAll(outDir, 0o755)
 
+	// FINANCY_SHOT_DARK=1 captures the dark palette instead (handy for eyeballing
+	// theme changes; the docs embed the light set).
+	applyPalette(os.Getenv("FINANCY_SHOT_DARK") == "1")
+
 	a := test.NewApp()
 	a.Settings().SetTheme(style.Theme{})
+	// SetTheme schedules an async theme-apply on the Fyne goroutine. Give it a
+	// beat to drain while no canvases exist yet — otherwise it walks the window
+	// we're about to build concurrently with its first layout, racing the SVG
+	// icon decode in canvas.Image (nil-decoder panic).
+	time.Sleep(150 * time.Millisecond)
 
 	c := &appController{}
 	ctl = c
@@ -27,7 +37,7 @@ func runShots(outDir string) {
 	w := test.NewWindow(root)
 	c.win = w
 	view.Init(store, c.show, c.refresh, w)
-	w.Resize(fyne.NewSize(1320, 860))
+	w.Resize(fyne.NewSize(1420, 880))
 
 	capture := func(name string) { writePNG(outDir+"/"+name+".png", w.Canvas().Capture()) }
 	dropOverlay := func() { w.Canvas().Overlays().Remove(w.Canvas().Overlays().Top()) }

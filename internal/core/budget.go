@@ -106,27 +106,55 @@ func (s *Store) Assigned(month, catID string) int {
 // SetAssigned records (or clears, when amount == 0) a category's assignment for
 // a month and writes through to disk.
 func (s *Store) SetAssigned(month, catID string, amount int) {
+	if s.setAssigned(month, catID, amount) {
+		s.notify()
+	}
+}
+
+// setAssigned is SetAssigned without the notification; it reports whether
+// anything changed so callers batching several writes can notify once.
+func (s *Store) setAssigned(month, catID string, amount int) bool {
 	if s.assignments == nil {
 		s.assignments = map[string]int{}
 	}
 	key := monthKey(month, catID)
 	if amount == 0 {
 		if _, ok := s.assignments[key]; !ok {
-			return
+			return false
 		}
 		delete(s.assignments, key)
 		if err := s.dbDeleteAssignment(month, catID); err != nil {
 			s.reportError(err)
-			return
+			return false
 		}
 	} else {
 		s.assignments[key] = amount
 		if err := s.dbUpsertAssignment(month, catID, amount); err != nil {
 			s.reportError(err)
-			return
+			return false
 		}
 	}
-	s.notify()
+	return true
+}
+
+// MoveAssigned shifts amount between two categories' assignments for a month —
+// the "cover overspending" move. An empty fromID takes the money from Ready to
+// Assign instead: assigning to the target alone is what reduces RTA, so no
+// source needs decrementing. Subscribers are notified once for the whole move.
+func (s *Store) MoveAssigned(month, fromID, toID string, amount int) {
+	if amount <= 0 || toID == "" || fromID == toID {
+		return
+	}
+	changed := false
+	if fromID != "" {
+		changed = s.setAssigned(month, fromID, s.Assigned(month, fromID)-amount)
+	}
+	if s.setAssigned(month, toID, s.Assigned(month, toID)+amount) {
+		changed = true
+	}
+	if changed {
+		s.notify()
+	}
 }
 
 // ---- derived flows ----

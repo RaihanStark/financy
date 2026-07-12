@@ -5,7 +5,6 @@ import (
 
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/container"
-	"fyne.io/fyne/v2/dialog"
 	"fyne.io/fyne/v2/layout"
 	"fyne.io/fyne/v2/theme"
 	"fyne.io/fyne/v2/widget"
@@ -31,7 +30,7 @@ func DebtForm(existing *Debt) {
 	body := container.NewVBox()
 	footer := container.NewVBox()
 
-	var dlg *dialog.CustomDialog
+	var dlg *modal
 	rebuild := func(k string) {
 		f := newDebtFields(k, nil)
 		body.Objects = []fyne.CanvasObject{f.grid()}
@@ -51,14 +50,14 @@ func DebtForm(existing *Debt) {
 
 	head := container.New(layout.NewFormLayout(), widget.NewLabel("Type"), kind)
 	content := container.NewVBox(head, spacerH(4), body, spacerH(8), footer)
-	dlg = dialog.NewCustomWithoutButtons("Add Debt", container.NewScroll(content), win)
-	dlg.Resize(fyne.NewSize(520, 520))
+	dlg = newModal("Add Debt", container.NewScroll(content))
+	dlg.SetCardSize(fyne.NewSize(520, 520))
 	dlg.Show()
 }
 
 func editDebtForm(d Debt) {
 	f := newDebtFields(d.Type, &d)
-	var dlg *dialog.CustomDialog
+	var dlg *modal
 	cancel := secondaryButton("Cancel", nil, func() { dlg.Hide() })
 	save := primaryButton("Save", theme.ConfirmIcon(), func() {
 		if f.commit() {
@@ -70,8 +69,8 @@ func editDebtForm(d Debt) {
 		spacerH(4), f.grid(), spacerH(8),
 		container.NewHBox(layout.NewSpacer(), cancel, save),
 	)
-	dlg = dialog.NewCustomWithoutButtons("Edit Debt", container.NewScroll(content), win)
-	dlg.Resize(fyne.NewSize(520, 520))
+	dlg = newModal("Edit Debt", container.NewScroll(content))
+	dlg.SetCardSize(fyne.NewSize(520, 520))
 	dlg.Show()
 }
 

@@ -115,6 +115,7 @@ type (
 	tableSpec     = component.TableSpec
 	cell          = component.Cell
 	columnsLayout = component.ColumnsLayout
+	modal         = component.Modal
 )
 
 var (

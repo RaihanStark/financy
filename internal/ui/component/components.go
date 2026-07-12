@@ -85,11 +85,12 @@ func (r *TappableRow) SetBordered() {
 }
 
 // appBar is the in-content header: title + subtitle on the left, action buttons
-// on the right, on a chrome strip with a bottom rule.
+// on the right. It sits directly on the window background — no chrome strip —
+// so screens open with a clean, airy heading.
 func appBar(title, subtitle string, actions ...fyne.CanvasObject) fyne.CanvasObject {
-	left := container.NewVBox(txt(title, colText, 17, true))
+	left := container.NewVBox(txt(title, colText, 20, true))
 	if subtitle != "" {
-		left = container.NewVBox(txt(title, colText, 17, true), txt(subtitle, colTextDim, 11, false))
+		left = container.NewVBox(txt(title, colText, 20, true), spacerH(1), txt(subtitle, colTextDim, 11.5, false))
 	}
 	right := container.NewHBox()
 	for _, a := range actions {
@@ -97,11 +98,8 @@ func appBar(title, subtitle string, actions ...fyne.CanvasObject) fyne.CanvasObj
 			right.Add(a)
 		}
 	}
-	bg := canvas.NewRectangle(colBG)
-	rule := canvas.NewRectangle(colBorder)
-	rule.SetMinSize(fyne.NewSize(0, 1))
 	row := container.NewBorder(nil, nil, container.NewPadded(left), container.NewCenter(right))
-	return container.NewBorder(nil, rule, nil, nil, container.NewStack(bg, row))
+	return container.New(padCell(4, 0), row)
 }
 
 // primaryButton is a filled accent action button.

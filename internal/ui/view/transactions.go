@@ -9,7 +9,6 @@ import (
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/canvas"
 	"fyne.io/fyne/v2/container"
-	"fyne.io/fyne/v2/dialog"
 	"fyne.io/fyne/v2/layout"
 	"fyne.io/fyne/v2/theme"
 	"fyne.io/fyne/v2/widget"
@@ -157,9 +156,12 @@ func ScreenTransactions() fyne.CanvasObject {
 		render()
 	})
 
-	filters := panel(container.NewVBox(
-		container.NewHBox(labeledControl("Month", monthSel), labeledControl("Type", typeSel), labeledControl("Account", acctSel)),
-		container.NewBorder(nil, nil, nil, clearBtn, labeledControl("Search", search)),
+	// One slim row: the selects' values describe themselves ("All months", …),
+	// so no caption row — the search field takes the remaining width.
+	filters := panel(container.NewBorder(nil, nil,
+		container.NewHBox(monthSel, typeSel, acctSel, spacerW(4)),
+		clearBtn,
+		container.New(padCell(0, 4), search),
 	))
 
 	rows := filteredTransactions()
@@ -175,9 +177,9 @@ func ScreenTransactions() fyne.CanvasObject {
 	}
 	summary := container.NewGridWithColumns(4,
 		statCard("SHOWING", itoa(len(rows)), colText, "of "+itoa(len(store.Transactions()))+" entries"),
-		statCard("INCOME (filtered)", fmtMoney(inc), colPositive, ""),
-		statCard("EXPENSES (filtered)", fmtMoney(exp), colNegative, ""),
-		statCard("NET (filtered)", fmtMoney(inc-exp), moneyColor(inc-exp), ""),
+		statCard("INCOME", fmtMoney(inc), colPositive, "in current view"),
+		statCard("EXPENSES", fmtMoney(exp), colNegative, "in current view"),
+		statCard("NET", fmtMoney(inc-exp), moneyColor(inc-exp), "income − expenses"),
 	)
 
 	items := []fyne.CanvasObject{filters, spacerH(4)}
@@ -186,15 +188,16 @@ func ScreenTransactions() fyne.CanvasObject {
 	} else {
 		items = append(items, summary, spacerH(4))
 	}
-	items = append(items, panel(container.NewVBox(sectionTitle("Journal"), spacerH(4), txnLedger(rows))))
+	items = append(items, txnLedger(rows))
 	body := container.NewVBox(items...)
 	return container.NewBorder(bar, nil, nil, nil, container.NewPadded(body))
 }
 
-// txnLedger renders transactions as clean rows grouped under date headers.
+// txnLedger renders the journal as one card per day: a date header with the
+// day's net, then that day's transactions separated by hairlines.
 func txnLedger(rows []Transaction) fyne.CanvasObject {
 	if len(rows) == 0 {
-		return container.New(padCell(20, 8), emptyState("No transactions match the current filters"))
+		return panel(container.New(padCell(20, 8), emptyState("No transactions match the current filters")))
 	}
 
 	// Net income−expense per day, for the date headers.
@@ -210,35 +213,42 @@ func txnLedger(rows []Transaction) fyne.CanvasObject {
 	}
 
 	box := container.NewVBox()
-	curDate := -1
-	for i, t := range rows {
-		if t.Date != curDate {
-			if i > 0 {
-				box.Add(spacerH(8))
-			}
-			box.Add(dateHeader(t.Date, dayNet[t.Date]))
-			curDate = t.Date
+	var day *fyne.Container
+	flush := func() {
+		if day != nil {
+			box.Add(panel(container.New(padCell(2, 2), day)))
+			box.Add(spacerH(2))
 		}
-		box.Add(txnRow(t))
-		box.Add(divider())
 	}
+	curDate := -1
+	for _, t := range rows {
+		if t.Date != curDate {
+			flush()
+			day = container.NewVBox(dateHeader(t.Date, dayNet[t.Date]), divider())
+			curDate = t.Date
+		} else {
+			day.Add(divider())
+		}
+		day.Add(txnRow(t))
+	}
+	flush()
 	return box
 }
 
+// dateHeader is a day card's title row: the date on the left, the day's net
+// (when it has one) on the right.
 func dateHeader(date, net int) fyne.CanvasObject {
-	bg := canvas.NewRectangle(colSurfaceHi)
-	bg.CornerRadius = radiusSm
-	netCol := colTextDim
-	netStr := "Net " + fmtMoney(net)
-	if net > 0 {
-		netCol = colPositive
-	} else if net < 0 {
-		netCol = colNegative
+	var right fyne.CanvasObject = spacerW(0)
+	if net != 0 {
+		netCol := colPositive
+		if net < 0 {
+			netCol = colNegative
+		}
+		right = alignRight(mono("Net "+fmtMoney(net), netCol, 11.5, true))
 	}
 	row := container.NewBorder(nil, nil,
-		txt(relDate(date), colText, 11.5, true),
-		alignRight(txt(netStr, netCol, 11, true)))
-	return container.NewStack(bg, container.New(padCell(4, 8), row))
+		txt(relDate(date), colText, 12, true), right)
+	return container.New(padCell(6, 10), row)
 }
 
 func relDate(serial int) string {
@@ -403,17 +413,23 @@ func bulkRecategorize() {
 // typeChip is the small colored square that flags the transaction kind.
 func typeChip(kind string) fyne.CanvasObject {
 	col := kindColor(kind)
-	glyph := map[string]string{"Income": "+", "Expense": "−", "Transfer": "⇄", "Opening": "•", "Split": "≡"}[kind]
+	glyph := map[string]string{"Income": "+", "Expense": "−", "Transfer": "→", "Opening": "•", "Split": "≡"}[kind]
 	if glyph == "" {
 		glyph = "•"
 	}
-	bg := canvas.NewRectangle(withAlpha(col, 0x1f))
-	bg.StrokeColor = withAlpha(col, 0x70)
-	bg.StrokeWidth = 1
-	bg.CornerRadius = radiusSm
-	g := txt(glyph, col, 16, true)
+	bg := canvas.NewRectangle(withAlpha(col, 0x22))
+	bg.CornerRadius = 14
+	g := txt(glyph, col, 14, true)
 	g.Alignment = fyne.TextAlignCenter
-	return container.NewGridWrap(fyne.NewSize(32, 32), container.NewStack(bg, container.NewCenter(g)))
+	// Arrows sit above the em-box middle in the bundled font while the other
+	// glyphs center cleanly; nudge just the arrow onto the circle's true
+	// center (offset measured from rendered pixels).
+	inner := fyne.CanvasObject(g)
+	if glyph == "→" {
+		inner = container.New(layout.NewCustomPaddedLayout(7, 0, 1, 0), g)
+	}
+	chip := container.NewGridWrap(fyne.NewSize(28, 28), container.NewStack(bg, container.NewCenter(inner)))
+	return container.NewCenter(chip)
 }
 
 func txnMenuItems(t Transaction) []*fyne.MenuItem {
@@ -441,10 +457,6 @@ func duplicateTxn(t Transaction) {
 	cp := Transaction{Date: t.Date, Payee: t.Payee, Memo: t.Memo}
 	cp.Posts = append([]Posting(nil), t.Posts...)
 	store.AddTransaction(cp)
-}
-
-func labeledControl(label string, w fyne.CanvasObject) fyne.CanvasObject {
-	return container.NewVBox(txt(label, colTextDim, 10, true), w)
 }
 
 func kindColor(k string) color.Color {
@@ -510,7 +522,7 @@ func filteredTransactions() []Transaction {
 func TransactionForm(id, prefillMoney string) {
 	var existing *Transaction
 	var v txnView
-	var formDialog dialog.Dialog
+	var formDialog *modal
 	if id != "" {
 		existing = store.TxnByID(id)
 		if existing != nil {
@@ -637,12 +649,12 @@ func TransactionForm(id, prefillMoney string) {
 	// Editing keeps the plain Save/Cancel form. Adding uses a custom footer with a
 	// "Save & Add another" action that keeps the dialog open for rapid entry.
 	if existing != nil {
-		formDialog = dialog.NewForm(title, "Save", "Cancel", items, func(ok bool) {
+		formDialog = newModalForm(title, "Save", "Cancel", items, func(ok bool) {
 			if ok {
 				commit()
 			}
-		}, win)
-		formDialog.Resize(fyne.NewSize(460, 420))
+		})
+		formDialog.SetCardSize(fyne.NewSize(460, 0))
 		formDialog.Show()
 		return
 	}
@@ -663,7 +675,7 @@ func TransactionForm(id, prefillMoney string) {
 		win.Canvas().Focus(amount)
 	}
 
-	var d *dialog.CustomDialog
+	var d *modal
 	cancel := secondaryButton("Cancel", nil, func() { d.Hide() })
 	saveAnother := secondaryButton("Save & Add another", theme.ContentAddIcon(), func() {
 		if commit() {
@@ -677,9 +689,9 @@ func TransactionForm(id, prefillMoney string) {
 	})
 	content := container.NewVBox(formGrid, spacerH(8),
 		container.NewHBox(layout.NewSpacer(), cancel, saveAnother, save))
-	d = dialog.NewCustomWithoutButtons(title, content, win)
+	d = newModal(title, content)
 	formDialog = d
-	d.Resize(fyne.NewSize(480, 460))
+	d.SetCardSize(fyne.NewSize(480, 460))
 	d.Show()
 }
 
@@ -764,7 +776,7 @@ func payInstallmentForm() {
 	form = widget.NewForm(payDebtItems(debts[0], debtSel, instRow, amtLabelRow, amtEntryRow, date)...)
 	debtSel.SetSelected(debtNames[0])
 
-	dlg := dialog.NewCustomConfirm("Pay debt", "Save", "Cancel", form, func(ok bool) {
+	dlg := newModalConfirm("Pay debt", "Save", "Cancel", form, func(ok bool) {
 		if !ok {
 			return
 		}
@@ -782,8 +794,8 @@ func payInstallmentForm() {
 		if id := instID[instSel.Selected]; id != "" {
 			store.PayInstallment(id, serial)
 		}
-	}, win)
-	dlg.Resize(fyne.NewSize(460, 340))
+	})
+	dlg.SetCardSize(fyne.NewSize(460, 340))
 	dlg.Show()
 }
 

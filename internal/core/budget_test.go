@@ -88,6 +88,45 @@ func TestAssignedRoundTripAndClear(t *testing.T) {
 	}
 }
 
+// MoveAssigned shifts money between envelopes (the cover-overspending move),
+// treats an empty source as Ready to Assign, and ignores no-op moves.
+func TestMoveAssigned(t *testing.T) {
+	s := budgetStore()
+	s.SetAssigned("2026-07", "groceries", 500)
+
+	s.MoveAssigned("2026-07", "groceries", "housing", 200)
+	if got := s.Assigned("2026-07", "groceries"); got != 300 {
+		t.Fatalf("source Assigned = %d, want 300", got)
+	}
+	if got := s.Assigned("2026-07", "housing"); got != 200 {
+		t.Fatalf("target Assigned = %d, want 200", got)
+	}
+
+	// From Ready to Assign: only the target changes.
+	s.MoveAssigned("2026-07", "", "housing", 100)
+	if got := s.Assigned("2026-07", "housing"); got != 300 {
+		t.Fatalf("after RTA move target Assigned = %d, want 300", got)
+	}
+	if got := s.Assigned("2026-07", "groceries"); got != 300 {
+		t.Fatalf("RTA move touched the wrong envelope: groceries = %d", got)
+	}
+
+	// No-ops: zero/negative amounts, same source and target.
+	s.MoveAssigned("2026-07", "groceries", "housing", 0)
+	s.MoveAssigned("2026-07", "groceries", "housing", -50)
+	s.MoveAssigned("2026-07", "groceries", "groceries", 100)
+	if s.Assigned("2026-07", "groceries") != 300 || s.Assigned("2026-07", "housing") != 300 {
+		t.Fatal("no-op MoveAssigned changed assignments")
+	}
+
+	// A move can drive the source negative — that's the YNAB behavior when
+	// covering from an envelope whose Available came from rollover.
+	s.MoveAssigned("2026-07", "groceries", "housing", 400)
+	if got := s.Assigned("2026-07", "groceries"); got != -100 {
+		t.Fatalf("source Assigned = %d, want -100", got)
+	}
+}
+
 func TestPreviewAutoAssign(t *testing.T) {
 	s := budgetStore()
 	// Last month (June): groceries and housing assigned.

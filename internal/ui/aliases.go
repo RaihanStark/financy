@@ -15,6 +15,8 @@ type (
 	Account     = core.Account
 	Posting     = core.Posting
 	Transaction = core.Transaction
+
+	modal = component.Modal
 )
 
 const (
@@ -33,6 +35,8 @@ var (
 	panel           = component.Panel
 	sectionTitle    = component.SectionTitle
 	spacerH         = component.SpacerH
+	spacerW         = component.SpacerW
+	moneyColor      = component.MoneyColor
 	primaryButton   = component.PrimaryButton
 	secondaryButton = component.SecondaryButton
 )
@@ -45,6 +49,8 @@ var (
 	colText      color.NRGBA
 	colTextDim   color.NRGBA
 	colPrimary   color.NRGBA
+	colPositive  color.NRGBA
+	colNegative  color.NRGBA
 )
 
 func init() { syncPalette() }
@@ -59,6 +65,8 @@ func syncPalette() {
 	colText = style.Text
 	colTextDim = style.TextDim
 	colPrimary = style.Primary
+	colPositive = style.Positive
+	colNegative = style.Negative
 }
 
 // store is the single live data store, set up in Run.

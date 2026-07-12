@@ -67,16 +67,16 @@ func moneyColor(amount int) color.Color {
 // statCard is a compact bordered summary tile: caption above, value below.
 func statCard(caption, value string, valueCol color.Color, sub string) fyne.CanvasObject {
 	cap := txt(caption, colTextDim, 10.5, true)
-	val := txt(value, valueCol, 17, true)
-	items := []fyne.CanvasObject{cap, spacerH(2), val}
+	val := txt(value, valueCol, 19, true)
+	items := []fyne.CanvasObject{cap, spacerH(3), val}
 	if sub != "" {
-		items = append(items, txt(sub, colTextDim, 10, false))
+		items = append(items, spacerH(2), txt(sub, colTextDim, 10.5, false))
 	}
 	bg := canvas.NewRectangle(colSurface)
 	bg.StrokeColor = colBorder
 	bg.StrokeWidth = 1
 	bg.CornerRadius = radius
-	return container.NewStack(bg, container.New(layout.NewCustomPaddedLayout(10, 10, 12, 12), container.NewVBox(items...)))
+	return container.NewStack(bg, container.New(layout.NewCustomPaddedLayout(12, 12, 14, 14), container.NewVBox(items...)))
 }
 
 // sectionTitle is a heading used above a block of content.
@@ -114,12 +114,10 @@ func progressBar(ratio float64, col color.Color) fyne.CanvasObject {
 		ratio = 1
 	}
 	track := canvas.NewRectangle(colSurfaceHi)
-	track.StrokeColor = colBorder
-	track.StrokeWidth = 1
-	track.CornerRadius = radiusSm
-	track.SetMinSize(fyne.NewSize(0, 14))
+	track.CornerRadius = 5
+	track.SetMinSize(fyne.NewSize(0, 10))
 	fill := canvas.NewRectangle(col)
-	fill.CornerRadius = radiusSm
+	fill.CornerRadius = 5
 	var filler fyne.CanvasObject
 	if ratio <= 0 {
 		filler = layout.NewSpacer()
@@ -135,7 +133,7 @@ func progressBar(ratio float64, col color.Color) fyne.CanvasObject {
 // ratioLayout splits horizontal space between two children by weight.
 type ratioLayout struct{ leftW, rightW float32 }
 
-func (r *ratioLayout) MinSize(_ []fyne.CanvasObject) fyne.Size { return fyne.NewSize(0, 14) }
+func (r *ratioLayout) MinSize(_ []fyne.CanvasObject) fyne.Size { return fyne.NewSize(0, 10) }
 func (r *ratioLayout) Layout(objs []fyne.CanvasObject, size fyne.Size) {
 	if len(objs) != 2 {
 		return

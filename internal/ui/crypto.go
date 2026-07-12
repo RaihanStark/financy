@@ -6,7 +6,6 @@ import (
 
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/container"
-	"fyne.io/fyne/v2/dialog"
 	"fyne.io/fyne/v2/widget"
 
 	"github.com/raihanstark/financy/internal/core"
@@ -30,12 +29,12 @@ func askPassword(title, message string, onOK func(pass string)) {
 		items = append(items, widget.NewFormItem("", hint))
 	}
 	items = append(items, widget.NewFormItem("Password", entry))
-	d := dialog.NewForm(title, "Open", "Cancel", items, func(ok bool) {
+	d := newModalForm(title, "Open", "Cancel", items, func(ok bool) {
 		if ok && entry.Text != "" {
 			onOK(entry.Text)
 		}
-	}, ctl.win)
-	d.Resize(fyne.NewSize(440, 0))
+	})
+	d.SetCardSize(fyne.NewSize(440, 0))
 	d.Show()
 	ctl.win.Canvas().Focus(entry)
 }
@@ -58,20 +57,20 @@ func askNewPassword(title, confirmLabel string, onOK func(pass string)) {
 		widget.NewFormItem("Confirm", p2),
 		widget.NewFormItem("", warn),
 	}
-	d := dialog.NewForm(title, confirmLabel, "Cancel", items, func(ok bool) {
+	d := newModalForm(title, confirmLabel, "Cancel", items, func(ok bool) {
 		if !ok {
 			return
 		}
 		switch {
 		case p1.Text == "":
-			dialog.ShowError(errors.New("password can't be empty"), ctl.win)
+			showError(errors.New("password can't be empty"))
 		case p1.Text != p2.Text:
-			dialog.ShowError(errors.New("the passwords don't match"), ctl.win)
+			showError(errors.New("the passwords don't match"))
 		default:
 			onOK(p1.Text)
 		}
-	}, ctl.win)
-	d.Resize(fyne.NewSize(440, 0))
+	})
+	d.SetCardSize(fyne.NewSize(440, 0))
 	d.Show()
 	ctl.win.Canvas().Focus(p1)
 }
@@ -86,14 +85,14 @@ func openEncryptedAt(path string) {
 		if err != nil {
 			switch {
 			case errors.Is(err, core.ErrBadPassphrase):
-				dialog.ShowError(errors.New("incorrect password — please try again"), ctl.win)
+				showError(errors.New("incorrect password — please try again"))
 				openEncryptedAt(path) // retry
 			case errors.Is(err, core.ErrFileTooNew):
-				dialog.ShowInformation("Can't open this file",
+				showInfo("Can't open this file",
 					filepath.Base(path)+" was created by a newer version of Financy than this one "+
-						"(you're running v"+core.Version+"). Update Financy, then open it again.", ctl.win)
+						"(you're running v"+core.Version+"). Update Financy, then open it again.")
 			default:
-				dialog.ShowError(err, ctl.win)
+				showError(err)
 			}
 			return
 		}
@@ -110,7 +109,7 @@ func doSave() {
 		return
 	}
 	if err := store.Save(); err != nil {
-		dialog.ShowError(err, ctl.win)
+		showError(err)
 		return
 	}
 	updateTitle()
@@ -124,12 +123,12 @@ func guardUnsaved(proceed func()) {
 		proceed()
 		return
 	}
-	var d *dialog.CustomDialog
+	var d *modal
 	msg := txt("You have unsaved changes. Save before continuing?", colText, 13, false)
 	save := primaryButton("Save", nil, func() {
 		d.Hide()
 		if err := store.Save(); err != nil {
-			dialog.ShowError(err, ctl.win)
+			showError(err)
 			return
 		}
 		updateTitle()
@@ -139,7 +138,7 @@ func guardUnsaved(proceed func()) {
 	cancel := secondaryButton("Cancel", nil, func() { d.Hide() })
 	content := container.NewVBox(msg, spacerH(14),
 		container.NewCenter(container.NewHBox(cancel, discard, save)))
-	d = dialog.NewCustomWithoutButtons("Unsaved changes", content, ctl.win)
+	d = newModal("Unsaved changes", content)
 	d.Show()
 }
 
@@ -156,12 +155,12 @@ func doSetPassword() {
 	}
 	askNewPassword(title, label, func(pass string) {
 		if err := store.SetPassword(pass); err != nil {
-			dialog.ShowError(err, ctl.win)
+			showError(err)
 			return
 		}
 		updateTitle()
 		refreshMenu()
-		dialog.ShowInformation(title, "This document is now protected by a password.", ctl.win)
+		showInfo(title, "This document is now protected by a password.")
 	})
 }
 
@@ -170,19 +169,16 @@ func doRemovePassword() {
 	if store == nil || !store.Encrypted() {
 		return
 	}
-	dialog.ShowConfirm("Remove Password",
+	showConfirm("Remove Password",
 		"Remove encryption from this document? It will be stored unencrypted on disk.",
-		func(ok bool) {
-			if !ok {
-				return
-			}
+		"Remove", func() {
 			if err := store.RemovePassword(); err != nil {
-				dialog.ShowError(err, ctl.win)
+				showError(err)
 				return
 			}
 			updateTitle()
 			refreshMenu()
-		}, ctl.win)
+		})
 }
 
 // updateTitle refreshes the window title so the unsaved-changes marker tracks

@@ -7,7 +7,6 @@ import (
 
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/container"
-	"fyne.io/fyne/v2/dialog"
 	"fyne.io/fyne/v2/layout"
 	"fyne.io/fyne/v2/theme"
 	"fyne.io/fyne/v2/widget"
@@ -144,7 +143,7 @@ func postRecurringNow(r Recurring) {
 		sel.widget,
 	)
 
-	var d *dialog.CustomDialog
+	var d *modal
 	cancel := secondaryButton("Cancel", nil, func() { d.Hide() })
 	confirm := primaryButton("Confirm", theme.ConfirmIcon(), func() {
 		create := sel.isPostNew()
@@ -162,8 +161,8 @@ func postRecurringNow(r Recurring) {
 
 	content := container.NewVBox(body, spacerH(16),
 		container.NewHBox(layout.NewSpacer(), cancel, confirm))
-	d = dialog.NewCustomWithoutButtons("Post now (early)", content, win)
-	d.Resize(fyne.NewSize(520, 300))
+	d = newModal("Post now (early)", content)
+	d.SetCardSize(fyne.NewSize(520, 300))
 	d.Show()
 }
 
@@ -295,7 +294,7 @@ func showTxnPicker(accountID string, onPick func(*Transaction)) {
 	search.SetPlaceHolder("Search payee…")
 	listBox := container.NewVBox()
 
-	var d *dialog.CustomDialog
+	var d *modal
 	render := func(q string) {
 		listBox.Objects = nil
 		ql := strings.ToLower(strings.TrimSpace(q))
@@ -337,8 +336,8 @@ func showTxnPicker(accountID string, onPick func(*Transaction)) {
 		nil, nil,
 		container.NewScroll(listBox),
 	)
-	d = dialog.NewCustomWithoutButtons("Link to a transaction", body, win)
-	d.Resize(fyne.NewSize(560, 520))
+	d = newModal("Link to a transaction", body)
+	d.SetCardSize(fyne.NewSize(560, 520))
 	d.Show()
 }
 
@@ -482,7 +481,7 @@ func showDuePrompt(items []DueItem) {
 		container.NewScroll(container.NewVBox(rows...)),
 	)
 
-	var d *dialog.CustomDialog
+	var d *modal
 	later := secondaryButton("Later", nil, func() { d.Hide() })
 	apply := primaryButton("Apply", theme.ConfirmIcon(), func() {
 		var toPost []DueItem
@@ -497,7 +496,7 @@ func showDuePrompt(items []DueItem) {
 		d.Hide()
 		n, err := store.PostRecurring(todaySerial, toPost)
 		if err != nil {
-			dialog.ShowError(err, win)
+			showError(err)
 			return
 		}
 		msg := "Posted " + itoa(n) + " new transaction" + plural(n, "", "s") + "."
@@ -510,8 +509,8 @@ func showDuePrompt(items []DueItem) {
 	content := container.NewBorder(nil,
 		container.NewVBox(spacerH(8), container.NewHBox(layout.NewSpacer(), later, apply)),
 		nil, nil, body)
-	d = dialog.NewCustomWithoutButtons("Recurring due", content, win)
-	d.Resize(fyne.NewSize(580, 500))
+	d = newModal("Recurring due", content)
+	d.SetCardSize(fyne.NewSize(580, 500))
 	d.Show()
 }
 

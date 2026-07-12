@@ -68,14 +68,14 @@ func showSetup() {
 		labeledRow("Confirm", pw2),
 	)
 
-	var d *dialog.CustomDialog
+	var d *modal
 	cont := primaryButton("Continue…", nil, func() {
 		demo := mode.Selected == setupDemo
 		cur := currency.Selected
 		pass := ""
 		if !demo {
 			if pw.Text != pw2.Text {
-				dialog.ShowError(errors.New("the passwords don't match"), ctl.win)
+				showError(errors.New("the passwords don't match"))
 				return
 			}
 			pass = pw.Text
@@ -86,8 +86,8 @@ func showSetup() {
 	cancel := secondaryButton("Close", nil, func() { d.Hide() })
 
 	content := container.NewVBox(body, spacerH(16), container.NewCenter(container.NewHBox(cancel, cont)))
-	d = dialog.NewCustomWithoutButtons("Setup", content, ctl.win)
-	d.Resize(fyne.NewSize(480, 420))
+	d = newModal("Setup", content)
+	d.SetCardSize(fyne.NewSize(480, 420))
 	d.Show()
 }
 
@@ -115,10 +115,10 @@ func promptNewDocument() {
 		labeledRow("Confirm", pw2),
 	)
 
-	var d *dialog.CustomDialog
+	var d *modal
 	cont := primaryButton("Continue…", nil, func() {
 		if pw.Text != pw2.Text {
-			dialog.ShowError(errors.New("the passwords don't match"), ctl.win)
+			showError(errors.New("the passwords don't match"))
 			return
 		}
 		cur := currency.Selected
@@ -129,8 +129,8 @@ func promptNewDocument() {
 	cancel := secondaryButton("Cancel", nil, func() { d.Hide() })
 
 	content := container.NewVBox(body, spacerH(16), container.NewCenter(container.NewHBox(cancel, cont)))
-	d = dialog.NewCustomWithoutButtons("New", content, ctl.win)
-	d.Resize(fyne.NewSize(460, 320))
+	d = newModal("New", content)
+	d.SetCardSize(fyne.NewSize(460, 320))
 	d.Show()
 }
 
@@ -155,7 +155,7 @@ func promptCreateDocument(demo bool, currency, passphrase string) {
 			s, e = core.NewDocument(path)
 		}
 		if e != nil {
-			dialog.ShowError(e, ctl.win)
+			showError(e)
 			return
 		}
 		if demo {
@@ -166,7 +166,7 @@ func promptCreateDocument(demo bool, currency, passphrase string) {
 		if s.Encrypted() {
 			// Persist the seed/currency so the encrypted file on disk is complete.
 			if err := s.Save(); err != nil {
-				dialog.ShowError(err, ctl.win)
+				showError(err)
 				return
 			}
 		}
