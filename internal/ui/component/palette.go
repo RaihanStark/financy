@@ -9,7 +9,6 @@ import (
 // Local aliases for the shared palette so component code stays concise. They are
 // copies of the active palette; SyncPalette refreshes them after a theme switch.
 var (
-	colBG        color.NRGBA
 	colSurface   color.NRGBA
 	colSurfaceHi color.NRGBA
 	colAltRow    color.NRGBA
@@ -26,7 +25,6 @@ func init() { SyncPalette() }
 // SyncPalette refreshes the local palette aliases from the active style palette.
 // Call it after style.SetDark so freshly built widgets pick up the new colors.
 func SyncPalette() {
-	colBG = style.BG
 	colSurface = style.Surface
 	colSurfaceHi = style.SurfaceHi
 	colAltRow = style.AltRow

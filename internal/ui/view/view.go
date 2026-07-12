@@ -190,7 +190,3 @@ func SyncPalette() {
 	colWarning = style.Warning
 }
 
-const (
-	radius   = style.Radius
-	radiusSm = style.RadiusSm
-)

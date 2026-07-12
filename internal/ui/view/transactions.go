@@ -238,7 +238,7 @@ func txnLedger(rows []Transaction) fyne.CanvasObject {
 // dateHeader is a day card's title row: the date on the left, the day's net
 // (when it has one) on the right.
 func dateHeader(date, net int) fyne.CanvasObject {
-	var right fyne.CanvasObject = spacerW(0)
+	right := spacerW(0)
 	if net != 0 {
 		netCol := colPositive
 		if net < 0 {
