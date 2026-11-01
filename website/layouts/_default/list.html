@@ -1,0 +1,29 @@
+{{ define "main" }}
+<div class="doc-nav-bar">
+  <div>
+    <strong>Location:</strong>
+    <a href="{{ .Site.Home.RelPermalink }}">Financy Manual</a>
+    &raquo; <span>{{ .Title }}</span>
+  </div>
+  <div>
+    [ <a href="{{ .Site.Home.RelPermalink }}">Up: Manual Index</a> ]
+  </div>
+</div>
+
+<article class="doc-content">
+  <h1 class="doc-title">{{ .Title }}</h1>
+  {{ .Content }}
+</article>
+
+<div class="doc-nav-bar bottom">
+  <div>
+    &laquo; <a href="{{ .Site.Home.RelPermalink }}">Manual Index</a>
+  </div>
+  <div>
+    {{- if gt (len .Pages) 0 -}}
+      {{- $first := index .Pages.ByWeight 0 -}}
+      Next: <a href="{{ $first.RelPermalink }}">{{ $first.Title }}</a> &raquo;
+    {{- end -}}
+  </div>
+</div>
+{{ end }}

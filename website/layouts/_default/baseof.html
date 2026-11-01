@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>{{ if not .IsHome }}{{ .Title }} - {{ end }}{{ .Site.Title }}</title>
+  <link rel="icon" type="image/png" href="{{ "icon.png" | relURL }}" />
+  <link rel="stylesheet" href="{{ "style.css" | relURL }}" />
+</head>
+<body>
+  <div class="page">
+
+    <!-- Top Banner -->
+    <header class="banner">
+      <div class="banner-title">
+        <img class="banner-logo" src="{{ "icon.png" | relURL }}" alt="Financy icon" width="28" height="28" />
+        <div>
+          <h1><a href="{{ .Site.Home.RelPermalink }}">Financy User Manual</a></h1>
+          <div class="banner-tagline">Reference Documentation &amp; Operating Guide ({{ .Site.Params.version | default "v0.14.0" }})</div>
+        </div>
+      </div>
+      <div class="banner-meta">
+        <a href="{{ .Site.Home.RelPermalink }}../">&larr; Main Project Site</a> |
+        <a href="{{ .Site.Params.repoURL }}">Source (GitHub)</a>
+      </div>
+    </header>
+
+    <!-- Dense Top Navigation Bar -->
+    <nav class="navbar" aria-label="Documentation navigation">
+      <div>
+        [ <a href="{{ .Site.Home.RelPermalink }}">Manual Index</a>
+        {{- range $i, $sec := .Site.Sections.ByWeight }}
+        <span class="nav-sep">|</span>
+        <a href="{{ $sec.RelPermalink }}">{{ add $i 1 }}. {{ $sec.Title }}</a>
+        {{- end }} ]
+      </div>
+      <div>
+        [ <a href="{{ .Site.Home.RelPermalink }}../">Financy Home</a>
+        <span class="nav-sep">|</span>
+        <a href="{{ .Site.Params.repoURL }}/releases/latest">Releases</a>
+        <span class="nav-sep">|</span>
+        <a href="{{ .Site.Params.repoURL }}">GitHub ↗</a> ]
+      </div>
+    </nav>
+
+    <!-- Two-Column Manual Body -->
+    <div class="manual-body">
+
+      <!-- Left Manual Index Sidebar -->
+      <aside class="sidebar" aria-label="Manual Table of Contents">
+        <div class="sidebar-box-title">Manual Contents</div>
+
+        <div class="sidebar-sec">
+          <div class="sidebar-sec-title">
+            <a href="{{ .Site.Home.RelPermalink }}">0. Overview &amp; Index</a>
+          </div>
+        </div>
+
+        {{- $current := . -}}
+        {{- range $i, $sec := .Site.Sections.ByWeight }}
+        <div class="sidebar-sec">
+          <div class="sidebar-sec-title">
+            <a href="{{ $sec.RelPermalink }}">{{ add $i 1 }}. {{ $sec.Title }}</a>
+          </div>
+          <ul class="sidebar-list">
+            {{- range $j, $p := $sec.Pages.ByWeight }}
+            <li>
+              <a href="{{ $p.RelPermalink }}"{{ if eq $current.RelPermalink $p.RelPermalink }} class="active"{{ end }}>
+                {{ add $i 1 }}.{{ add $j 1 }} {{ $p.Title }}
+              </a>
+            </li>
+            {{- end }}
+          </ul>
+        </div>
+        {{- end }}
+      </aside>
+
+      <!-- Main Documentation Content -->
+      <main class="doc-main">
+        {{ block "main" . }}{{ end }}
+      </main>
+
+    </div>
+
+    <!-- Classic Footer -->
+    <footer class="footer">
+      <div>
+        <strong>Financy User Manual</strong> ({{ .Site.Params.version | default "v0.14.0" }}) -
+        Local-first zero-based budgeting &amp; double-entry accounting.
+      </div>
+      <div>
+        [ <a href="{{ .Site.Home.RelPermalink }}../">Project Home</a>
+        | <a href="{{ .Site.Home.RelPermalink }}">Manual Index</a>
+        | <a href="{{ .Site.Params.repoURL }}">GitHub Repository</a> ]
+      </div>
+    </footer>
+
+  </div>
+</body>
+</html>

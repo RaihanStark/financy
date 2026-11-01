@@ -3,12 +3,11 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Financy — private, local-first zero-based budgeting for desktop &amp; mobile</title>
-  <meta name="description" content="Financy is a fast, private, local-first zero-based budgeting app for desktop and mobile. Give every dollar a job, backed by real double-entry accounting. Your data stays in a single encrypted file you own — no cloud, no account, no tracking. Open source, MIT licensed." />
+  <title>Financy - Local-First Zero-Based Budgeting &amp; Double-Entry Accounting</title>
+  <meta name="description" content="Financy is a free, open-source, local-first zero-based budgeting (ZBB) application for desktop and Android backed by strict double-entry accounting and a single SQLite file with optional XChaCha20-Poly1305 encryption." />
 
-  <!-- Open Graph / social preview -->
-  <meta property="og:title" content="Financy — private, local-first zero-based budgeting" />
-  <meta property="og:description" content="Give every dollar a job. A private, local-first zero-based budget backed by real double-entry accounting. Your data, in a single encrypted file you own. Open source, MIT." />
+  <meta property="og:title" content="Financy - Local-First Zero-Based Budgeting" />
+  <meta property="og:description" content="Open-source zero-based budgeting backed by double-entry accounting. Single SQLite file, optional XChaCha20-Poly1305 encryption, no cloud, MIT licensed." />
   <meta property="og:type" content="website" />
   <meta property="og:image" content="screenshots/budget.png" />
 
@@ -16,259 +15,471 @@
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
-  <header class="topbar">
-    <div class="wrap topbar-inner">
-      <a class="brand" href="#">💰 Financy</a>
-      <nav class="nav">
-        <a href="#features">Features</a>
-        <a href="#screens">Screenshots</a>
-        <a href="#mobile">Mobile</a>
-        <a href="#install">Install</a>
-        <a href="docs/">Docs</a>
-        <a class="ghlink" href="https://github.com/raihanstark/financy" target="_blank" rel="noopener">GitHub ↗</a>
-      </nav>
-    </div>
-  </header>
+  <div class="page">
 
-  <main>
-    <!-- Hero -->
-    <section class="hero">
-      <div class="wrap hero-inner">
-        <span class="eyebrow">Private &amp; local-first personal finance</span>
-        <h1>Budgeting that stays yours.</h1>
-        <p class="lede">
-          Financy is a fast, private <strong>zero-based budgeting</strong> app for
-          desktop and mobile — give every dollar a job, backed by real
-          double-entry accounting. Your data stays in a single
-          <strong>encrypted file you own</strong>. No cloud, no account, no tracking.
-        </p>
-        <div class="cta">
-          <a class="btn btn-primary" href="https://github.com/raihanstark/financy/releases/latest" target="_blank" rel="noopener">
-            Download Financy
-          </a>
-          <a class="btn btn-ghost" href="https://github.com/raihanstark/financy" target="_blank" rel="noopener">
-            View source
-          </a>
-        </div>
-        <p class="platforms">Linux · Windows · macOS · Android (beta) — free &amp; open source (MIT)</p>
-        <div class="shot-frame">
-          <img src="screenshots/budget.png" alt="Financy zero-based budget with Ready to Assign and category envelopes" width="1100" loading="eager" />
+    <!-- Top Project Banner -->
+    <header class="banner">
+      <div class="banner-title">
+        <img class="banner-logo" src="icon.png" alt="Financy icon" width="28" height="28" />
+        <div>
+          <h1><a href="./">Financy</a></h1>
+          <div class="banner-tagline">Local-First Zero-Based Budgeting &amp; Double-Entry Personal Finance</div>
         </div>
       </div>
-    </section>
+      <div class="banner-meta">
+        Latest: <a href="https://github.com/raihanstark/financy/releases/latest">v0.14.0</a> |
+        License: MIT |
+        <a href="https://github.com/raihanstark/financy">Source Repository</a>
+      </div>
+    </header>
 
-    <!-- Values / trust strip -->
-    <section class="values">
-      <div class="wrap values-grid">
-        <div class="value">
-          <span class="value-ico">🔒</span>
-          <div>
-            <strong>Private by design</strong>
-            <span>No cloud, no account, no telemetry — ever.</span>
+    <!-- Dense Utilitarian Navigation Bar -->
+    <nav class="navbar" aria-label="Primary navigation">
+      <div>
+        [ <a href="#overview">1. Overview</a>
+        <span class="nav-sep">|</span>
+        <a href="#architecture">2. Architecture</a>
+        <span class="nav-sep">|</span>
+        <a href="#features">3. Capabilities</a>
+        <span class="nav-sep">|</span>
+        <a href="#screenshots">4. Desktop UI</a>
+        <span class="nav-sep">|</span>
+        <a href="#mobile">5. Mobile UI</a>
+        <span class="nav-sep">|</span>
+        <a href="#download">6. Download &amp; Build</a> ]
+      </div>
+      <div>
+        [ <a href="docs/">User Manual (/docs)</a>
+        <span class="nav-sep">|</span>
+        <a href="https://github.com/raihanstark/financy/releases/latest">Releases</a>
+        <span class="nav-sep">|</span>
+        <a href="https://github.com/raihanstark/financy/blob/main/CHANGELOG.md">Changelog</a>
+        <span class="nav-sep">|</span>
+        <a href="https://github.com/raihanstark/financy">GitHub ↗</a> ]
+      </div>
+    </nav>
+
+    <main class="content">
+
+      <!-- 1. Overview & Technical Fact Sheet -->
+      <section id="overview">
+        <h2 class="sec-head" style="margin-top: 0;">1. Project Overview</h2>
+
+        <div class="intro-layout">
+          <div class="abstract">
+            <p>
+              <strong>Financy</strong> is a self-contained, local-first personal finance and
+              <strong>zero-based budgeting (ZBB)</strong> program for Linux, Windows, macOS,
+              and Android. It combines envelope budgeting (<em>give every unit of currency a job
+              until Ready to Assign reaches zero</em>) with a strict <strong>double-entry
+              accounting engine</strong>.
+            </p>
+            <p>
+              Unlike cloud-hosted budgeting services, Financy requires no user account,
+              makes no background network requests (except when you explicitly check GitHub
+              for software updates), and stores your entire financial ledger in a single
+              portable <code>.financy</code> SQLite database file on your local filesystem.
+              Documents can optionally be encrypted at rest using authenticated encryption
+              (<strong>XChaCha20-Poly1305</strong> with an <strong>Argon2id</strong> key derivation function).
+            </p>
+            <p>
+              All monetary quantities are stored and computed as exact 64-bit integer minor
+              units (cents) to eliminate IEEE-754 floating-point rounding drift. Account
+              balances, category envelopes, debt amortization schedules, and net-worth reports
+              are derived directly from the underlying posting journal.
+            </p>
+
+            <div class="quick-links">
+              <strong>Quick Links:</strong>
+              <a href="https://github.com/raihanstark/financy/releases/latest">Download Binaries (v0.14.0)</a> ·
+              <a href="docs/">Read the User Manual</a> ·
+              <a href="docs/introduction/getting-started/">Getting Started Guide</a> ·
+              <a href="docs/introduction/concepts/">Accounting Model</a> ·
+              <a href="https://github.com/raihanstark/financy/issues">Issue Tracker</a>
+            </div>
+          </div>
+
+          <aside>
+            <table class="factsheet">
+              <caption>System Specifications</caption>
+              <tbody>
+                <tr>
+                  <th>Software</th>
+                  <td>Financy</td>
+                </tr>
+                <tr>
+                  <th>Latest Version</th>
+                  <td><code>v0.14.0</code> (2026-07-12)</td>
+                </tr>
+                <tr>
+                  <th>License</th>
+                  <td><a href="https://github.com/raihanstark/financy/blob/main/LICENSE">MIT License</a> (Free &amp; Open Source)</td>
+                </tr>
+                <tr>
+                  <th>Language</th>
+                  <td>Go (1.25+)</td>
+                </tr>
+                <tr>
+                  <th>GUI Toolkit</th>
+                  <td><a href="https://fyne.io">Fyne v2</a> (Desktop &amp; Mobile shells)</td>
+                </tr>
+                <tr>
+                  <th>Storage Engine</th>
+                  <td>SQLite (pure-Go via <code>modernc.org/sqlite</code>)</td>
+                </tr>
+                <tr>
+                  <th>File Format</th>
+                  <td>Single <code>.financy</code> file (Schema v9, auto-migrated with pre-upgrade <code>.bak</code> backup)</td>
+                </tr>
+                <tr>
+                  <th>Encryption</th>
+                  <td><code>XChaCha20-Poly1305</code> + <code>Argon2id</code> KDF (decrypted in-memory only)</td>
+                </tr>
+                <tr>
+                  <th>Precision</th>
+                  <td>64-bit integer minor units (<code>int64</code> cents)</td>
+                </tr>
+                <tr>
+                  <th>Platforms</th>
+                  <td>Linux (<code>.deb</code>, <code>.rpm</code>, <code>.tar.xz</code>), Windows (<code>.exe</code>), macOS (<code>.app</code>), Android (<code>.apk</code>)</td>
+                </tr>
+                <tr>
+                  <th>Telemetry</th>
+                  <td>None (zero analytics, zero cloud sync)</td>
+                </tr>
+              </tbody>
+            </table>
+          </aside>
+        </div>
+
+        <div class="hero-fig">
+          <img src="screenshots/budget.png" alt="Financy desktop zero-based budget view" width="1100" />
+          <div class="fig-cap">
+            <strong>Figure 1.1:</strong> Financy v0.14 desktop shell showing the left navigation sidebar,
+            <em>Ready to Assign</em> banner, category envelopes with traffic-light usage bars, and live net-worth footer.
           </div>
         </div>
-        <div class="value">
-          <span class="value-ico">💾</span>
-          <div>
-            <strong>Local-first</strong>
-            <span>One <code>.financy</code> file that lives on your device.</span>
-          </div>
-        </div>
-        <div class="value">
-          <span class="value-ico">🛡️</span>
-          <div>
-            <strong>Encrypted</strong>
-            <span>XChaCha20-Poly1305, unreadable without your passphrase.</span>
-          </div>
-        </div>
-        <div class="value">
-          <span class="value-ico">⚖️</span>
-          <div>
-            <strong>Open source</strong>
-            <span>Auditable code, MIT licensed, yours to fork.</span>
-          </div>
-        </div>
-      </div>
-    </section>
+      </section>
 
-    <!-- Features -->
-    <section id="features" class="section">
-      <div class="wrap">
-        <h2 class="section-title">Zero-based budgeting, backed by real accounting</h2>
-        <p class="section-sub">Everything you need to plan every dollar — with numbers that never lie.</p>
-        <div class="grid">
-          <article class="card">
-            <div class="ico">🎯</div>
-            <h3>Zero-based budget</h3>
-            <p>Give every category a job until <em>Ready to Assign</em> hits zero. Track Assigned · Activity · Available per envelope, with balances that roll forward and overspending in red.</p>
-          </article>
-          <article class="card">
-            <div class="ico">💰</div>
-            <h3>Honest Ready to Assign</h3>
-            <p>One global pool drawn from your real on-budget balances. Assign to any month — even a future one — and it draws down today. You can't budget money you don't have.</p>
-          </article>
-          <article class="card">
-            <div class="ico">💳</div>
-            <h3>Credit cards &amp; tracking</h3>
-            <p>Card spending nets against the budget so it stays budget-neutral. Mark investments or a mortgage as off-budget — counted in net worth, not in assignable cash.</p>
-          </article>
-          <article class="card">
-            <div class="ico">📒</div>
-            <h3>Real double-entry</h3>
-            <p>Every transaction is balanced postings that sum to zero. Your budget, balances and net worth are <em>derived</em> from one journal — they can't go inconsistent.</p>
-          </article>
-          <article class="card">
-            <div class="ico">🛡️</div>
-            <h3>Optional encryption</h3>
-            <p>Protect a document with a passphrase and the file is encrypted at rest with <em>XChaCha20-Poly1305</em> and an Argon2id key. Decrypted only in memory — never in plaintext on disk.</p>
-          </article>
-          <article class="card">
-            <div class="ico">🗓️</div>
-            <h3>Debts &amp; installments</h3>
-            <p>Track BNPL and installment plans on a fixed schedule. Each debt becomes its own budget envelope and off-budget liability, so paying it down stays Ready-to-Assign neutral.</p>
-          </article>
-          <article class="card">
-            <div class="ico">📊</div>
-            <h3>Analytics</h3>
-            <p>KPIs, income-vs-expenses, net-worth trends and spending by category — all derived from your journal, so they never drift from your transactions.</p>
-          </article>
-          <article class="card">
-            <div class="ico">📱</div>
-            <h3>Desktop &amp; mobile</h3>
-            <p>A native desktop app and a touch-first Android build (beta) from the same codebase — budget on your laptop, capture spending on your phone.</p>
-          </article>
-          <article class="card">
-            <div class="ico">💾</div>
-            <h3>Local-first &amp; yours</h3>
-            <p>Each document is a single <code>.financy</code> SQLite file, auto-saved with ACID writes. No cloud, no account, no save button — just your data on your machine.</p>
-          </article>
-        </div>
-      </div>
-    </section>
-
-    <!-- Screenshots -->
-    <section id="screens" class="section section-alt">
-      <div class="wrap">
-        <h2 class="section-title">A look inside</h2>
-        <p class="section-sub">The desktop app, from first run to full analytics.</p>
-        <div class="shots">
-          <figure class="shot">
-            <img src="screenshots/budget.png" alt="Zero-based budget" loading="lazy" />
-            <figcaption>Budget: Ready to Assign, with Assigned · Activity · Available per category.</figcaption>
-          </figure>
-          <figure class="shot">
-            <img src="screenshots/accounts.png" alt="Accounts and net worth" loading="lazy" />
-            <figcaption>Accounts &amp; net worth, with on-budget and tracking accounts.</figcaption>
-          </figure>
-          <figure class="shot">
-            <img src="screenshots/analytics.png" alt="Analytics dashboard" loading="lazy" />
-            <figcaption>Analytics: KPIs, cash-flow &amp; net-worth trends, spending by category.</figcaption>
-          </figure>
-          <figure class="shot">
-            <img src="screenshots/transactions.png" alt="Transactions journal" loading="lazy" />
-            <figcaption>Date-grouped transaction journal with filters and search.</figcaption>
-          </figure>
-          <figure class="shot">
-            <img src="screenshots/categories.png" alt="Categories" loading="lazy" />
-            <figcaption>Income &amp; expense categories, managed from Preferences.</figcaption>
-          </figure>
-          <figure class="shot">
-            <img src="screenshots/data-summary.png" alt="Data summary" loading="lazy" />
-            <figcaption>A clear summary of everything in your document.</figcaption>
-          </figure>
-        </div>
-      </div>
-    </section>
-
-    <!-- Mobile -->
-    <section id="mobile" class="section">
-      <div class="wrap">
-        <h2 class="section-title">Financy on mobile <span class="badge">Android · beta</span></h2>
-        <p class="section-sub">
-          A touch-first UI built from the same codebase — capture spending on the go,
-          check your budget anywhere. See
-          <a href="https://github.com/raihanstark/financy/blob/main/MOBILE.md" target="_blank" rel="noopener">MOBILE.md</a>
-          for status and what's not ported yet.
-        </p>
-        <div class="phones">
-          <figure class="phone">
-            <img src="screenshots/mobile/home.png" alt="Mobile home" loading="lazy" />
-            <figcaption>Home</figcaption>
-          </figure>
-          <figure class="phone">
-            <img src="screenshots/mobile/transactions.png" alt="Mobile transactions" loading="lazy" />
-            <figcaption>Transactions</figcaption>
-          </figure>
-          <figure class="phone">
-            <img src="screenshots/mobile/budget.png" alt="Mobile budget" loading="lazy" />
-            <figcaption>Budget</figcaption>
-          </figure>
-          <figure class="phone">
-            <img src="screenshots/mobile/account.png" alt="Mobile account detail" loading="lazy" />
-            <figcaption>Account</figcaption>
-          </figure>
-          <figure class="phone">
-            <img src="screenshots/mobile/debts.png" alt="Mobile debts" loading="lazy" />
-            <figcaption>Debts</figcaption>
-          </figure>
-          <figure class="phone">
-            <img src="screenshots/mobile/debt.png" alt="Mobile debt detail" loading="lazy" />
-            <figcaption>Debt detail</figcaption>
-          </figure>
-        </div>
-      </div>
-    </section>
-
-    <!-- Install -->
-    <section id="install" class="section section-alt">
-      <div class="wrap install-inner">
-        <h2 class="section-title">Get Financy</h2>
-        <p class="install-lede">
-          Grab the build for your platform from the latest release. Builds are currently
-          unsigned, so Windows/macOS may ask you to confirm before the first run.
+      <!-- 2. System Architecture & Accounting Guarantees -->
+      <section id="architecture">
+        <h2 class="sec-head">2. Architecture &amp; Accounting Invariants</h2>
+        <p>
+          Financy enforces three core invariants across both desktop (<code>internal/ui</code>)
+          and mobile (<code>internal/mobileui</code>) interfaces via a shared core library
+          (<code>internal/core</code>):
         </p>
 
-        <div class="install-grid">
-          <div class="install-card">
-            <h3>🐧 Linux</h3>
-            <p>Install the <code>.deb</code> or <code>.rpm</code>, or extract the <code>.tar.xz</code> and run.</p>
-          </div>
-          <div class="install-card">
-            <h3>🪟 Windows</h3>
-            <p>Run the <code>.exe</code>. SmartScreen → <em>More info → Run anyway</em>.</p>
-          </div>
-          <div class="install-card">
-            <h3>🍎 macOS</h3>
-            <p>Unzip, move to Applications. First launch: right-click → <em>Open</em>.</p>
-          </div>
-          <div class="install-card">
-            <h3>📱 Android</h3>
-            <p>Beta <code>.apk</code> attached to releases. Allow install from unknown sources.</p>
-          </div>
-        </div>
+<pre><code>+-----------------------------------------------------------------------------------+
+|                        SINGLE .financy DOCUMENT (SQLite)                          |
+|  [Unencrypted SQLite]  --or--  [XChaCha20-Poly1305 + Argon2id In-Memory VFS]      |
++-----------------------------------------------------------------------------------+
+                                         |
+                                         v
++-----------------------------------------------------------------------------------+
+|                     DOUBLE-ENTRY JOURNAL (internal/core)                          |
+|  Invariant 1 (Balanced Journal):   For every Transaction T,  Sum(Postings_T) == 0 |
+|  Invariant 2 (Derived Balances):   Balance(Account A, t) = Sum(Postings_A &lt;= t)   |
+|  Invariant 3 (Zero-Based Pool):    ReadyToAssign = OnBudgetCash - Sum(Assigned)   |
++-----------------------------------------------------------------------------------+
+                     /                                         \
+                    v                                           v
+   +---------------------------------+         +---------------------------------+
+   |   Desktop Shell (internal/ui)   |         |  Mobile Shell (internal/mobile) |
+   |  Linux / Windows / macOS        |         |  Android Touch UI (16KB ELF)    |
+   +---------------------------------+         +---------------------------------+</code></pre>
 
-        <div class="cta cta-center">
-          <a class="btn btn-primary btn-lg" href="https://github.com/raihanstark/financy/releases/latest" target="_blank" rel="noopener">
-            Download the latest release
-          </a>
-        </div>
-        <p class="build-note">
-          Or build from source: <code>git clone</code> the repo and run <code>make run</code>.
+        <table class="datatable">
+          <thead>
+            <tr>
+              <th style="width: 24%;">Design Principle</th>
+              <th>Technical Implementation</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>1. Strict Double-Entry</strong></td>
+              <td>
+                Every transaction records two or more balanced legs (postings) whose signed integer amounts sum to zero.
+                Income credits an Income account and debits an Asset/Liability account; expenses debit an Expense
+                category and credit the payment account; transfers move funds between money accounts with zero net budget impact.
+              </td>
+            </tr>
+            <tr>
+              <td><strong>2. Global Ready-to-Assign</strong></td>
+              <td>
+                <code>Ready to Assign</code> is computed from the real cash balance of all <em>on-budget</em> accounts
+                (checking, savings, cash, net of on-budget credit cards) minus all category assignments across every month.
+                Assigning funds in a future month immediately reduces today's assignable pool, preventing phantom budgeting.
+              </td>
+            </tr>
+            <tr>
+              <td><strong>3. Local-First &amp; Encrypted</strong></td>
+              <td>
+                Changes are committed atomically via ACID transactions. When passphrase protection is enabled,
+                the file on disk stores an Argon2id salt, nonce, and XChaCha20-Poly1305 ciphertext; decryption occurs
+                strictly in RAM so plaintext never touches disk.
+              </td>
+            </tr>
+            <tr>
+              <td><strong>4. Automatic Schema Migration</strong></td>
+              <td>
+                Opening an older <code>.financy</code> file automatically writes a versioned backup
+                (e.g., <code>budget.financy.v8.bak</code>) before migrating the schema forward, ensuring safe downgrades.
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </section>
+
+      <!-- 3. Core Capabilities -->
+      <section id="features">
+        <h2 class="sec-head">3. Core Capabilities &amp; Modules</h2>
+
+        <table class="datatable">
+          <thead>
+            <tr>
+              <th style="width: 22%;">Module</th>
+              <th style="width: 30%;">Summary</th>
+              <th>Details &amp; Operations</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>Zero-Based Budget</strong><br />(<code>Budget</code>)</td>
+              <td>Monthly envelope allocation, rollover, and overspending recovery</td>
+              <td>
+                Tracks <code>Assigned</code>, <code>Activity</code>, and rolling <code>Available</code> balances per category.
+                Includes per-category traffic-light progress bars, overspent alert banners, one-click
+                <em>Cover Overspending</em> (<code>MoveAssigned</code> between envelopes), and guarded <em>Auto-Assign</em>
+                with a diff preview popup before overwriting existing assignments.
+              </td>
+            </tr>
+            <tr>
+              <td><strong>Accounts &amp; Register</strong><br />(<code>Accounts</code>)</td>
+              <td>Grouped Assets &amp; Liabilities with running-balance registers</td>
+              <td>
+                Supports <strong>On-Budget</strong> accounts (Checking, Savings, Cash, Credit Card) and
+                <strong>Off-Budget / Tracking</strong> accounts (Investments, Mortgages, Loans). Displays share-of-group
+                bars, aligned balances, per-account running registers, and guided bank statement reconciliation.
+              </td>
+            </tr>
+            <tr>
+              <td><strong>Transactions Journal</strong><br />(<code>Transactions</code>)</td>
+              <td>Date-grouped ledger, bulk entry, search, and CSV import</td>
+              <td>
+                Filter by date range, account, category, transaction type, or free-text query. Features searchable
+                payee autocomplete across all forms, a multi-row <strong>Bulk Add</strong> table for rapid bookkeeping,
+                and a guided CSV importer with column mapping and duplicate detection.
+              </td>
+            </tr>
+            <tr>
+              <td><strong>Debts &amp; Amortization</strong><br />(<code>Debts</code>)</td>
+              <td>BNPL installments, amortizing loans, revolving credit, and IOUs</td>
+              <td>
+                Full debt management engine (Schema v9):
+                <ul>
+                  <li><strong>Amortizing Loans</strong> (mortgage, auto, student, personal): integer half-up interest kernel, annuity payment solver, 3-leg split payments (principal + expensed interest), and extra payments that either shorten the term or re-amortize.</li>
+                  <li><strong>Revolving Credit</strong> (credit cards, lines of credit): utilization tracking, minimum-payment rules, and monthly statement review without envelope double-counting.</li>
+                  <li><strong>BNPL / Installments &amp; Informal IOUs</strong>: fixed installment schedules or arbitrary balance paydowns.</li>
+                  <li><strong>Payoff Simulator</strong>: side-by-side <em>Snowball vs. Avalanche</em> comparison showing payoff order, projected debt-free date, and total interest saved.</li>
+                </ul>
+              </td>
+            </tr>
+            <tr>
+              <td><strong>Recurring Commitments</strong><br />(<code>Recurring</code>)</td>
+              <td>Forward-looking 30-day timeline &amp; periodic due checks</td>
+              <td>
+                Models recurring bills, subscriptions, and income templates across daily, weekly, biweekly, monthly,
+                quarterly, and yearly intervals. Computes monthly commitment totals, a 30-day upcoming timeline,
+                and prompts when due items are ready to post.
+              </td>
+            </tr>
+            <tr>
+              <td><strong>Analytics</strong><br />(<code>Analytics</code>)</td>
+              <td>Journal-derived KPIs, cash flow, and net-worth history</td>
+              <td>
+                Computes savings rate, income vs. expenses, net-worth progression, and category spending breakdowns
+                directly from journal postings, guaranteed never to drift from your register.
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </section>
+
+      <!-- 4. Desktop User Interface Screenshots -->
+      <section id="screenshots">
+        <h2 class="sec-head">4. Desktop Interface (Linux, Windows, macOS)</h2>
+        <p>
+          The desktop interface uses a labeled left navigation sidebar, keyboard-friendly forms, custom modals,
+          and both Light and Dark palettes (<code>internal/ui/style</code>).
         </p>
-      </div>
-    </section>
-  </main>
 
-  <footer class="footer">
-    <div class="wrap footer-inner">
-      <span>💰 Financy — private, local-first zero-based budgeting.</span>
-      <span>
-        Built with <a href="https://go.dev" target="_blank" rel="noopener">Go</a> +
-        <a href="https://fyne.io" target="_blank" rel="noopener">Fyne</a> +
-        <a href="https://pkg.go.dev/modernc.org/sqlite" target="_blank" rel="noopener">SQLite</a>.
-        MIT licensed.
-      </span>
-    </div>
-  </footer>
+        <div class="fig-grid">
+          <figure class="fig-box">
+            <a href="screenshots/budget.png"><img src="screenshots/budget.png" alt="Desktop Budget screen" loading="lazy" /></a>
+            <figcaption><strong>Fig 4.1 (Budget):</strong> Ready to Assign pool, category envelopes, usage bars, and overspending alerts.</figcaption>
+          </figure>
+          <figure class="fig-box">
+            <a href="screenshots/accounts.png"><img src="screenshots/accounts.png" alt="Desktop Accounts screen" loading="lazy" /></a>
+            <figcaption><strong>Fig 4.2 (Accounts):</strong> Grouped Assets &amp; Liabilities tables with share bars and net-worth header.</figcaption>
+          </figure>
+          <figure class="fig-box">
+            <a href="screenshots/transactions.png"><img src="screenshots/transactions.png" alt="Desktop Transactions screen" loading="lazy" /></a>
+            <figcaption><strong>Fig 4.3 (Transactions):</strong> Date-grouped journal cards, one-line filter bar, and summary metrics.</figcaption>
+          </figure>
+          <figure class="fig-box">
+            <a href="screenshots/recurring.png"><img src="screenshots/recurring.png" alt="Desktop Recurring screen" loading="lazy" /></a>
+            <figcaption><strong>Fig 4.4 (Recurring):</strong> Monthly commitment stats, 30-day forward timeline, and schedule templates.</figcaption>
+          </figure>
+          <figure class="fig-box">
+            <a href="screenshots/analytics.png"><img src="screenshots/analytics.png" alt="Desktop Analytics screen" loading="lazy" /></a>
+            <figcaption><strong>Fig 4.5 (Analytics):</strong> Income vs. expenses, net-worth trendline, and category breakdown.</figcaption>
+          </figure>
+          <figure class="fig-box">
+            <a href="screenshots/categories.png"><img src="screenshots/categories.png" alt="Desktop Categories screen" loading="lazy" /></a>
+            <figcaption><strong>Fig 4.6 (Categories &amp; Data Summary):</strong> Manage income/expense categories and monthly targets.</figcaption>
+          </figure>
+        </div>
+      </section>
+
+      <!-- 5. Mobile User Interface (Android) -->
+      <section id="mobile">
+        <h2 class="sec-head">5. Mobile Interface - Android (Beta)</h2>
+        <p>
+          Financy compiles a dedicated touch-first mobile shell (<code>internal/mobileui</code>) from the same Go
+          codebase and <code>internal/core</code> engine. It supports opening and exporting cross-platform
+          <code>.financy</code> files (including encrypted databases), a speed-dial floating action button for single
+          or bulk transaction entry, tappable calendar date pickers, and full debt/budget drill-downs.
+          See <a href="https://github.com/raihanstark/financy/blob/main/MOBILE.md">MOBILE.md</a> for platform notes.
+        </p>
+
+        <div class="mobile-grid">
+          <figure class="mobile-box">
+            <a href="screenshots/mobile/home.png"><img src="screenshots/mobile/home.png" alt="Mobile Home screen" loading="lazy" /></a>
+            <figcaption>5.1 Home</figcaption>
+          </figure>
+          <figure class="mobile-box">
+            <a href="screenshots/mobile/transactions.png"><img src="screenshots/mobile/transactions.png" alt="Mobile Transactions screen" loading="lazy" /></a>
+            <figcaption>5.2 Ledger</figcaption>
+          </figure>
+          <figure class="mobile-box">
+            <a href="screenshots/mobile/budget.png"><img src="screenshots/mobile/budget.png" alt="Mobile Budget screen" loading="lazy" /></a>
+            <figcaption>5.3 Budget</figcaption>
+          </figure>
+          <figure class="mobile-box">
+            <a href="screenshots/mobile/account.png"><img src="screenshots/mobile/account.png" alt="Mobile Account register" loading="lazy" /></a>
+            <figcaption>5.4 Account</figcaption>
+          </figure>
+          <figure class="mobile-box">
+            <a href="screenshots/mobile/debts.png"><img src="screenshots/mobile/debts.png" alt="Mobile Debts overview" loading="lazy" /></a>
+            <figcaption>5.5 Debts</figcaption>
+          </figure>
+          <figure class="mobile-box">
+            <a href="screenshots/mobile/debt.png"><img src="screenshots/mobile/debt.png" alt="Mobile Debt detail" loading="lazy" /></a>
+            <figcaption>5.6 Schedule</figcaption>
+          </figure>
+        </div>
+      </section>
+
+      <!-- 6. Download, Packages & Building from Source -->
+      <section id="download">
+        <h2 class="sec-head">6. Download &amp; Installation</h2>
+        <p>
+          Pre-built binaries for the latest release (<a href="https://github.com/raihanstark/financy/releases/latest"><strong>v0.14.0</strong></a>)
+          are published on GitHub Releases:
+        </p>
+
+        <table class="datatable">
+          <thead>
+            <tr>
+              <th style="width: 18%;">Operating System</th>
+              <th style="width: 28%;">Package / Artifact</th>
+              <th>Installation &amp; First-Run Notes</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>Linux (Debian/Ubuntu)</strong></td>
+              <td><code>financy_*_linux_amd64.deb</code></td>
+              <td>
+                Install via <code>sudo apt install ./financy_*_linux_amd64.deb</code>. Installs binary to
+                <code>/usr/bin/financy</code>, desktop launcher, icon, and registers the <code>.financy</code> MIME type.
+              </td>
+            </tr>
+            <tr>
+              <td><strong>Linux (Fedora/RHEL)</strong></td>
+              <td><code>financy-*.x86_64.rpm</code></td>
+              <td>
+                Install via <code>sudo dnf install ./financy-*.x86_64.rpm</code>. Includes desktop entry and MIME association.
+              </td>
+            </tr>
+            <tr>
+              <td><strong>Linux (Generic Tarball)</strong></td>
+              <td><code>Financy-*-linux-amd64.tar.xz</code></td>
+              <td>
+                Extract with <code>tar xf Financy-*-linux-amd64.tar.xz</code> and run <code>./Financy</code> (or <code>make install</code>).
+              </td>
+            </tr>
+            <tr>
+              <td><strong>Windows (x86_64)</strong></td>
+              <td><code>Financy-*-windows-amd64.exe</code></td>
+              <td>
+                Standalone executable. Because builds are currently unsigned, click
+                <em>More info &rarr; Run anyway</em> if Windows SmartScreen prompts on first launch.
+              </td>
+            </tr>
+            <tr>
+              <td><strong>macOS (Universal/ARM64)</strong></td>
+              <td><code>Financy-*-macos.zip</code></td>
+              <td>
+                Unzip and move <code>Financy.app</code> to <code>/Applications</code>. On first launch,
+                <strong>right-click &rarr; Open</strong> (or run <code>xattr -cr /Applications/Financy.app</code>).
+              </td>
+            </tr>
+            <tr>
+              <td><strong>Android (Beta)</strong></td>
+              <td><code>Financy-*-android.apk</code></td>
+              <td>
+                Sideload the signed <code>.apk</code> from the GitHub Release page (16 KB ELF page-aligned for Android 15+).
+              </td>
+            </tr>
+          </tbody>
+        </table>
+
+        <h3 class="sub-head">6.1 Building from Source</h3>
+        <p>
+          Building from source requires <strong>Go 1.25+</strong>, a C compiler (<code>gcc</code> or <code>clang</code>),
+          and standard OpenGL/X11 development headers required by Fyne:
+        </p>
+
+<pre><code># Debian / Ubuntu dependencies:
+sudo apt-get install gcc pkg-config libgl1-mesa-dev xorg-dev
+
+# Clone and build:
+git clone https://github.com/raihanstark/financy.git
+cd financy
+make build      # produces ./Financy binary
+make test       # runs unit &amp; accounting invariant tests
+make run-dev    # runs against an isolated ./.devdata profile</code></pre>
+      </section>
+
+    </main>
+
+    <!-- Classic Footer -->
+    <footer class="footer">
+      <div>
+        <strong>Financy</strong> - Open-source local-first zero-based budgeting.
+        Released under the <a href="https://github.com/raihanstark/financy/blob/main/LICENSE">MIT License</a>.
+      </div>
+      <div>
+        [ <a href="./">Home</a>
+        | <a href="docs/">Documentation</a>
+        | <a href="https://github.com/raihanstark/financy/releases">Releases</a>
+        | <a href="https://github.com/raihanstark/financy">GitHub Repository</a> ]
+      </div>
+    </footer>
+
+  </div>
 </body>
 </html>

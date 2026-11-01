@@ -1,0 +1,478 @@
+/* ==========================================================================
+   Financy User Manual - Classic Open Source Documentation Stylesheet
+   Matches site/style.css (SQLite / OpenBSD / Lua / Texinfo style)
+   ========================================================================== */
+
+:root {
+  --page-bg:      #e8ecef;
+  --doc-bg:       #ffffff;
+  --banner-bg:    #044a64;
+  --banner-dark:  #033549;
+  --subbar-bg:    #d9e4ec;
+  --subbar-bdr:   #9ab0c0;
+  --sec-bg:       #e6edf2;
+  --sec-bdr:      #044a64;
+  --tbl-hdr:      #dfe7ed;
+  --tbl-alt:      #f6f8fa;
+  --box-bg:       #f7f9fb;
+  --code-bg:      #f2f4f6;
+  --border:       #99a3ad;
+  --border-light: #c5ced6;
+  --text:         #111111;
+  --text-dim:     #444b52;
+  --link:         #004499;
+  --link-visited: #4a2c6b;
+  --link-hover:   #002266;
+  --info-bg:      #eef4f8;
+  --info-bdr:     #6c93b0;
+  --warn-bg:      #fffbe6;
+  --warn-bdr:     #c9a227;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html, body {
+  margin: 0;
+  padding: 0;
+  background-color: var(--page-bg);
+  color: var(--text);
+  font-family: Verdana, "DejaVu Sans", "Bitstream Vera Sans", Tahoma, Geneva, Arial, sans-serif;
+  font-size: 13.5px;
+  line-height: 1.58;
+}
+
+a:link {
+  color: var(--link);
+  text-decoration: underline;
+}
+a:visited {
+  color: var(--link-visited);
+}
+a:hover, a:active {
+  color: var(--link-hover);
+  background-color: #e6eff7;
+}
+
+code, pre, tt, kbd {
+  font-family: "DejaVu Sans Mono", "Liberation Mono", "Courier New", Courier, monospace;
+  font-size: 12.5px;
+}
+
+code, tt {
+  background-color: var(--code-bg);
+  border: 1px solid var(--border-light);
+  padding: 0 3px;
+}
+
+pre {
+  background-color: var(--code-bg);
+  border: 1px solid var(--border);
+  padding: 8px 10px;
+  overflow-x: auto;
+  line-height: 1.4;
+  margin: 10px 0 14px;
+}
+pre code {
+  background: none;
+  border: 0;
+  padding: 0;
+}
+
+hr {
+  border: 0;
+  border-top: 1px solid var(--border);
+  margin: 18px 0;
+}
+
+/* ---- Outer Page Container ---- */
+.page {
+  max-width: 980px;
+  margin: 12px auto 24px;
+  background-color: var(--doc-bg);
+  border: 1px solid #6e7b85;
+}
+
+/* ---- Top Banner ---- */
+.banner {
+  background-color: var(--banner-bg);
+  color: #ffffff;
+  padding: 10px 14px;
+  border-bottom: 2px solid var(--banner-dark);
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.banner-title {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.banner-logo {
+  width: 28px;
+  height: 28px;
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  background: #ffffff;
+  vertical-align: middle;
+}
+
+.banner h1 {
+  margin: 0;
+  font-size: 20px;
+  font-weight: bold;
+  letter-spacing: 0.2px;
+  color: #ffffff;
+}
+.banner h1 a {
+  color: #ffffff;
+  text-decoration: none;
+}
+.banner h1 a:hover {
+  background: transparent;
+  text-decoration: underline;
+}
+
+.banner-tagline {
+  font-size: 12px;
+  color: #d0e2ec;
+}
+
+.banner-meta {
+  font-family: "DejaVu Sans Mono", "Courier New", monospace;
+  font-size: 11.5px;
+  color: #d9eaf2;
+}
+.banner-meta a {
+  color: #ffffff;
+  font-weight: bold;
+}
+.banner-meta a:hover {
+  background: var(--banner-dark);
+}
+
+/* ---- Top Navigation Bar ---- */
+.navbar {
+  background-color: var(--subbar-bg);
+  border-bottom: 1px solid var(--subbar-bdr);
+  padding: 5px 14px;
+  font-size: 12.5px;
+  font-weight: bold;
+  display: flex;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.navbar a:link,
+.navbar a:visited {
+  color: #033549;
+  text-decoration: none;
+  padding: 1px 4px;
+}
+.navbar a:hover {
+  text-decoration: underline;
+  background-color: #c2d4e2;
+}
+.nav-sep {
+  color: #6c8294;
+  font-weight: normal;
+}
+
+/* ---- Two-Column Manual Layout ---- */
+.manual-body {
+  display: grid;
+  grid-template-columns: 230px 1fr;
+  min-height: 540px;
+}
+
+/* ---- Left Manual Index Sidebar ---- */
+.sidebar {
+  background-color: var(--box-bg);
+  border-right: 1px solid var(--border);
+  padding: 12px 10px 18px;
+  font-size: 12px;
+}
+
+.sidebar-box-title {
+  background-color: var(--banner-bg);
+  color: #ffffff;
+  font-weight: bold;
+  padding: 3px 7px;
+  font-size: 11.5px;
+  margin-bottom: 8px;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+
+.sidebar-sec {
+  margin-bottom: 11px;
+}
+
+.sidebar-sec-title {
+  font-weight: bold;
+  color: #033549;
+  border-bottom: 1px solid var(--border-light);
+  padding-bottom: 2px;
+  margin-bottom: 4px;
+}
+.sidebar-sec-title a:link,
+.sidebar-sec-title a:visited {
+  color: #033549;
+  text-decoration: none;
+}
+.sidebar-sec-title a:hover {
+  text-decoration: underline;
+}
+
+.sidebar-list {
+  list-style: none;
+  margin: 0;
+  padding: 0 0 0 8px;
+}
+.sidebar-list li {
+  margin: 2px 0;
+  line-height: 1.38;
+}
+.sidebar-list li::before {
+  content: "· ";
+  color: var(--text-dim);
+}
+.sidebar-list a.active {
+  font-weight: bold;
+  color: #000000;
+  background-color: #d9e4ec;
+  padding: 0 3px;
+  text-decoration: none;
+}
+
+/* ---- Main Documentation Article Column ---- */
+.doc-main {
+  padding: 14px 20px 22px;
+  min-width: 0;
+}
+
+/* ---- Breadcrumb & Top/Bottom Manual Nav Bar ---- */
+.doc-nav-bar {
+  background-color: var(--tbl-alt);
+  border: 1px solid var(--border-light);
+  padding: 4px 8px;
+  font-size: 12px;
+  display: flex;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 14px;
+}
+
+.doc-nav-bar.bottom {
+  margin-top: 24px;
+  margin-bottom: 0;
+}
+
+.doc-title {
+  font-size: 19px;
+  font-weight: bold;
+  color: #032b3b;
+  border-bottom: 2px solid var(--sec-bdr);
+  padding-bottom: 4px;
+  margin: 0 0 12px;
+}
+
+/* ---- On-Page Table of Contents Box ---- */
+.page-toc {
+  background-color: var(--box-bg);
+  border: 1px solid var(--border);
+  padding: 6px 12px;
+  margin: 0 0 16px;
+  font-size: 12px;
+  display: inline-block;
+  min-width: 260px;
+  max-width: 100%;
+}
+.page-toc-title {
+  font-weight: bold;
+  color: #033549;
+  border-bottom: 1px dotted var(--border);
+  padding-bottom: 2px;
+  margin-bottom: 4px;
+}
+.page-toc nav ul {
+  margin: 2px 0;
+  padding-left: 18px;
+}
+.page-toc nav li {
+  margin: 2px 0;
+}
+
+/* ---- Article Typography & Elements ---- */
+.doc-content h2 {
+  font-size: 15px;
+  font-weight: bold;
+  color: #032b3b;
+  background-color: var(--sec-bg);
+  border-top: 2px solid var(--sec-bdr);
+  border-bottom: 1px solid var(--subbar-bdr);
+  padding: 3px 8px;
+  margin: 22px 0 10px;
+}
+
+.doc-content h3 {
+  font-size: 13.5px;
+  font-weight: bold;
+  color: #111111;
+  border-bottom: 1px dotted var(--border);
+  padding-bottom: 2px;
+  margin: 16px 0 8px;
+}
+
+.doc-content p {
+  margin: 0 0 10px;
+}
+
+.doc-content ul,
+.doc-content ol {
+  margin: 6px 0 12px;
+  padding-left: 22px;
+}
+.doc-content li {
+  margin: 3px 0;
+}
+
+.doc-content blockquote {
+  margin: 10px 0;
+  padding: 6px 12px;
+  background-color: var(--box-bg);
+  border-left: 3px solid var(--sec-bdr);
+  border-top: 1px solid var(--border-light);
+  border-right: 1px solid var(--border-light);
+  border-bottom: 1px solid var(--border-light);
+}
+.doc-content blockquote p:last-child {
+  margin-bottom: 0;
+}
+
+.doc-content img {
+  display: block;
+  max-width: 100%;
+  height: auto;
+  border: 1px solid var(--border);
+  padding: 4px;
+  background-color: var(--box-bg);
+  margin: 10px 0 14px;
+}
+
+/* ---- Markdown Tables & Index Tables ---- */
+.doc-content table,
+table.datatable {
+  width: 100%;
+  border-collapse: collapse;
+  border: 1px solid var(--border);
+  margin: 10px 0 16px;
+  font-size: 12.5px;
+}
+.doc-content th,
+.doc-content td,
+table.datatable th,
+table.datatable td {
+  border: 1px solid var(--border);
+  padding: 5px 8px;
+  text-align: left;
+  vertical-align: top;
+}
+.doc-content th,
+table.datatable th {
+  background-color: var(--tbl-hdr);
+  color: #0f2430;
+  font-weight: bold;
+}
+.doc-content tr:nth-child(even) td,
+table.datatable tr:nth-child(even) td {
+  background-color: var(--tbl-alt);
+}
+
+/* ---- Shortcode: Callout (NOTE / WARNING) ---- */
+.callout {
+  border: 1px solid var(--info-bdr);
+  background-color: var(--info-bg);
+  padding: 7px 10px;
+  margin: 10px 0 14px;
+  font-size: 12.5px;
+}
+.callout.callout-warning {
+  border-color: var(--warn-bdr);
+  background-color: var(--warn-bg);
+}
+.callout-label {
+  font-family: "DejaVu Sans Mono", monospace;
+  font-weight: bold;
+  margin-right: 4px;
+  color: #033549;
+}
+.callout.callout-warning .callout-label {
+  color: #6b4e00;
+}
+.callout p {
+  display: inline;
+  margin: 0;
+}
+
+/* ---- Shortcode: Tabs (Platform Instructions Table) ---- */
+.platform-tabs {
+  border: 1px solid var(--border);
+  margin: 10px 0 14px;
+  background-color: var(--doc-bg);
+}
+.platform-tab-row {
+  border-bottom: 1px solid var(--border-light);
+  padding: 8px 10px;
+}
+.platform-tab-row:last-child {
+  border-bottom: 0;
+}
+.platform-tab-label {
+  display: inline-block;
+  background-color: var(--tbl-hdr);
+  border: 1px solid var(--border);
+  padding: 1px 6px;
+  font-size: 11.5px;
+  font-weight: bold;
+  margin-bottom: 5px;
+  color: #0f2430;
+}
+.platform-tab-body p:last-child,
+.platform-tab-body pre:last-child {
+  margin-bottom: 0;
+}
+
+/* ---- Footer ---- */
+.footer {
+  border-top: 2px solid var(--banner-bg);
+  background-color: var(--sec-bg);
+  padding: 8px 14px;
+  font-size: 11.5px;
+  color: var(--text-dim);
+  display: flex;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+/* ---- Responsive ---- */
+@media (max-width: 760px) {
+  .page {
+    margin: 0;
+    border-left: 0;
+    border-right: 0;
+  }
+  .manual-body {
+    grid-template-columns: 1fr;
+  }
+  .sidebar {
+    border-right: 0;
+    border-bottom: 1px solid var(--border);
+  }
+}

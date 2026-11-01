@@ -1,0 +1,63 @@
+{{ define "main" }}
+<div class="doc-nav-bar">
+  <div>
+    <strong>Location:</strong>
+    <a href="{{ .Site.Home.RelPermalink }}">Financy Manual</a>
+    {{- if .CurrentSection }}
+      &raquo; <a href="{{ .CurrentSection.RelPermalink }}">{{ .CurrentSection.Title }}</a>
+    {{- end }}
+    &raquo; <span>{{ .Title }}</span>
+  </div>
+  <div>
+    [ <a href="{{ .CurrentSection.RelPermalink }}">Up: {{ .CurrentSection.Title }}</a>
+    | <a href="{{ .Site.Home.RelPermalink }}">Index</a> ]
+  </div>
+</div>
+
+<article class="doc-content">
+  <h1 class="doc-title">{{ .Title }}</h1>
+
+  {{- if and (ne .Params.toc false) (gt (len .TableOfContents) 35) }}
+  <div class="page-toc">
+    <div class="page-toc-title">On This Page</div>
+    {{ .TableOfContents }}
+  </div>
+  {{- end }}
+
+  {{ .Content }}
+</article>
+
+{{- $pages := .CurrentSection.Pages.ByWeight -}}
+{{- $prev := false -}}
+{{- $next := false -}}
+{{- range $idx, $p := $pages -}}
+  {{- if eq $p.RelPermalink $.RelPermalink -}}
+    {{- if gt $idx 0 -}}
+      {{- $prev = index $pages (sub $idx 1) -}}
+    {{- end -}}
+    {{- if lt (add $idx 1) (len $pages) -}}
+      {{- $next = index $pages (add $idx 1) -}}
+    {{- end -}}
+  {{- end -}}
+{{- end }}
+
+<div class="doc-nav-bar bottom">
+  <div>
+    {{- with $prev }}
+      &laquo; Prev: <a href="{{ .RelPermalink }}">{{ .Title }}</a>
+    {{- else }}
+      &laquo; <a href="{{ .CurrentSection.RelPermalink }}">{{ .CurrentSection.Title }}</a>
+    {{- end }}
+  </div>
+  <div>
+    [ <a href="{{ .CurrentSection.RelPermalink }}">Up</a> | <a href="{{ .Site.Home.RelPermalink }}">Manual Index</a> ]
+  </div>
+  <div>
+    {{- with $next }}
+      Next: <a href="{{ .RelPermalink }}">{{ .Title }}</a> &raquo;
+    {{- else }}
+      <a href="{{ .Site.Home.RelPermalink }}">Manual Index</a> &raquo;
+    {{- end }}
+  </div>
+</div>
+{{ end }}

@@ -1,49 +1,26 @@
-# Financy documentation site (Hugo + Hextra), deployed under /financy/docs/.
+# Financy documentation site (Hugo), deployed under /financy/docs/.
 baseURL: "https://raihanstark.github.io/financy/docs/"
-title: Financy Docs
-
-module:
-  imports:
-    - path: github.com/imfing/hextra
+title: "Financy Manual"
+languageCode: "en-us"
 
 enableInlineShortcodes: true
 enableGitInfo: false
 
 # Docs site — no blog-style taxonomies (avoids stray /tags/ and /categories/).
-disableKinds: [taxonomy, term]
+disableKinds: [taxonomy, term, RSS, sitemap]
 
 markup:
   goldmark:
     renderer:
       unsafe: true
   highlight:
-    noClasses: false
-
-menu:
-  main:
-    - name: Documentation
-      pageRef: /
-      weight: 1
-    - name: Search
-      weight: 2
-      params:
-        type: search
-    - name: GitHub ↗
-      url: "https://github.com/raihanstark/financy"
-      weight: 3
-    - name: ← Financy
-      url: "https://raihanstark.github.io/financy/"
-      weight: 4
+    codeFences: false
+  tableOfContents:
+    startLevel: 2
+    endLevel: 3
+    ordered: false
 
 params:
-  navbar:
-    displayTitle: true
-    displayLogo: false
-  footer:
-    displayCopyright: true
-    displayPoweredBy: false
-  editURL:
-    enable: false
-  theme:
-    default: system
-    displayToggle: true
+  version: "v0.14.0"
+  repoURL: "https://github.com/raihanstark/financy"
+  mainSiteURL: "../"

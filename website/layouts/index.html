@@ -1,0 +1,41 @@
+{{ define "main" }}
+<div class="doc-nav-bar">
+  <div>
+    <strong>Location:</strong> <span>Financy User Manual - Master Index</span>
+  </div>
+  <div>
+    [ <a href="{{ .Site.Home.RelPermalink }}../">&larr; Main Project Site</a> ]
+  </div>
+</div>
+
+<article class="doc-content">
+  <h1 class="doc-title">{{ .Title }}</h1>
+
+  {{ .Content }}
+
+  <h2>Complete Table of Contents</h2>
+  <table class="datatable">
+    <thead>
+      <tr>
+        <th style="width: 28%;">Section</th>
+        <th>Chapters &amp; Topics</th>
+      </tr>
+    </thead>
+    <tbody>
+      {{- range $i, $sec := .Site.Sections.ByWeight }}
+      <tr>
+        <td>
+          <strong><a href="{{ $sec.RelPermalink }}">{{ add $i 1 }}. {{ $sec.Title }}</a></strong>
+        </td>
+        <td>
+          {{- range $j, $p := $sec.Pages.ByWeight }}
+            {{- if gt $j 0 }} &middot; {{ end -}}
+            <a href="{{ $p.RelPermalink }}">{{ add $i 1 }}.{{ add $j 1 }} {{ $p.Title }}</a>
+          {{- end }}
+        </td>
+      </tr>
+      {{- end }}
+    </tbody>
+  </table>
+</article>
+{{ end }}

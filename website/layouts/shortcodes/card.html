@@ -1,0 +1,6 @@
+{{- $link := .Get "link" -}}
+{{- $href := printf "%s%s" .Page.RelPermalink ($link | strings.TrimPrefix "/") -}}
+<tr>
+  <td><strong><a href="{{ $href }}">{{ .Get "title" }}</a></strong></td>
+  <td>{{ .Get "subtitle" }}</td>
+</tr>

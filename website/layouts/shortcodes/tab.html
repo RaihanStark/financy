@@ -1,0 +1,8 @@
+{{- $items := split (.Parent.Get "items") "," -}}
+{{- $label := index $items .Ordinal | default (printf "Option %d" (add .Ordinal 1)) -}}
+<div class="platform-tab-row">
+  <div class="platform-tab-label">{{ $label }}</div>
+  <div class="platform-tab-body">
+    {{ .Inner | .Page.RenderString }}
+  </div>
+</div>

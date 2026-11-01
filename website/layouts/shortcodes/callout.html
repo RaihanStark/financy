@@ -1,0 +1,5 @@
+{{- $type := .Get "type" | default "info" -}}
+<div class="callout {{ if eq $type "warning" }}callout-warning{{ else }}callout-info{{ end }}">
+  <span class="callout-label">[{{ if eq $type "warning" }}WARNING{{ else }}NOTE{{ end }}]</span>
+  {{ .Inner | .Page.RenderString }}
+</div>
